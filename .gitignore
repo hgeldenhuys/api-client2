@@ -1,0 +1,16 @@
+.DS_Store
+/node_modules/
+
+# React Router
+/.react-router/
+/build/
+/.idea/
+/debug-hooks/
+/hermes
+/.claude/cloudios/agents/
+
+# Proxy server binaries (too large for GitHub)
+proxy-server/dist/
+**/proxy-server/dist/
+**/*proxy*
+**/api-client-proxy*

@@ -1,0 +1,137 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(ls:*)",
+      "Bash(bun test:*)",
+      "Bash(bun run lint:*)",
+      "Bash(bun --bun run:*)",
+      "Bash(bun run:*)",
+      "Bash(npx eslint:*)",
+      "Bash(grep:*)",
+      "Bash(npx tsc:*)",
+      "Bash(bun:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(chmod:*)",
+      "Bash(curl:*)",
+      "mcp__puppeteer__puppeteer_navigate",
+      "Bash(timeout:*)",
+      "Bash(kill:*)",
+      "Bash(true)",
+      "Bash(pkill:*)",
+      "Bash(./test-hook-event.sh:*)",
+      "Bash(sqlite3:*)",
+      "Bash(git add:*)",
+      "mcp__context7__get-library-docs",
+      "Bash(bun run dev:*)",
+      "Bash(git commit:*)",
+      "WebFetch(domain:codepen.io)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(tail -f:*)",
+      "Bash(open http://localhost:*)"
+    ],
+    "deny": []
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun --bun ${PWD}/.claude/hooks/cld/send-event.ts",
+            "INTENT": "SEND HOOK EVENT"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun --bun ${PWD}/.claude/hooks/cld/send-event.ts",
+            "INTENT": "SEND HOOK EVENT"
+          },
+          {
+            "type": "command",
+            "command": "bun --bun ${PWD}/.claude/hooks/cld/post/register-session-id.ts",
+            "INTENT": "SEND HOOK EVENT"
+          },
+          {
+            "type": "command",
+            "command": "bun --bun ${PWD}/.claude/hooks/cld/post/who-am-i.ts",
+            "INTENT": "IDENTIFY THIS CLOUDIOS AGENT"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun --bun ${PWD}/.claude/hooks/cld/send-event.ts",
+            "INTENT": "SEND HOOK EVENT"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun --bun ${PWD}/.claude/hooks/cld/send-event.ts",
+            "INTENT": "SEND HOOK EVENT"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun --bun ${PWD}/.claude/hooks/cld/send-event.ts",
+            "INTENT": "SEND HOOK EVENT"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun --bun ${PWD}/.claude/hooks/cld/send-event.ts",
+            "LABEL": "SEND EVENT"
+          },
+
+          {
+            "type": "command",
+            "command": "bun --bun ${PWD}/.claude/hooks/debug/post/echo-input.ts"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun --bun ${PWD}/.claude/hooks/cld/send-event.ts",
+            "LABEL": "SEND EVENT"
+          },
+
+          {
+            "type": "command",
+            "command": "bun --bun ${PWD}/.claude/hooks/debug/post/echo-input.ts"
+          }
+        ]
+      }
+    ]
+  },
+  "enableAllProjectMcpServers": true
+}

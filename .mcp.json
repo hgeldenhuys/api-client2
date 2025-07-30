@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "equentialthinking": {
+      "command": "bunx",
+      "args": [
+        "-y",
+        "mcp-sequentialthinking-tools"
+      ]
+    },
+    "puppeteer": {
+      "command": "bunx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer@latest"
+      ]
+    },
+    "desktop-commander": {
+      "command": "bunx",
+      "args": [
+        "-y",
+        "@wonderwhy-er/desktop-commander@latest"
+      ]
+    },
+    "semgrep": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "semgrep-mcp"
+      ],
+      "env": {}
+    }
+  }
+}

@@ -6,6 +6,8 @@ import { useProxyStore } from '~/stores/proxyStore';
 import { useAuthStore } from '~/stores/authStore';
 import { getScriptExecutor } from './scriptExecutor';
 import { VariableResolver, type VariableContext } from './variableResolver';
+import { TIMEOUTS, HTTP_STATUS, PERFORMANCE } from '~/constants';
+import type { FormDataParameter, AuthContext } from '~/types/script';
 
 interface RequestOptions {
   request: PostmanRequest;
@@ -40,7 +42,7 @@ export class RequestExecutor {
       
       // Apply authentication with caching
       const requestId = `${options.request.url}-${options.request.method}`;
-      const effectiveAuth = processedRequest.auth || collectionAuth;
+      const effectiveAuth = processedRequest.auth ?? collectionAuth;
       
       // Store auth credentials for reuse
       if (effectiveAuth) {
@@ -50,7 +52,7 @@ export class RequestExecutor {
       const authResult = this.processAuth(effectiveAuth, context, requestId);
       
       // Merge headers
-      const processedHeaders = this.mergeHeaders(processedRequest.header || [], authResult.headers);
+      const processedHeaders = this.mergeHeaders(processedRequest.header ?? [], authResult.headers);
       
       // Apply auth query parameters if any
       if (authResult.queryParams) {
@@ -189,17 +191,18 @@ export class RequestExecutor {
         const bodyConfig = processedRequest.body;
         
         switch (bodyConfig.mode) {
-          case 'raw':
+          case 'raw': {
             fetchOptions.body = requestContext.body || bodyConfig.raw;
             if (!processedHeaders['content-type']) {
               processedHeaders['content-type'] = 'application/json';
             }
             break;
+          }
             
-          case 'form-data':
+          case 'form-data': {
             if (bodyConfig.formdata) {
               const formData = new FormData();
-              bodyConfig.formdata.forEach((param: any) => {
+              bodyConfig.formdata.forEach((param: FormDataParameter) => {
                 if (param.type === 'file' && param.value?.src) {
                   // File handling would require actual file objects
                   // For now, we'll treat as text
@@ -212,13 +215,15 @@ export class RequestExecutor {
               // Don't set content-type for FormData - browser will set it with boundary
             }
             break;
+          }
             
-          case 'urlencoded':
+          case 'urlencoded': {
             fetchOptions.body = bodyConfig.raw;
             if (!processedHeaders['content-type']) {
               processedHeaders['content-type'] = 'application/x-www-form-urlencoded';
             }
             break;
+          }
             
           default:
             if (requestContext.body) {
@@ -451,23 +456,26 @@ export class RequestExecutor {
     context: VariableContext,
     requestId?: string
   ): { headers: Record<string, string>; queryParams?: Record<string, string> } {
-    if (!auth) return { headers: {} };
+    if (!auth) {
+      return { headers: {} };
+    }
     
     const headers: Record<string, string> = {};
     const queryParams: Record<string, string> = {};
     
     switch (auth.type) {
-      case 'bearer':
-        const token = auth.bearer?.find(item => item.key === 'token')?.value || '';
+      case 'bearer': {
+        const token = auth.bearer?.find(item => item.key === 'token')?.value ?? '';
         const resolvedToken = VariableResolver.resolve(token, context);
         if (resolvedToken) {
           headers['Authorization'] = `Bearer ${resolvedToken}`;
         }
         break;
+      }
         
-      case 'basic':
-        const username = auth.basic?.find(item => item.key === 'username')?.value || '';
-        const password = auth.basic?.find(item => item.key === 'password')?.value || '';
+      case 'basic': {
+        const username = auth.basic?.find(item => item.key === 'username')?.value ?? '';
+        const password = auth.basic?.find(item => item.key === 'password')?.value ?? '';
         const resolvedUsername = VariableResolver.resolve(username, context);
         const resolvedPassword = VariableResolver.resolve(password, context);
         
@@ -476,8 +484,9 @@ export class RequestExecutor {
           headers['Authorization'] = `Basic ${credentials}`;
         }
         break;
+      }
         
-      case 'apikey':
+      case 'apikey': {
         const apiKeyItem = auth.apikey?.find(item => item.key === 'key');
         const apiValueItem = auth.apikey?.find(item => item.key === 'value');
         const apiInItem = auth.apikey?.find(item => item.key === 'in');
@@ -485,7 +494,7 @@ export class RequestExecutor {
         if (apiKeyItem && apiValueItem) {
           const key = VariableResolver.resolve(apiKeyItem.value, context);
           const value = VariableResolver.resolve(apiValueItem.value, context);
-          const location = apiInItem?.value || 'header';
+          const location = apiInItem?.value ?? 'header';
           
           if (key && value) {
             if (location === 'header') {
@@ -496,6 +505,7 @@ export class RequestExecutor {
           }
         }
         break;
+      }
         
       case 'jwt':
         const jwtToken = auth.jwt?.find(item => item.key === 'token')?.value || '';

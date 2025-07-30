@@ -4,6 +4,7 @@ import { enableMapSet } from 'immer';
 import { devtools } from 'zustand/middleware';
 import * as jsonpatch from 'fast-json-patch';
 import { storageService } from '~/services/storage/storageService';
+import { TIMEOUTS } from '~/constants';
 
 // Enable Map/Set support for Immer
 enableMapSet();
@@ -150,7 +151,7 @@ function removeItemFromTree(
 }
 
 // Auto-save debounce delay
-const AUTO_SAVE_DELAY = 1000; // 1 second
+const AUTO_SAVE_DELAY = TIMEOUTS.AUTO_SAVE_DELAY;
 
 let autoSaveTimer: NodeJS.Timeout | null = null;
 

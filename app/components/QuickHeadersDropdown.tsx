@@ -15,8 +15,8 @@ import { createUniversalParameter } from '~/utils/parameterLocations';
 import type { UniversalParameter } from '~/types/postman';
 
 interface QuickHeadersDropdownProps {
-  onAddHeader: (header: UniversalParameter) => void;
-  className?: string;
+  readonly onAddHeader: (header: UniversalParameter) => void;
+  readonly className?: string;
 }
 
 export function QuickHeadersDropdown({ onAddHeader, className }: QuickHeadersDropdownProps) {

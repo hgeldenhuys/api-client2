@@ -16,6 +16,7 @@ import {
   Edit2,
   Trash2
 } from 'lucide-react';
+import { UI, METHOD_COLORS } from '~/constants';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,6 +62,11 @@ function filterItems(
     
     return filtered;
   }, []);
+}
+
+function getMethodColorClasses(method: string): string {
+  const colors = METHOD_COLORS[method as keyof typeof METHOD_COLORS];
+  return colors ? `${colors.text} ${colors.bg}` : '';
 }
 
 export function CollectionExplorer() {
@@ -153,18 +159,14 @@ export function CollectionExplorer() {
             hover:bg-accent rounded-sm group
             ${isActive ? 'bg-accent' : ''}
           `}
-          style={{ paddingLeft: `${(depth * 16) + 8}px` }}
+          style={{ paddingLeft: `${(depth * UI.INDENT_SIZE) + 8}px` }}
           onClick={() => handleRequestClick(collectionId, itemId)}
         >
           <FileText className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm flex-1 truncate">{item.name}</span>
           <span className={`
             text-xs font-medium px-1.5 py-0.5 rounded
-            ${item.request.method === 'GET' ? 'text-green-700 bg-green-100' : ''}
-            ${item.request.method === 'POST' ? 'text-blue-700 bg-blue-100' : ''}
-            ${item.request.method === 'PUT' ? 'text-orange-700 bg-orange-100' : ''}
-            ${item.request.method === 'DELETE' ? 'text-red-700 bg-red-100' : ''}
-            ${item.request.method === 'PATCH' ? 'text-purple-700 bg-purple-100' : ''}
+            ${getMethodColorClasses(item.request.method)}
           `}>
             {item.request.method}
           </span>
@@ -215,7 +217,7 @@ export function CollectionExplorer() {
         <div key={itemId}>
           <div
             className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-accent rounded-sm group"
-            style={{ paddingLeft: `${(depth * 16) + 8}px` }}
+            style={{ paddingLeft: `${(depth * UI.INDENT_SIZE) + 8}px` }}
             onClick={() => toggleFolder(collectionId, itemId)}
           >
             {isExpanded ? (

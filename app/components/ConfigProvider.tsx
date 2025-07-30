@@ -4,8 +4,8 @@ import { ApiClientConfig, DEFAULT_CONFIG } from '~/types/config';
 const ConfigContext = React.createContext<ApiClientConfig>(DEFAULT_CONFIG);
 
 interface ConfigProviderProps {
-  config?: Partial<ApiClientConfig>;
-  children: React.ReactNode;
+  readonly config?: Partial<ApiClientConfig>;
+  readonly children: React.ReactNode;
 }
 
 export function ConfigProvider({ config, children }: ConfigProviderProps) {

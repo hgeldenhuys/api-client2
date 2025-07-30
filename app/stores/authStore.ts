@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Auth, AuthType } from '~/types/postman';
+import { TIMEOUTS, DURATIONS } from '~/constants';
 
 interface AuthCredentials {
   id: string;
@@ -140,7 +141,7 @@ export const useAuthStore = create<AuthState>()(
       
       storeOAuth2Token: (clientId, token) => {
         const expiresAt = token.expiresIn 
-          ? Date.now() + (token.expiresIn * 1000)
+          ? Date.now() + (token.expiresIn * DURATIONS.ONE_SECOND)
           : undefined;
           
         set(state => ({
@@ -276,5 +277,5 @@ if (typeof window !== 'undefined') {
   // Set up periodic cleanup every 5 minutes
   setInterval(() => {
     useAuthStore.getState().clearExpiredTokens();
-  }, 5 * 60 * 1000);
+  }, TIMEOUTS.TOKEN_CLEANUP_INTERVAL);
 }

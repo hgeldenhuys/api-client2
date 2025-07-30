@@ -1,3 +1,5 @@
+import { API } from '~/constants';
+
 export interface VariableContext {
   collection?: Record<string, string>;
   environment?: Record<string, string>;
@@ -15,7 +17,7 @@ export class VariableResolver {
   private static readonly SYSTEM_VARIABLES: Record<string, () => string> = {
     '$timestamp': () => Date.now().toString(),
     '$isoTimestamp': () => new Date().toISOString(),
-    '$randomInt': () => Math.floor(Math.random() * 1000).toString(),
+    '$randomInt': () => Math.floor(Math.random() * API.RANDOM_INT_MAX).toString(),
     '$guid': () => crypto.randomUUID(),
     '$random': () => Math.random().toString(),
   };
@@ -24,7 +26,9 @@ export class VariableResolver {
    * Resolve all variables in a string with recursive resolution
    */
   static resolve(text: string, context: VariableContext): string {
-    if (!text || typeof text !== 'string') return text;
+    if (!text || typeof text !== 'string') {
+      return text;
+    }
     
     let resolved = text;
     let depth = 0;
@@ -51,7 +55,9 @@ export class VariableResolver {
       });
       
       // If nothing changed, break to avoid infinite loop
-      if (beforeResolve === resolved) break;
+      if (beforeResolve === resolved) {
+        break;
+      }
       
       depth++;
     }

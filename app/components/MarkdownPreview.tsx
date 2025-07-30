@@ -3,8 +3,8 @@ import Markdown from 'react-markdown';
 import { cn } from '~/lib/utils';
 
 interface MarkdownPreviewProps {
-  markdown: string;
-  className?: string;
+  readonly markdown: string;
+  readonly className?: string;
 }
 
 export function MarkdownPreview({ markdown, className }: MarkdownPreviewProps) {

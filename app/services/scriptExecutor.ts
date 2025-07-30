@@ -1,5 +1,12 @@
-import type { WorkerMessage, WorkerResult, TestResult } from '~/workers/scriptWorker';
-import { ScriptResult } from '~/types/request';
+import type { 
+  WorkerMessage, 
+  WorkerResult, 
+  TestResult, 
+  ScriptResult,
+  ScriptRequestContext,
+  AuthContext 
+} from '~/types/script';
+import { TIMEOUTS } from '~/constants';
 
 export class ScriptExecutor {
   private worker: Worker | null = null;
@@ -39,11 +46,11 @@ export class ScriptExecutor {
     this.pendingExecutions.delete(id);
     
     if (type === 'error') {
-      pending.reject(new Error(error || 'Unknown script error'));
+      pending.reject(new Error(error ?? 'Unknown script error'));
     } else {
       const result: ScriptResult = {
-        tests: tests || [],
-        consoleOutput: consoleOutput || [],
+        tests: tests ?? [],
+        consoleOutput: consoleOutput ?? [],
         error: undefined,
         requestUpdates: requestUpdates
       };
@@ -75,36 +82,24 @@ export class ScriptExecutor {
   async executePreRequestScript(
     script: string,
     context: {
-      request: {
-        url: string;
-        method: string;
-        headers: Record<string, string>;
-        body: string;
-        auth?: any;
-      };
+      request: ScriptRequestContext;
       environment: Record<string, string>;
       collectionVariables: Record<string, string>;
       globals?: Record<string, string>;
     }
   ): Promise<ScriptResult> {
-    return this.executeScript(script, { ...context, response: undefined, globals: context.globals || {} });
+    return this.executeScript(script, { ...context, response: undefined, globals: context.globals ?? {} });
   }
   
   async executeTestScript(
     script: string,
     context: {
-      request: {
-        url: string;
-        method: string;
-        headers: Record<string, string>;
-        body: string;
-        auth?: any;
-      };
+      request: ScriptRequestContext;
       response: {
         status: number;
         statusText: string;
         headers: Record<string, string>;
-        body: any;
+        body: unknown;
         time: number;
       };
       environment: Record<string, string>;
@@ -122,25 +117,19 @@ export class ScriptExecutor {
     return this.executeScript(script, { 
       ...context, 
       response: transformedResponse,
-      globals: context.globals || {} 
+      globals: context.globals ?? {} 
     });
   }
   
   async executeScript(
     script: string,
     context: {
-      request: {
-        url: string;
-        method: string;
-        headers: Record<string, string>;
-        body?: any;
-        auth?: any;
-      };
+      request: ScriptRequestContext;
       response?: {
         code: number;
         status: string;
         headers: Record<string, string>;
-        body: any;
+        body: unknown;
         responseTime: number;
       };
       environment: Record<string, string>;
@@ -165,13 +154,13 @@ export class ScriptExecutor {
       
       this.worker!.postMessage(message);
       
-      // Timeout after 35 seconds (5 seconds more than worker timeout)
+      // Timeout after script execution timeout
       setTimeout(() => {
         if (this.pendingExecutions.has(id)) {
           this.pendingExecutions.delete(id);
           reject(new Error('Script execution timed out'));
         }
-      }, 35000);
+      }, TIMEOUTS.SCRIPT_EXECUTION_TIMEOUT);
     });
   }
   

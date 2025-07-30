@@ -19,6 +19,7 @@ export interface RequestItem {
   request: Request;
   response?: Response[];
   event?: Event[];
+  auth?: Auth;
   universalParameters?: UniversalParameter[]; // Extension for universal parameter support
 }
 

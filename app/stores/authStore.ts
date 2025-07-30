@@ -92,18 +92,18 @@ export const useAuthStore = create<AuthState>()(
             
           case 'apikey':
             if (auth.apikey) {
-              credentials.credentials.key = auth.apikey.find(p => p.key === 'key')?.value || '';
-              credentials.credentials.value = auth.apikey.find(p => p.key === 'value')?.value || '';
-              credentials.credentials.in = auth.apikey.find(p => p.key === 'in')?.value || 'header';
+              credentials.credentials.key = auth.apikey.find(p => p.key === 'key')?.value ?? '';
+              credentials.credentials.value = auth.apikey.find(p => p.key === 'value')?.value ?? '';
+              credentials.credentials.in = auth.apikey.find(p => p.key === 'in')?.value ?? 'header';
             }
             break;
             
-          case 'oauth2':
+          case 'oauth2': {
             if (auth.oauth2) {
-              credentials.credentials.accessToken = auth.oauth2.find(p => p.key === 'accessToken')?.value || '';
-              credentials.credentials.clientId = auth.oauth2.find(p => p.key === 'clientId')?.value || '';
-              credentials.credentials.clientSecret = auth.oauth2.find(p => p.key === 'clientSecret')?.value || '';
-              credentials.credentials.grantType = auth.oauth2.find(p => p.key === 'grant_type')?.value || 'authorization_code';
+              credentials.credentials.accessToken = auth.oauth2.find(p => p.key === 'accessToken')?.value ?? '';
+              credentials.credentials.clientId = auth.oauth2.find(p => p.key === 'clientId')?.value ?? '';
+              credentials.credentials.clientSecret = auth.oauth2.find(p => p.key === 'clientSecret')?.value ?? '';
+              credentials.credentials.grantType = auth.oauth2.find(p => p.key === 'grant_type')?.value ?? 'authorization_code';
               
               const refreshToken = auth.oauth2.find(p => p.key === 'refreshToken')?.value;
               if (refreshToken) {
@@ -111,13 +111,15 @@ export const useAuthStore = create<AuthState>()(
               }
             }
             break;
+          }
             
-          case 'jwt':
+          case 'jwt': {
             if (auth.jwt) {
-              credentials.credentials.token = auth.jwt.find(p => p.key === 'token')?.value || '';
-              credentials.credentials.prefix = auth.jwt.find(p => p.key === 'prefix')?.value || 'Bearer';
+              credentials.credentials.token = auth.jwt.find(p => p.key === 'token')?.value ?? '';
+              credentials.credentials.prefix = auth.jwt.find(p => p.key === 'prefix')?.value ?? 'Bearer';
             }
             break;
+          }
             
           // Add other auth types as needed
         }

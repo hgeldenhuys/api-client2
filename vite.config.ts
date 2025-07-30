@@ -9,7 +9,9 @@ export default defineConfig({
     tailwindcss(), 
     reactRouter(), 
     tsconfigPaths(),
-    monacoEditorPlugin.default({
+    (monacoEditorPlugin as any).default ? (monacoEditorPlugin as any).default({
+      languageWorkers: ['editorWorkerService', 'typescript', 'json', 'html', 'css']
+    }) : monacoEditorPlugin({
       languageWorkers: ['editorWorkerService', 'typescript', 'json', 'html', 'css']
     })
   ],

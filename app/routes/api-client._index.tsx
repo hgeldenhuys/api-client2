@@ -15,7 +15,7 @@ import { ConfigProvider } from "~/components/ConfigProvider";
 import { useCollectionStore } from "~/stores/collectionStore";
 import { useEnvironmentStore } from "~/stores/environmentStore";
 import { useTheme } from "~/stores/themeStore";
-import { getThemeFromRequest } from "~/cookies/theme.server";
+import { getThemeFromRequest, type ThemeMode } from "~/cookies/theme.server";
 import { demoCollection } from "~/utils/demo-collection";
 
 export function meta({}: Route.MetaArgs) {
@@ -31,6 +31,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
+  const data = loaderData as { theme?: ThemeMode } | undefined;
   const { collections, addCollection, init: initCollections, isInitialized: collectionsInitialized } = useCollectionStore();
   const { init: initEnvironments } = useEnvironmentStore();
   const { initializeFromServer } = useTheme();
@@ -49,8 +50,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   
   // Initialize theme from server
   useEffect(() => {
-    initializeFromServer(loaderData.theme);
-  }, [loaderData.theme, initializeFromServer]);
+    if (data?.theme) {
+      initializeFromServer(data.theme);
+    }
+  }, [data?.theme, initializeFromServer]);
   
   // Add demo collection after initialization
   useEffect(() => {

@@ -212,9 +212,9 @@ test.describe('Parameter Field Focus - Comprehensive Test Suite', () => {
     console.log('\n📊 COMPREHENSIVE TEST RESULTS');
     console.log('===============================');
     console.log(`Key field focus losses: ${keyFocusLossCount}`);
-    console.log(`Value field focus losses: ${valueFocusLossCount || 0}`);
+    console.log(`Value field focus losses: ${valueFocusLossCount ?? 0}`);
     
-    if (keyFocusLossCount > 0 || (valueFocusLossCount || 0) > 0) {
+    if (keyFocusLossCount > 0 || (valueFocusLossCount ?? 0) > 0) {
       console.log('\n🐛 FOCUS LOSS BUG CONFIRMED!');
       console.log('Users experience focus interruption when typing in parameter fields');
       console.log('This affects the user experience by disrupting typing flow');

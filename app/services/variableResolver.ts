@@ -112,7 +112,9 @@ export class VariableResolver {
    * Resolve variables in an object recursively
    */
   static resolveObject<T extends Record<string, any>>(obj: T, context: VariableContext): T {
-    if (!obj || typeof obj !== 'object') return obj;
+    if (!obj || typeof obj !== 'object') {
+      return obj;
+    }
     
     const resolved = Array.isArray(obj) ? [...obj] : { ...obj };
     
@@ -191,7 +193,9 @@ export class VariableResolver {
    * Get all variables used in a text
    */
   static extractVariables(text: string): string[] {
-    if (!text || typeof text !== 'string') return [];
+    if (!text || typeof text !== 'string') {
+      return [];
+    }
     
     const matches = text.matchAll(this.VARIABLE_PATTERN);
     const variables = new Set<string>();

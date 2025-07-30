@@ -26,6 +26,8 @@ import { AddVariableDialog } from '~/components/AddVariableDialog';
 import { useVariableContext } from '~/hooks/useVariableContext';
 import { useTheme } from '~/stores/themeStore';
 import { AuthenticationEditor } from '~/components/AuthenticationEditor';
+import { useContentTypeSync } from '~/hooks/useContentTypeSync';
+import { LANGUAGE_OPTIONS } from '~/utils/contentTypeLanguageMap';
 
 const MonacoEditor = React.lazy(() => 
   import('./MonacoEditor').then(module => ({ default: module.MonacoEditor }))
@@ -113,8 +115,8 @@ export function RequestBuilder() {
   
   // Universal parameters using custom hook to isolate state management
   const {
-    parameters: universalParams,
-    setParameters: setUniversalParams,
+    parameters,
+    setParameters,
     loadParameters,
     isUrlSyncEnabled,
     setIsUrlSyncEnabled
@@ -139,6 +141,14 @@ export function RequestBuilder() {
   
   // URL and parameter synchronization is now handled by the useUniversalParameters hook
   // This isolates parameter state management and prevents cascading re-renders
+  
+  // Sync editor language with Content-Type header
+  const { language, setLanguage, isTextBased } = useContentTypeSync({
+    activeRequestId: activeRequestId || undefined,
+    parameters,
+    onParametersChange: setParameters,
+    defaultLanguage: 'json'
+  });
   
   // Auto-save functionality
   const saveRequest = React.useCallback(() => {
@@ -169,7 +179,7 @@ export function RequestBuilder() {
 
       updateRequest(activeCollectionId, activeRequestId, {
         ...request,
-        universalParameters: universalParams, // Save universal parameters
+        universalParameters: parameters, // Save universal parameters
         request: {
           ...request.request,
           method,
@@ -181,7 +191,7 @@ export function RequestBuilder() {
             query: [],
             variable: []
           },
-          header: universalParams
+          header: parameters
             .filter(p => p.location === 'header')
             .map(p => ({
               key: p.key,
@@ -198,7 +208,7 @@ export function RequestBuilder() {
         auth: request.auth // Also save at request item level
       });
     }
-  }, [activeCollectionId, activeRequestId, method, url, bodyMode, bodyContent, preRequestScript, testScript, universalParams, updateRequest, findRequestById]);
+  }, [activeCollectionId, activeRequestId, method, url, bodyMode, bodyContent, preRequestScript, testScript, parameters, updateRequest, findRequestById]);
 
   const debouncedSave = useDebounce(saveRequest, 1000);
 
@@ -207,7 +217,7 @@ export function RequestBuilder() {
     if (activeCollectionId && activeRequestId && !isInitialLoad) {
       debouncedSave();
     }
-  }, [method, url, bodyMode, bodyContent, preRequestScript, testScript, universalParams]);
+  }, [method, url, bodyMode, bodyContent, preRequestScript, testScript, parameters]);
   
   // Note: Removed problematic effect that was preventing URL input editing
   // urlInputValue is now only synced from url during initial load and parameter changes
@@ -261,7 +271,7 @@ export function RequestBuilder() {
       setBodyContent('');
       setPreRequestScript('');
       setTestScript('');
-      setUniversalParams([]);
+      setParameters([]);
       setIsInitialLoad(true);
     }
   }, [activeCollectionId, activeRequestId, findRequestById, setActiveRequest]);
@@ -269,10 +279,10 @@ export function RequestBuilder() {
   const handleSendRequest = async () => {
     if (!url) return;
     
-    const grouped = groupParametersByLocation(universalParams);
+    const grouped = groupParametersByLocation(parameters);
     
     // Build URL with query parameters AND path variables replaced
-    const finalUrl = buildUrlWithReplacedVariables(url, universalParams);
+    const finalUrl = buildUrlWithReplacedVariables(url, parameters);
     const processedUrl = replaceVariables(finalUrl);
     
     // Build headers from universal parameters
@@ -336,7 +346,7 @@ export function RequestBuilder() {
         ...request.request,
         url,
         method,
-        header: universalParams
+        header: parameters
           .filter(p => p.location === 'header' && p.enabled)
           .map(p => ({ key: p.key, value: p.value, enabled: p.enabled }))
       },
@@ -522,19 +532,39 @@ export function RequestBuilder() {
           
           <TabsContent value="body" className="h-[calc(100%-40px)] p-4">
             <div className="space-y-4">
-              <div>
-                <Label>Body Type</Label>
-                <Select value={bodyMode} onValueChange={(v) => setBodyMode(v as any)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="raw">Raw</SelectItem>
-                    <SelectItem value="form-data">Form Data</SelectItem>
-                    <SelectItem value="x-www-form-urlencoded">x-www-form-urlencoded</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Label>Body Type</Label>
+                  <Select value={bodyMode} onValueChange={(v) => setBodyMode(v as any)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="raw">Raw</SelectItem>
+                      <SelectItem value="form-data">Form Data</SelectItem>
+                      <SelectItem value="x-www-form-urlencoded">x-www-form-urlencoded</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {bodyMode === 'raw' && (
+                  <div className="flex-1">
+                    <Label>Language</Label>
+                    <Select value={language} onValueChange={setLanguage}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGE_OPTIONS.map(option => (
+                          <SelectItem key={option.id} value={option.monacoLanguage}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
               
               {bodyMode === 'raw' && (
@@ -544,7 +574,7 @@ export function RequestBuilder() {
                       key={`body-${activeRequestId}`}
                       value={bodyContent}
                       onChange={(value) => setBodyContent(value || '')}
-                      language="json"
+                      language={language}
                       theme={theme === "dark" ? "vs-dark" : "vs"}
                       placeholder='{\n  "key": "value"\n}'
                     />
@@ -577,8 +607,8 @@ export function RequestBuilder() {
           
           <TabsContent value="params" className="h-[calc(100%-40px)] p-0">
             <UniversalParametersEditor
-              parameters={universalParams}
-              onChange={setUniversalParams}
+              parameters={parameters}
+              onChange={setParameters}
             />
           </TabsContent>
           

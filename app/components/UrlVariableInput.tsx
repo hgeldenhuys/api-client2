@@ -5,13 +5,15 @@ import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '~/lib/utils';
 
 interface UrlVariableInputProps {
-  value: string;
-  vars?: Record<string, string>;
-  onAddVariable?: (variableName: string) => void;
-  onChange?: (value: string) => void;
-  placeholder?: string;
-  className?: string;
-  showPreviewButton?: boolean;
+  readonly value: string;
+  readonly vars?: Record<string, string>;
+  readonly onAddVariable?: (variableName: string) => void;
+  readonly onChange?: (value: string) => void;
+  readonly placeholder?: string;
+  readonly className?: string;
+  readonly showPreviewButton?: boolean;
+  readonly id?: string;
+  readonly type?: string;
 }
 
 export const UrlVariableInput: React.FC<UrlVariableInputProps> = ({
@@ -21,7 +23,9 @@ export const UrlVariableInput: React.FC<UrlVariableInputProps> = ({
                                                                     onChange,
                                                                     placeholder,
                                                                     className = '',
-                                                                    showPreviewButton = true
+                                                                    showPreviewButton = true,
+                                                                    id,
+                                                                    type
                                                                   }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const displayRef = useRef<HTMLDivElement>(null);
@@ -132,7 +136,8 @@ export const UrlVariableInput: React.FC<UrlVariableInputProps> = ({
           {/* Hidden input field */}
           <input
             ref={inputRef}
-            type="text"
+            id={id}
+            type={type ?? "text"}
             value={value}
             onChange={(e) => onChange?.(e.target.value)}
             onScroll={handleScroll}

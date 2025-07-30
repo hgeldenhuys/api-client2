@@ -432,6 +432,7 @@ self.addEventListener('message', async (event: MessageEvent<WorkerMessage>) => {
       const pm = createPMObject(context);
       
       // Create execution function with timeout
+      // NOSONAR - Dynamic code execution is required for script functionality in isolated worker
       const executeScript = new Function('pm', script);
       
       // Set up timeout

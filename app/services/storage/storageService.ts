@@ -15,7 +15,9 @@ export class StorageService {
    * Initialize the database
    */
   async init(): Promise<void> {
-    if (this.isInitialized) return;
+    if (this.isInitialized) {
+      return;
+    }
 
     try {
       this.db = await openDB<ApiClientDB>(DB_NAME, DB_VERSION, {
@@ -86,7 +88,9 @@ export class StorageService {
     const salt = await this.getSetting<Uint8Array>('encryption-salt');
     const verificationData = await this.getSetting<string>('encryption-verification');
     
-    if (!salt || !verificationData) return false;
+    if (!salt || !verificationData) {
+      return false;
+    }
 
     try {
       const key = await EncryptionService.deriveKey(password, salt);
@@ -112,7 +116,9 @@ export class StorageService {
    * Save a collection
    */
   async saveCollection(collection: PostmanCollection): Promise<string> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     const id = collection.info._postman_id || crypto.randomUUID();
     const now = new Date();
@@ -148,10 +154,14 @@ export class StorageService {
    * Get a collection by ID
    */
   async getCollection(id: string): Promise<PostmanCollection | null> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     const metadata = await this.db.get('collections', id);
-    if (!metadata) return null;
+    if (!metadata) {
+      return null;
+    }
 
     let collection = metadata.collection;
 
@@ -171,7 +181,9 @@ export class StorageService {
    * Get all collections
    */
   async getAllCollections(): Promise<PostmanCollection[]> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     const allMetadata = await this.db.getAll('collections');
     const collections: PostmanCollection[] = [];
@@ -198,7 +210,9 @@ export class StorageService {
    * Delete a collection
    */
   async deleteCollection(id: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     await this.db.delete('collections', id);
     
@@ -218,7 +232,9 @@ export class StorageService {
    * Save an environment
    */
   async saveEnvironment(environment: Environment): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     let envData = { ...environment };
     let encryptedVariables: string[] = [];
@@ -257,10 +273,14 @@ export class StorageService {
    * Get an environment by ID
    */
   async getEnvironment(id: string): Promise<Environment | null> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     const storedEnv = await this.db.get('environments', id);
-    if (!storedEnv) return null;
+    if (!storedEnv) {
+      return null;
+    }
 
     let environment: Environment = {
       id: storedEnv.id,
@@ -328,7 +348,9 @@ export class StorageService {
    * Get all environments
    */
   async getAllEnvironments(): Promise<Environment[]> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     const allStored = await this.db.getAll('environments');
     const environments: Environment[] = [];
@@ -403,7 +425,9 @@ export class StorageService {
    * Delete an environment
    */
   async deleteEnvironment(id: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     await this.db.delete('environments', id);
   }
@@ -471,7 +495,9 @@ export class StorageService {
    * Save request execution history
    */
   async saveRequestExecution(execution: Omit<RequestExecution, 'id'>): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     const id = crypto.randomUUID();
     const record: RequestExecution = {
@@ -489,7 +515,9 @@ export class StorageService {
     requestId: string,
     limit: number = 10
   ): Promise<RequestExecution[]> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     const tx = this.db.transaction('history', 'readonly');
     const index = tx.store.index('by-request');
@@ -505,7 +533,9 @@ export class StorageService {
    * Clear all history
    */
   async clearHistory(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     const tx = this.db.transaction('history', 'readwrite');
     await tx.store.clear();
@@ -516,7 +546,9 @@ export class StorageService {
    * Get a setting
    */
   private async getSetting<T>(key: string): Promise<T | null> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     const setting = await this.db.get('settings', key);
     return setting?.value ?? null;
@@ -526,7 +558,9 @@ export class StorageService {
    * Set a setting
    */
   private async setSetting(key: string, value: any): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     await this.db.put('settings', { key, value });
   }
@@ -549,7 +583,9 @@ export class StorageService {
    * Export all data (for backup)
    */
   async exportAllData(includeEncrypted: boolean = false): Promise<any> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
     const collections = await this.db.getAll('collections');
     const environments = await this.db.getAll('environments');

@@ -154,6 +154,8 @@ export function CollectionExplorer() {
       return (
         <div
           key={itemId}
+          role="button"
+          tabIndex={0}
           className={`
             flex items-center gap-2 px-2 py-1.5 cursor-pointer
             hover:bg-accent rounded-sm group
@@ -161,6 +163,12 @@ export function CollectionExplorer() {
           `}
           style={{ paddingLeft: `${(depth * UI.INDENT_SIZE) + 8}px` }}
           onClick={() => handleRequestClick(collectionId, itemId)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleRequestClick(collectionId, itemId);
+            }
+          }}
         >
           <FileText className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm flex-1 truncate">{item.name}</span>
@@ -216,9 +224,17 @@ export function CollectionExplorer() {
       return (
         <div key={itemId}>
           <div
+            role="button"
+            tabIndex={0}
             className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-accent rounded-sm group"
             style={{ paddingLeft: `${(depth * UI.INDENT_SIZE) + 8}px` }}
             onClick={() => toggleFolder(collectionId, itemId)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleFolder(collectionId, itemId);
+              }
+            }}
           >
             {isExpanded ? (
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -342,12 +358,20 @@ export function CollectionExplorer() {
               return (
                 <div key={id} className="mb-4">
                   <div 
+                    role="button"
+                    tabIndex={0}
                     className={`
                       flex items-center gap-2 px-2 py-1.5 rounded-sm cursor-pointer
                       hover:bg-accent font-medium
                       ${activeCollectionId === id ? 'bg-accent' : ''}
                     `}
                     onClick={() => setActiveCollection(id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setActiveCollection(id);
+                      }
+                    }}
                   >
                     <Folder className="h-4 w-4" />
                     <span className="text-sm flex-1 truncate">{collection.info.name}</span>

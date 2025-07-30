@@ -7,6 +7,11 @@
     "**/.client/**/*.ts",
     "**/.client/**/*.tsx"
   ],
+  "exclude": [
+    "node_modules",
+    ".react-router/**/*",
+    ".react-router"
+  ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["@react-router/node", "vite/client", "bun"],
@@ -24,6 +29,7 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./app/*"],
+      "~/+types/*": ["./.react-router/types/app/routes/+types/*"],
       "@lib/*": ["./lib/*"],
       "@cld/*": ["./.claude/*"]
     },

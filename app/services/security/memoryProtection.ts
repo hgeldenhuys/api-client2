@@ -109,7 +109,7 @@ export class MemoryProtection {
         if (sensitiveKeySet.has(prop as keyof T)) {
           // Mark sensitive data
           if (typeof value === 'object' && value !== null) {
-            this.markSensitive(value);
+            MemoryProtection.markSensitive(value);
           }
         }
         
@@ -121,7 +121,7 @@ export class MemoryProtection {
         if (sensitiveKeySet.has(prop as keyof T)) {
           const value = (obj as any)[prop];
           if (typeof value === 'object' && value !== null) {
-            this.clearSensitiveData(value);
+            MemoryProtection.clearSensitiveData(value);
           }
         }
         

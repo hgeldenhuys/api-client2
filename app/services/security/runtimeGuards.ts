@@ -22,11 +22,11 @@ export class RuntimeGuards {
       this.originalFunctions.set(`${storeName}.getState`, originalGetState);
       
       store.getState = () => {
-        this.logAccess(storeName, 'getState');
+        RuntimeGuards.logAccess(storeName, 'getState');
         const state = originalGetState();
         
         // Return a deep clone to prevent reference retention
-        return this.createSecureCopy(state);
+        return RuntimeGuards.createSecureCopy(state);
       };
     }
 
@@ -36,12 +36,12 @@ export class RuntimeGuards {
       this.originalFunctions.set(`${storeName}.setState`, originalSetState);
       
       store.setState = (updater: any, replace?: boolean) => {
-        this.logAccess(storeName, 'setState');
+        RuntimeGuards.logAccess(storeName, 'setState');
         
         // Validate the updater function
         if (typeof updater === 'function') {
           const updaterString = updater.toString();
-          if (this.detectMaliciousCode(updaterString)) {
+          if (RuntimeGuards.detectMaliciousCode(updaterString)) {
             console.error('Potentially malicious state update detected and blocked');
             return;
           }
@@ -57,7 +57,7 @@ export class RuntimeGuards {
       this.originalFunctions.set(`${storeName}.subscribe`, originalSubscribe);
       
       store.subscribe = (listener: Function) => {
-        this.logAccess(storeName, 'subscribe');
+        RuntimeGuards.logAccess(storeName, 'subscribe');
         
         // Wrap listener to detect malicious behavior
         const secureListener = (...args: any[]) => {
@@ -174,12 +174,12 @@ export class RuntimeGuards {
       (window as any).eval = function(code: string) {
         console.warn('eval() usage detected - potential security risk');
         
-        if (typeof code === 'string' && this.detectMaliciousCode(code)) {
+        if (typeof code === 'string' && RuntimeGuards.detectMaliciousCode(code)) {
           throw new Error('Malicious eval() attempt blocked');
         }
         
         return originalEval.call(this, code);
-      }.bind(this);
+      };
     }
 
     // Protect against Function constructor

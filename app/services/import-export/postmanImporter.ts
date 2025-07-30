@@ -16,8 +16,12 @@ export class PostmanImporter {
     if (!data.info) {
       errors.push('Missing required field: info');
     } else {
-      if (!data.info.name) errors.push('Missing required field: info.name');
-      if (!data.info.schema) errors.push('Missing required field: info.schema');
+      if (!data.info.name) {
+        errors.push('Missing required field: info.name');
+      }
+      if (!data.info.schema) {
+        errors.push('Missing required field: info.schema');
+      }
     }
 
     if (!data.item || !Array.isArray(data.item)) {
@@ -123,7 +127,9 @@ export class PostmanImporter {
    * Sanitizes auth configuration to ensure it's valid
    */
   private static sanitizeAuth(auth: any): any {
-    if (!auth || !auth.type) return auth;
+    if (!auth || !auth.type) {
+      return auth;
+    }
     
     // Ensure the auth type is valid
     const validAuthTypes = [

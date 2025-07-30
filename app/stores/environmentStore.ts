@@ -52,6 +52,11 @@ interface EnvironmentState {
   resolveVariable: (key: string) => string | undefined;
   resolveAllVariables: () => Record<string, string>;
   replaceVariables: (text: string) => string;
+  
+  // Helper methods for useVariableContext
+  updateEnvironmentVariable: (environmentId: string, key: string, value: string) => void;
+  addEnvironmentVariable: (environmentId: string, key: string, value: string) => void;
+  deleteEnvironmentVariable: (environmentId: string, key: string) => void;
 }
 
 function generateId(): string {
@@ -238,13 +243,13 @@ export const useEnvironmentStore = create<EnvironmentState>()(
                   env.values[variable.key] = variable.value;
                   // Remove from secrets if it was there
                   delete env.secrets[variable.key];
-                  env.secretKeys = env.secretKeys.filter(k => k !== variable.key);
+                  env.secretKeys = env.secretKeys.filter((k: string) => k !== variable.key);
                 }
               } else {
                 // Delete from both when disabled
                 delete env.values[variable.key];
                 delete env.secrets[variable.key];
-                env.secretKeys = env.secretKeys.filter(k => k !== variable.key);
+                env.secretKeys = env.secretKeys.filter((k: string) => k !== variable.key);
               }
             }
           });
@@ -446,13 +451,13 @@ export const useEnvironmentStore = create<EnvironmentState>()(
               // Add regular variables
               if (env.values) {
                 Object.entries(env.values).forEach(([key, value]) => {
-                  rawVariables[key] = value;
+                  rawVariables[key] = value as string;
                 });
               }
               // Add secrets (they override regular variables)
               if (env.secrets) {
                 Object.entries(env.secrets).forEach(([key, value]) => {
-                  rawVariables[key] = value;
+                  rawVariables[key] = value as string;
                 });
               }
             }
@@ -527,6 +532,24 @@ export const useEnvironmentStore = create<EnvironmentState>()(
           
           // Use VariableResolver for recursive resolution
           return VariableResolver.resolve(text, context);
+        },
+        
+        // Helper methods for useVariableContext
+        updateEnvironmentVariable: (environmentId, key, value) => {
+          get().updateVariable(environmentId, key, { value });
+        },
+        
+        addEnvironmentVariable: (environmentId, key, value) => {
+          get().addVariable(environmentId, {
+            key,
+            value,
+            type: 'default',
+            enabled: true
+          });
+        },
+        
+        deleteEnvironmentVariable: (environmentId, key) => {
+          get().deleteVariable(environmentId, key);
         }
       }))
   )

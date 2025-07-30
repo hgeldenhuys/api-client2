@@ -36,13 +36,16 @@ export class RequestExecutor {
     // Build variable context using store methods to ensure fresh state
     const context = this.buildVariableContext(envStore, collectionVariables);
     
+    // Declare targetUrl for error handling scope
+    let targetUrl = '';
+    
     try {
       // Process entire request with variables
       const processedRequest = VariableResolver.resolveRequest(request, context);
       
       // Apply authentication with caching
       const requestId = `${options.request.url}-${options.request.method}`;
-      const effectiveAuth = processedRequest.auth ?? collectionAuth;
+      let effectiveAuth = processedRequest.auth ?? collectionAuth;
       
       // Store auth credentials for reuse
       if (effectiveAuth) {
@@ -67,10 +70,10 @@ export class RequestExecutor {
       const requestContext = {
         url: typeof processedRequest.url === 'string' 
           ? processedRequest.url 
-          : processedRequest.url?.raw || '',
+          : processedRequest.url?.raw ?? '',
         method: processedRequest.method,
         headers: processedHeaders,
-        body: processedRequest.body?.raw || '',
+        body: processedRequest.body?.raw ?? '',
         auth: effectiveAuth
       };
       
@@ -161,7 +164,18 @@ export class RequestExecutor {
       }
       
       // Re-process auth if it was updated by script
-      if (requestUpdates.auth !== undefined) {
+      let requestUpdates: any = undefined;
+      try {
+        const requestStore = useRequestStore.getState();
+        const preRequestResult = requestStore.preRequestScriptResult;
+        if (preRequestResult?.requestUpdates) {
+          requestUpdates = preRequestResult.requestUpdates;
+        }
+      } catch {
+        // Ignore if requestStore is not available
+      }
+      
+      if (requestUpdates?.auth !== undefined) {
         const newAuthResult = this.processAuth(effectiveAuth, context, requestId);
         
         // Update headers with new auth
@@ -192,7 +206,7 @@ export class RequestExecutor {
         
         switch (bodyConfig.mode) {
           case 'raw': {
-            fetchOptions.body = requestContext.body || bodyConfig.raw;
+            fetchOptions.body = requestContext.body ?? bodyConfig.raw;
             if (!processedHeaders['content-type']) {
               processedHeaders['content-type'] = 'application/json';
             }
@@ -203,12 +217,12 @@ export class RequestExecutor {
             if (bodyConfig.formdata) {
               const formData = new FormData();
               bodyConfig.formdata.forEach((param: FormDataParameter) => {
-                if (param.type === 'file' && param.value?.src) {
+                if (param.type === 'file' && param.src) {
                   // File handling would require actual file objects
                   // For now, we'll treat as text
-                  formData.append(param.key, param.value.src);
+                  formData.append(param.key, param.src);
                 } else {
-                  formData.append(param.key, param.value);
+                  formData.append(param.key, param.value as string);
                 }
               });
               fetchOptions.body = formData;
@@ -234,8 +248,8 @@ export class RequestExecutor {
         }
       }
       
-      // Declare targetUrl outside try-catch for proper scope access
-      const targetUrl = requestContext.url;
+      // Update targetUrl for error handling
+      targetUrl = requestContext.url;
       
       // Check if proxy is enabled
       const proxyStore = useProxyStore.getState();
@@ -270,7 +284,7 @@ export class RequestExecutor {
       
       // Get response body
       let responseBody: any;
-      const contentType = response.headers.get('content-type') || '';
+      const contentType = response.headers.get('content-type') ?? '';
       
       if (contentType.includes('application/json')) {
         responseBody = await response.json();
@@ -424,8 +438,8 @@ export class RequestExecutor {
     
     const context: VariableContext = {
       collection: collectionVariables,
-      environment: activeEnv?.values || {},
-      secrets: activeEnv?.secrets || {},
+      environment: activeEnv?.values ?? {},
+      secrets: activeEnv?.secrets ?? {},
       globals
     };
     
@@ -507,18 +521,19 @@ export class RequestExecutor {
         break;
       }
         
-      case 'jwt':
-        const jwtToken = auth.jwt?.find(item => item.key === 'token')?.value || '';
-        const jwtPrefix = auth.jwt?.find(item => item.key === 'prefix')?.value || 'Bearer';
+      case 'jwt': {
+        const jwtToken = auth.jwt?.find(item => item.key === 'token')?.value ?? '';
+        const jwtPrefix = auth.jwt?.find(item => item.key === 'prefix')?.value ?? 'Bearer';
         const resolvedJwtToken = VariableResolver.resolve(jwtToken, context);
         if (resolvedJwtToken) {
           headers['Authorization'] = `${jwtPrefix} ${resolvedJwtToken}`;
         }
         break;
+      }
         
-      case 'oauth2':
-        const accessToken = auth.oauth2?.find(item => item.key === 'accessToken')?.value || '';
-        const clientId = auth.oauth2?.find(item => item.key === 'clientId')?.value || '';
+      case 'oauth2': {
+        const accessToken = auth.oauth2?.find(item => item.key === 'accessToken')?.value ?? '';
+        const clientId = auth.oauth2?.find(item => item.key === 'clientId')?.value ?? '';
         const resolvedClientId = VariableResolver.resolve(clientId, context);
         
         // Try to get cached OAuth2 token first
@@ -526,7 +541,7 @@ export class RequestExecutor {
         const cachedToken = resolvedClientId ? authStore.getOAuth2Token(resolvedClientId) : undefined;
         
         if (cachedToken?.accessToken) {
-          headers['Authorization'] = `${cachedToken.tokenType || 'Bearer'} ${cachedToken.accessToken}`;
+          headers['Authorization'] = `${cachedToken.tokenType ?? 'Bearer'} ${cachedToken.accessToken}`;
         } else {
           // Fall back to provided access token
           const resolvedAccessToken = VariableResolver.resolve(accessToken, context);
@@ -543,47 +558,54 @@ export class RequestExecutor {
           }
         }
         break;
+      }
         
-      case 'oauth1':
+      case 'oauth1': {
         // OAuth 1.0 requires signature generation which is complex
         // For now, we'll add a placeholder
         console.warn('OAuth 1.0 authentication not fully implemented yet');
         // TODO: Implement OAuth 1.0 signature generation
         break;
+      }
         
-      case 'awsv4':
+      case 'awsv4': {
         // AWS Signature v4 is complex and requires request signing
         console.warn('AWS Signature v4 authentication not fully implemented yet');
         // TODO: Implement AWS v4 signature
         break;
+      }
         
-      case 'digest':
+      case 'digest': {
         // Digest auth requires challenge-response flow
         console.warn('Digest authentication not fully implemented yet');
         // TODO: Implement Digest auth
         break;
+      }
         
-      case 'hawk':
+      case 'hawk': {
         // Hawk authentication requires MAC generation
         console.warn('Hawk authentication not fully implemented yet');
         // TODO: Implement Hawk auth
         break;
+      }
         
-      case 'ntlm':
+      case 'ntlm': {
         // NTLM requires challenge-response flow
         console.warn('NTLM authentication not fully implemented yet');
         // TODO: Implement NTLM auth
         break;
+      }
         
-      case 'custom':
-        const headerName = auth.custom?.find(item => item.key === 'headerName')?.value || 'Authorization';
-        const headerValue = auth.custom?.find(item => item.key === 'headerValue')?.value || '';
+      case 'custom': {
+        const headerName = auth.custom?.find(item => item.key === 'headerName')?.value ?? 'Authorization';
+        const headerValue = auth.custom?.find(item => item.key === 'headerValue')?.value ?? '';
         const resolvedHeaderName = VariableResolver.resolve(headerName, context);
         const resolvedHeaderValue = VariableResolver.resolve(headerValue, context);
         if (resolvedHeaderName && resolvedHeaderValue) {
           headers[resolvedHeaderName] = resolvedHeaderValue;
         }
         break;
+      }
     }
     
     return { 

@@ -57,12 +57,16 @@ export function headers() {
   };
 }
 
+function getThemeClass(resolvedTheme?: 'light' | 'dark'): string {
+  return resolvedTheme === 'dark' ? 'dark' : '';
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData("root") as { theme: 'light' | 'dark' | 'system'; resolvedTheme: 'light' | 'dark' } | undefined;
   
   // Apply both theme attribute and resolved class for proper SSR
   return (
-    <html lang="en" data-theme={data?.theme || 'system'} className={data?.resolvedTheme === 'dark' ? 'dark' : ''}>
+    <html lang="en" data-theme={data?.theme ?? 'system'} className={getThemeClass(data?.resolvedTheme)}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

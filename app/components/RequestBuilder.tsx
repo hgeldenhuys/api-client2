@@ -25,6 +25,7 @@ import { UrlVariableInput } from '~/components/UrlVariableInput';
 import { AddVariableDialog } from '~/components/AddVariableDialog';
 import { useVariableContext } from '~/hooks/useVariableContext';
 import { useTheme } from '~/stores/themeStore';
+import { AuthenticationEditor } from '~/components/AuthenticationEditor';
 
 const MonacoEditor = React.lazy(() => 
   import('./MonacoEditor').then(module => ({ default: module.MonacoEditor }))
@@ -67,7 +68,8 @@ export function RequestBuilder() {
     openTabs,
     closeTab,
     findRequestById,
-    updateRequest 
+    updateRequest,
+    collections 
   } = useCollectionStore();
   
   const {
@@ -364,6 +366,9 @@ export function RequestBuilder() {
     );
   }
   
+  const request = activeCollectionId && activeRequestId ? findRequestById(activeCollectionId, activeRequestId) : null;
+  const collection = activeCollectionId ? collections.get(activeCollectionId) : null;
+  
   return (
     <div className="h-full flex flex-col">
       {/* Tabs */}
@@ -552,10 +557,19 @@ export function RequestBuilder() {
             </div>
           </TabsContent>
           
-          <TabsContent value="auth" className="h-[calc(100%-40px)] p-4">
-            <div className="text-muted-foreground text-sm">
-              Authentication configuration coming soon...
-            </div>
+          <TabsContent value="auth" className="h-[calc(100%-40px)] p-4 overflow-y-auto">
+            <AuthenticationEditor
+              auth={request?.auth}
+              onChange={(auth) => {
+                if (activeCollectionId && activeRequestId && request) {
+                  updateRequest(activeCollectionId, activeRequestId, {
+                    ...request,
+                    auth
+                  });
+                }
+              }}
+              collectionAuth={collection?.collection.auth}
+            />
           </TabsContent>
           
           <TabsContent value="params" className="h-[calc(100%-40px)] p-0">

@@ -144,6 +144,8 @@ export interface Auth {
   oauth1?: AuthParam[];
   oauth2?: AuthParam[];
   ntlm?: AuthParam[];
+  jwt?: AuthParam[];
+  custom?: AuthParam[];
 }
 
 export type AuthType = 
@@ -157,7 +159,9 @@ export type AuthType =
   | 'noauth' 
   | 'oauth1' 
   | 'oauth2' 
-  | 'ntlm';
+  | 'ntlm'
+  | 'jwt'
+  | 'custom';
 
 export interface AuthParam {
   key: string;

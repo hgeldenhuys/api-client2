@@ -3,6 +3,7 @@ import { RequestExecution } from '~/types/request';
 import { useEnvironmentStore } from '~/stores/environmentStore';
 import { useRequestStore } from '~/stores/requestStore';
 import { useProxyStore } from '~/stores/proxyStore';
+import { useAuthStore } from '~/stores/authStore';
 import { getScriptExecutor } from './scriptExecutor';
 import { VariableResolver, type VariableContext } from './variableResolver';
 
@@ -19,6 +20,7 @@ export class RequestExecutor {
   async execute(options: RequestOptions): Promise<RequestExecution> {
     const { request, collectionAuth, collectionVariables = {}, preRequestScript, testScript, signal } = options;
     const envStore = useEnvironmentStore.getState();
+    const authStore = useAuthStore.getState();
     
     // Ensure store is initialized
     if (!envStore.isInitialized) {
@@ -36,11 +38,28 @@ export class RequestExecutor {
       // Process entire request with variables
       const processedRequest = VariableResolver.resolveRequest(request, context);
       
-      // Apply authentication
-      const authHeaders = this.processAuth(processedRequest.auth || collectionAuth, context);
+      // Apply authentication with caching
+      const requestId = `${options.request.url}-${options.request.method}`;
+      const effectiveAuth = processedRequest.auth || collectionAuth;
+      
+      // Store auth credentials for reuse
+      if (effectiveAuth) {
+        authStore.storeCredentials(requestId, effectiveAuth);
+      }
+      
+      const authResult = this.processAuth(effectiveAuth, context, requestId);
       
       // Merge headers
-      const processedHeaders = this.mergeHeaders(processedRequest.header || [], authHeaders);
+      const processedHeaders = this.mergeHeaders(processedRequest.header || [], authResult.headers);
+      
+      // Apply auth query parameters if any
+      if (authResult.queryParams) {
+        const url = new URL(processedRequest.url);
+        Object.entries(authResult.queryParams).forEach(([key, value]) => {
+          url.searchParams.set(key, value);
+        });
+        processedRequest.url = url.toString();
+      }
       
       // Create request context for scripts
       const requestContext = {
@@ -399,11 +418,13 @@ export class RequestExecutor {
   
   private processAuth(
     auth: Auth | undefined,
-    context: VariableContext
-  ): Record<string, string> {
-    if (!auth) return {};
+    context: VariableContext,
+    requestId?: string
+  ): { headers: Record<string, string>; queryParams?: Record<string, string> } {
+    if (!auth) return { headers: {} };
     
     const headers: Record<string, string> = {};
+    const queryParams: Record<string, string> = {};
     
     switch (auth.type) {
       case 'bearer':
@@ -436,15 +457,99 @@ export class RequestExecutor {
           const value = VariableResolver.resolve(apiValueItem.value, context);
           const location = apiInItem?.value || 'header';
           
-          if (location === 'header' && key && value) {
-            headers[key] = value;
+          if (key && value) {
+            if (location === 'header') {
+              headers[key] = value;
+            } else if (location === 'query') {
+              queryParams[key] = value;
+            }
           }
-          // TODO: Handle query parameter API keys
+        }
+        break;
+        
+      case 'jwt':
+        const jwtToken = auth.jwt?.find(item => item.key === 'token')?.value || '';
+        const jwtPrefix = auth.jwt?.find(item => item.key === 'prefix')?.value || 'Bearer';
+        const resolvedJwtToken = VariableResolver.resolve(jwtToken, context);
+        if (resolvedJwtToken) {
+          headers['Authorization'] = `${jwtPrefix} ${resolvedJwtToken}`;
+        }
+        break;
+        
+      case 'oauth2':
+        const accessToken = auth.oauth2?.find(item => item.key === 'accessToken')?.value || '';
+        const clientId = auth.oauth2?.find(item => item.key === 'clientId')?.value || '';
+        const resolvedClientId = VariableResolver.resolve(clientId, context);
+        
+        // Try to get cached OAuth2 token first
+        const authStore = useAuthStore.getState();
+        const cachedToken = resolvedClientId ? authStore.getOAuth2Token(resolvedClientId) : undefined;
+        
+        if (cachedToken?.accessToken) {
+          headers['Authorization'] = `${cachedToken.tokenType || 'Bearer'} ${cachedToken.accessToken}`;
+        } else {
+          // Fall back to provided access token
+          const resolvedAccessToken = VariableResolver.resolve(accessToken, context);
+          if (resolvedAccessToken) {
+            headers['Authorization'] = `Bearer ${resolvedAccessToken}`;
+            
+            // Store token for future use if we have a client ID
+            if (resolvedClientId) {
+              authStore.storeOAuth2Token(resolvedClientId, {
+                accessToken: resolvedAccessToken,
+                tokenType: 'Bearer'
+              });
+            }
+          }
+        }
+        break;
+        
+      case 'oauth1':
+        // OAuth 1.0 requires signature generation which is complex
+        // For now, we'll add a placeholder
+        console.warn('OAuth 1.0 authentication not fully implemented yet');
+        // TODO: Implement OAuth 1.0 signature generation
+        break;
+        
+      case 'awsv4':
+        // AWS Signature v4 is complex and requires request signing
+        console.warn('AWS Signature v4 authentication not fully implemented yet');
+        // TODO: Implement AWS v4 signature
+        break;
+        
+      case 'digest':
+        // Digest auth requires challenge-response flow
+        console.warn('Digest authentication not fully implemented yet');
+        // TODO: Implement Digest auth
+        break;
+        
+      case 'hawk':
+        // Hawk authentication requires MAC generation
+        console.warn('Hawk authentication not fully implemented yet');
+        // TODO: Implement Hawk auth
+        break;
+        
+      case 'ntlm':
+        // NTLM requires challenge-response flow
+        console.warn('NTLM authentication not fully implemented yet');
+        // TODO: Implement NTLM auth
+        break;
+        
+      case 'custom':
+        const headerName = auth.custom?.find(item => item.key === 'headerName')?.value || 'Authorization';
+        const headerValue = auth.custom?.find(item => item.key === 'headerValue')?.value || '';
+        const resolvedHeaderName = VariableResolver.resolve(headerName, context);
+        const resolvedHeaderValue = VariableResolver.resolve(headerValue, context);
+        if (resolvedHeaderName && resolvedHeaderValue) {
+          headers[resolvedHeaderName] = resolvedHeaderValue;
         }
         break;
     }
     
-    return headers;
+    return { 
+      headers, 
+      queryParams: Object.keys(queryParams).length > 0 ? queryParams : undefined 
+    };
   }
   
   private async blobToBase64(blob: Blob): Promise<string> {

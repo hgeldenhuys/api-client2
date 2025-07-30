@@ -14,6 +14,7 @@ interface ScriptContext {
     method: string;
     headers: Record<string, string>;
     body?: any;
+    auth?: any;
   };
   response?: {
     code: number;
@@ -39,6 +40,7 @@ interface WorkerResult {
     method?: string;
     headers?: Record<string, string>;
     body?: any;
+    auth?: any;
   };
 }
 
@@ -112,7 +114,8 @@ function createPMObject(context: ScriptContext) {
     url: context.request.url,
     method: context.request.method,
     headers: { ...context.request.headers },
-    body: context.request.body
+    body: context.request.body,
+    auth: context.request.auth ? JSON.parse(JSON.stringify(context.request.auth)) : undefined
   };
   
   const pm = {
@@ -148,6 +151,39 @@ function createPMObject(context: ScriptContext) {
       setBody: (body: any) => {
         mutableRequest.body = body;
         requestUpdates.body = body;
+      },
+      
+      auth: mutableRequest.auth,
+      
+      setAuth: (auth: any) => {
+        mutableRequest.auth = auth;
+        requestUpdates.auth = auth;
+      },
+      
+      updateAuth: (type: string, key: string, value: string) => {
+        if (!mutableRequest.auth) {
+          mutableRequest.auth = { type };
+        }
+        
+        // Initialize auth type array if needed
+        if (!mutableRequest.auth[type]) {
+          mutableRequest.auth[type] = [];
+        }
+        
+        // Find existing param or add new one
+        const param = mutableRequest.auth[type].find((p: any) => p.key === key);
+        if (param) {
+          param.value = value;
+        } else {
+          mutableRequest.auth[type].push({ key, value, type: 'string' });
+        }
+        
+        requestUpdates.auth = mutableRequest.auth;
+      },
+      
+      removeAuth: () => {
+        mutableRequest.auth = undefined;
+        requestUpdates.auth = null;
       }
     },
     response,

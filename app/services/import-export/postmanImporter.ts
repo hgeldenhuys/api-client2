@@ -56,6 +56,11 @@ export class PostmanImporter {
     if (!sanitized.variable) {
       sanitized.variable = [];
     }
+    
+    // Sanitize collection-level auth if present
+    if (sanitized.auth) {
+      sanitized.auth = this.sanitizeAuth(sanitized.auth);
+    }
 
     return sanitized as PostmanCollection;
   }
@@ -98,10 +103,55 @@ export class PostmanImporter {
             variable: []
           };
         }
+        
+        // Validate auth if present
+        if (item.request.auth) {
+          item.request.auth = this.sanitizeAuth(item.request.auth);
+        }
+      }
+      
+      // If it's a folder with auth
+      if (item.auth) {
+        item.auth = this.sanitizeAuth(item.auth);
       }
 
       return item;
     });
+  }
+
+  /**
+   * Sanitizes auth configuration to ensure it's valid
+   */
+  private static sanitizeAuth(auth: any): any {
+    if (!auth || !auth.type) return auth;
+    
+    // Ensure the auth type is valid
+    const validAuthTypes = [
+      'apikey', 'awsv4', 'basic', 'bearer', 'digest', 
+      'edgegrid', 'hawk', 'noauth', 'oauth1', 'oauth2', 
+      'ntlm', 'jwt', 'custom'
+    ];
+    
+    if (!validAuthTypes.includes(auth.type)) {
+      return { type: 'noauth' };
+    }
+    
+    // Ensure auth params are arrays
+    const authTypeKey = auth.type;
+    if (authTypeKey !== 'noauth' && auth[authTypeKey]) {
+      if (!Array.isArray(auth[authTypeKey])) {
+        auth[authTypeKey] = [];
+      }
+      
+      // Ensure each param has required fields
+      auth[authTypeKey] = auth[authTypeKey].map((param: any) => ({
+        key: param.key || '',
+        value: param.value || '',
+        type: param.type || 'string'
+      }));
+    }
+    
+    return auth;
   }
 
   /**

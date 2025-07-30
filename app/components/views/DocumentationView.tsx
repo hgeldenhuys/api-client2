@@ -292,7 +292,7 @@ pm.test("Response time under 500ms", () => {
 The PM object provides access to:
 - \`pm.environment\`: Get/set environment variables
 - \`pm.globals\`: Access global variables
-- \`pm.request\`: Modify the current request
+- \`pm.request\`: Modify the current request (URL, method, headers, body, auth)
 - \`pm.response\`: Access response data
 - \`pm.test\`: Define test assertions`,
     examples: [

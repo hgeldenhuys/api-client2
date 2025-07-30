@@ -80,6 +80,7 @@ export class ScriptExecutor {
         method: string;
         headers: Record<string, string>;
         body: string;
+        auth?: any;
       };
       environment: Record<string, string>;
       collectionVariables: Record<string, string>;
@@ -97,6 +98,7 @@ export class ScriptExecutor {
         method: string;
         headers: Record<string, string>;
         body: string;
+        auth?: any;
       };
       response: {
         status: number;
@@ -132,6 +134,7 @@ export class ScriptExecutor {
         method: string;
         headers: Record<string, string>;
         body?: any;
+        auth?: any;
       };
       response?: {
         code: number;

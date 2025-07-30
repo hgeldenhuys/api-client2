@@ -37,6 +37,46 @@ pm.request.addHeader('X-Request-ID', Date.now().toString());
 // pm.request.removeHeader('User-Agent');`
   },
   {
+    name: 'Set Bearer Token',
+    description: 'Set bearer token authentication',
+    code: `// Set bearer token authentication
+const token = pm.environment.get('access_token');
+pm.request.setAuth({
+  type: 'bearer',
+  bearer: [
+    { key: 'token', value: token, type: 'string' }
+  ]
+});`
+  },
+  {
+    name: 'Set Basic Auth',
+    description: 'Set basic authentication',
+    code: `// Set basic authentication
+pm.request.setAuth({
+  type: 'basic',
+  basic: [
+    { key: 'username', value: pm.environment.get('username'), type: 'string' },
+    { key: 'password', value: pm.environment.get('password'), type: 'string' }
+  ]
+});`
+  },
+  {
+    name: 'Update API Key',
+    description: 'Update API key authentication',
+    code: `// Update API key authentication
+const apiKey = pm.environment.get('api_key');
+pm.request.updateAuth('apikey', 'value', apiKey);
+pm.request.updateAuth('apikey', 'key', 'X-API-Key');
+pm.request.updateAuth('apikey', 'in', 'header');`
+  },
+  {
+    name: 'Remove Authentication',
+    description: 'Remove authentication from request',
+    code: `// Remove authentication from request
+pm.request.removeAuth();
+console.log('Authentication removed');`
+  },
+  {
     name: 'Dynamic Request URL',
     description: 'Modify the request URL based on environment',
     code: `// Get base URL from environment

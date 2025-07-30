@@ -135,6 +135,94 @@ export class PostmanExporter {
           });
         }
         break;
+
+      case 'oauth2':
+        if (sanitized.oauth2) {
+          sanitized.oauth2 = sanitized.oauth2.map((item: any) => {
+            if (['accessToken', 'refreshToken', 'clientSecret'].includes(item.key)) {
+              return { ...item, value: '[REDACTED]' };
+            }
+            return item;
+          });
+        }
+        break;
+
+      case 'oauth1':
+        if (sanitized.oauth1) {
+          sanitized.oauth1 = sanitized.oauth1.map((item: any) => {
+            if (['consumerSecret', 'tokenSecret'].includes(item.key)) {
+              return { ...item, value: '[REDACTED]' };
+            }
+            return item;
+          });
+        }
+        break;
+
+      case 'jwt':
+        if (sanitized.jwt) {
+          sanitized.jwt = sanitized.jwt.map((item: any) => {
+            if (item.key === 'token') {
+              return { ...item, value: '[REDACTED]' };
+            }
+            return item;
+          });
+        }
+        break;
+
+      case 'awsv4':
+        if (sanitized.awsv4) {
+          sanitized.awsv4 = sanitized.awsv4.map((item: any) => {
+            if (['secretKey', 'sessionToken'].includes(item.key)) {
+              return { ...item, value: '[REDACTED]' };
+            }
+            return item;
+          });
+        }
+        break;
+
+      case 'digest':
+        if (sanitized.digest) {
+          sanitized.digest = sanitized.digest.map((item: any) => {
+            if (item.key === 'password') {
+              return { ...item, value: '[REDACTED]' };
+            }
+            return item;
+          });
+        }
+        break;
+
+      case 'hawk':
+        if (sanitized.hawk) {
+          sanitized.hawk = sanitized.hawk.map((item: any) => {
+            if (item.key === 'authKey') {
+              return { ...item, value: '[REDACTED]' };
+            }
+            return item;
+          });
+        }
+        break;
+
+      case 'ntlm':
+        if (sanitized.ntlm) {
+          sanitized.ntlm = sanitized.ntlm.map((item: any) => {
+            if (item.key === 'password') {
+              return { ...item, value: '[REDACTED]' };
+            }
+            return item;
+          });
+        }
+        break;
+
+      case 'custom':
+        if (sanitized.custom) {
+          sanitized.custom = sanitized.custom.map((item: any) => {
+            if (item.key === 'headerValue') {
+              return { ...item, value: '[REDACTED]' };
+            }
+            return item;
+          });
+        }
+        break;
     }
 
     return sanitized;

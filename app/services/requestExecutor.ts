@@ -68,7 +68,8 @@ export class RequestExecutor {
           : processedRequest.url?.raw || '',
         method: processedRequest.method,
         headers: processedHeaders,
-        body: processedRequest.body?.raw || ''
+        body: processedRequest.body?.raw || '',
+        auth: effectiveAuth
       };
       
       // Execute pre-request script if exists
@@ -134,6 +135,18 @@ export class RequestExecutor {
             if (updates.body !== undefined) {
               requestContext.body = updates.body;
             }
+            
+            // Update auth
+            if (updates.auth !== undefined) {
+              if (updates.auth === null) {
+                // Remove auth
+                effectiveAuth = undefined;
+              } else {
+                // Update auth
+                effectiveAuth = updates.auth;
+                requestContext.auth = updates.auth;
+              }
+            }
           }
           
           // Store pre-request script results
@@ -142,6 +155,23 @@ export class RequestExecutor {
         } catch (error) {
           console.error('Pre-request script error:', error);
           // Continue with request even if script fails
+        }
+      }
+      
+      // Re-process auth if it was updated by script
+      if (requestUpdates.auth !== undefined) {
+        const newAuthResult = this.processAuth(effectiveAuth, context, requestId);
+        
+        // Update headers with new auth
+        Object.assign(processedHeaders, newAuthResult.headers);
+        
+        // Update query params if auth adds them
+        if (newAuthResult.queryParams) {
+          const url = new URL(requestContext.url);
+          Object.entries(newAuthResult.queryParams).forEach(([key, value]) => {
+            url.searchParams.set(key, value);
+          });
+          requestContext.url = url.toString();
         }
       }
       

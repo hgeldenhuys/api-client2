@@ -191,9 +191,11 @@ export function RequestBuilder() {
           body: bodyMode !== 'none' ? {
             mode: bodyMode as any,
             raw: bodyContent
-          } : undefined
+          } : undefined,
+          auth: request.auth // Preserve auth settings
         },
-        event: events.length > 0 ? events : undefined
+        event: events.length > 0 ? events : undefined,
+        auth: request.auth // Also save at request item level
       });
     }
   }, [activeCollectionId, activeRequestId, method, url, bodyMode, bodyContent, preRequestScript, testScript, universalParams, updateRequest, findRequestById]);
@@ -315,7 +317,8 @@ export function RequestBuilder() {
         key: replaceVariables(p.key),
         value: replaceVariables(p.value)
       })),
-      body: requestBody
+      body: requestBody,
+      auth: request?.auth
     }, activeRequestId || 'temp-request', {
       preRequest: preRequestScript || undefined,
       test: testScript || undefined

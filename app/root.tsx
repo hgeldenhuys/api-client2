@@ -43,7 +43,7 @@ export function headers() {
       `img-src 'self' data: blob:`,
       `media-src 'self'`,
       `object-src 'none'`,
-      `worker-src 'self' data:`,
+      `worker-src 'self' data: blob:`,
       `base-uri 'self'`,
       `form-action 'self'`,
       `frame-ancestors 'none'`,

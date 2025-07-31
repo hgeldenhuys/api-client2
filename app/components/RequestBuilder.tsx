@@ -629,7 +629,7 @@ export function RequestBuilder() {
                     key={`pre-${activeRequestId}`}
                     value={preRequestScript}
                     onChange={(value) => setPreRequestScript(value || '')}
-                    language="javascript"
+                    language="api-script"
                     placeholder="// Example: Set an auth token&#10;pm.environment.set('authToken', 'your-token-here');"
                     theme={theme === "dark" ? "vs-dark" : "vs"}
                   />
@@ -655,7 +655,7 @@ export function RequestBuilder() {
                     key={`test-${activeRequestId}`}
                     value={testScript}
                     onChange={(value) => setTestScript(value || '')}
-                    language="javascript"
+                    language="api-script"
                     theme={theme === "dark" ? "vs-dark" : "vs"}
                     placeholder="// Example: Test response status&#10;pm.test('Status is 200', () => {&#10;  pm.expect(pm.response).to.have.status(200);&#10;});"
                   />

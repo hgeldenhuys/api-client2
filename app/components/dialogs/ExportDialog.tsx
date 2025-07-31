@@ -17,6 +17,7 @@ import { OpenAPIExporter } from '~/services/import-export/openApiExporter';
 import { HTTPFileExporter } from '~/services/import-export/httpFileExporter';
 import { useCollectionStore } from '~/stores/collectionStore';
 import type { PostmanCollection } from '~/types/postman';
+import {Checkbox} from "~/components/ui/checkbox";
 
 interface ExportDialogProps {
   open: boolean;
@@ -250,8 +251,7 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
                   Sensitive Data Protection
                 </h4>
                 <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     id="include-sensitive"
                     checked={includeSensitive}
                     onChange={(e) => setIncludeSensitive(e.target.checked)}

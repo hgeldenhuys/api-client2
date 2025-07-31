@@ -95,7 +95,7 @@ export function ViewRouter({
     case 'documentation':
       return <>{documentationView || <div className="p-8 text-center text-muted-foreground">Documentation view coming soon...</div>}</>;
     case 'bugreport':
-      return <>{bugReportView || <div className="p-8 text-center text-muted-foreground">Bug report view coming soon...</div>}</>;
+      return <>{bugReportView || <div className="p-8 text-center text-muted-foreground">Feedback view coming soon...</div>}</>;
     case 'globals':
       return <>{globalsView || <div className="p-8 text-center text-muted-foreground">Globals view coming soon...</div>}</>;
     case 'settings':
@@ -122,7 +122,7 @@ export function useViewNavigation() {
     navigateToCollection: () => navigate('#collection'),
     navigateToEnvironment: () => navigate('#environment'),
     navigateToDocumentation: () => navigate('#documentation'),
-    navigateToBugReport: () => navigate('#bugreport'),
+    navigateToFeedback: () => navigate('#bugreport'),
     navigateToGlobals: () => navigate('#globals'),
     navigateToSettings: () => navigate('#settings'),
     navigateToView: (view: ViewType) => navigate(`#${view}`),

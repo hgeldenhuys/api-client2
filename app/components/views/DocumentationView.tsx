@@ -225,12 +225,56 @@ Organize your API requests into collections for better management.
 - **Authorization**: Inherit auth across requests
 - **Documentation**: Add descriptions to requests
 
-## Importing & Exporting
+## Import Formats
 
-The API Client supports:
-- **Postman Collections v2.1**: Full compatibility
-- **Export**: Share collections with your team
-- **Import**: Bring in existing collections`,
+The API Client supports importing from multiple industry-standard formats:
+
+### Postman Collections v2.1
+- **Full compatibility** with Postman Collections
+- **Complete feature support** including auth, variables, and scripts
+- **Perfect for migration** from Postman to API Client
+
+### OpenAPI/Swagger Specifications
+- **OpenAPI 3.0 & 3.1**: Modern API specifications
+- **Swagger 2.0**: Legacy but widely supported format
+- **Automatic conversion** of paths, parameters, and schemas
+- **Authentication mapping** from security schemes
+- **Server variables** converted to collection variables
+
+### HTTP Files (.http, .rest)
+- **IntelliJ IDEA format**: Compatible with JetBrains IDEs
+- **VS Code REST Client** format support
+- **Simple syntax** for quick API testing
+- **Variable support** with {{variable}} syntax
+- **Multiple requests** in a single file
+
+## Export Formats
+
+Export your collections in various formats for different use cases:
+
+### Postman Collection
+- **Standard format** for sharing with Postman users
+- **Full backup** option includes all data
+- **Collection-only** option for sharing specific collections
+
+### OpenAPI/Swagger
+- **Generate API documentation** from your requests
+- **Choose version**: OpenAPI 3.0, 3.1, or Swagger 2.0
+- **Perfect for API documentation** and code generation
+- **Include schemas** and examples from your requests
+
+### HTTP Files
+- **Lightweight format** for developers
+- **IDE-compatible** with VS Code and IntelliJ IDEA
+- **Easy to share** via version control
+- **Human-readable** format for code reviews
+
+## Format Detection
+
+The API Client automatically detects file formats:
+- **File extensions**: .json, .yaml, .yml, .http, .rest
+- **Content analysis**: Examines structure and key fields
+- **Smart validation**: Ensures format compatibility before import`,
     examples: [
       {
         title: 'Collection Structure',
@@ -249,6 +293,284 @@ The API Client supports:
     ├── 📄 List Products
     └── 📄 Search Products`,
         language: 'text',
+        runnable: false
+      },
+      {
+        title: 'HTTP File Format',
+        description: 'Simple format for defining API requests',
+        code: `### Get all users
+GET https://api.example.com/users
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Create a new user
+POST https://api.example.com/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+
+### Update user
+PUT https://api.example.com/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Jane Doe"
+}`,
+        language: 'http',
+        runnable: false
+      },
+      {
+        title: 'OpenAPI Specification',
+        description: 'Industry standard for API documentation',
+        code: `{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "User API",
+    "version": "1.0.0",
+    "description": "API for managing users"
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/users": {
+      "get": {
+        "summary": "Get all users",
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "integer"},
+          "name": {"type": "string"},
+          "email": {"type": "string"}
+        }
+      },
+      "CreateUser": {
+        "type": "object",
+        "required": ["name", "email"],
+        "properties": {
+          "name": {"type": "string"},
+          "email": {"type": "string"}
+        }
+      }
+    }
+  }
+}`,
+        language: 'json',
+        runnable: false
+      }
+    ]
+  },
+  {
+    id: 'import-export',
+    title: 'Import & Export',
+    icon: <ExternalLink className="h-4 w-4" />,
+    content: `# Import & Export
+
+The API Client provides comprehensive import and export capabilities for working with multiple file formats.
+
+## Import Process
+
+### Step 1: Access Import Dialog
+Click the **Import** button in the main interface to open the import dialog.
+
+### Step 2: Choose Input Method
+- **File Upload**: Drag and drop or click to select files
+- **Paste Content**: Copy and paste directly into text areas
+- **Multiple Formats**: Switch between Postman, OpenAPI, HTTP, and cURL tabs
+
+### Step 3: Format Detection
+The API Client automatically:
+- **Detects file format** based on content structure
+- **Validates syntax** and reports errors
+- **Shows preview** of what will be imported
+
+### Step 4: Import Confirmation
+Review the import summary and click **Import** to create your collection.
+
+## Export Process
+
+### Step 1: Select Collection
+Choose the collection you want to export from the Collection Explorer.
+
+### Step 2: Choose Export Format
+- **Postman Collection**: For sharing with Postman users
+- **OpenAPI/Swagger**: For documentation and code generation
+- **HTTP File**: For IDE compatibility and version control
+
+### Step 3: Configure Options
+- **OpenAPI Version**: Choose between 2.0, 3.0, or 3.1
+- **Full Backup**: Include all application data (Postman only)
+- **Collection Only**: Export just the selected collection
+
+### Step 4: Download File
+Click **Export** to download the formatted file.
+
+## Format-Specific Features
+
+### Postman Collections
+- **Complete compatibility** with Postman ecosystem
+- **Preserves all features**: auth, variables, scripts, tests
+- **Two-way conversion**: Import and export without data loss
+- **Full backup option** includes environments and globals
+
+### OpenAPI/Swagger
+- **Standards compliant** specifications
+- **Multiple versions supported**: 2.0, 3.0, 3.1
+- **Rich metadata**: descriptions, examples, schemas
+- **Authentication schemes** automatically mapped
+- **Server configurations** from collection variables
+
+### HTTP Files
+- **Simple syntax** for quick testing
+- **IDE integration** with VS Code and JetBrains
+- **Version control friendly** text format
+- **Variable support** with {{variable}} syntax
+- **Comment support** for documentation
+
+## Advanced Features
+
+### Variable Resolution
+During export, the API Client:
+- **Resolves variables** in URLs and headers
+- **Preserves variable syntax** where appropriate
+- **Maps collection variables** to format-specific equivalents
+
+### Authentication Mapping
+- **Postman auth types** preserved exactly
+- **OpenAPI security schemes** generated automatically
+- **HTTP files** include auth headers directly
+
+### Schema Generation
+When exporting to OpenAPI:
+- **Request/response schemas** inferred from examples
+- **Data types** detected automatically  
+- **Required fields** marked based on usage patterns
+
+## Best Practices
+
+### Importing
+1. **Validate files** before importing large collections
+2. **Check variable names** for conflicts with existing data
+3. **Review authentication** settings after import
+4. **Test critical requests** to ensure proper conversion
+
+### Exporting
+1. **Choose appropriate format** for your use case
+2. **Include examples** in requests for better OpenAPI generation
+3. **Document your APIs** with descriptions and summaries
+4. **Use consistent naming** for better organization
+
+### Version Control
+- **Export as HTTP files** for easy diff and merge
+- **Include .http files** in your project repositories
+- **Use variables** for environment-specific values
+- **Document API changes** in commit messages`,
+    examples: [
+      {
+        title: 'Import from File',
+        description: 'Step-by-step file import process',
+        code: `1. Click "Import" button
+2. Select "File" tab
+3. Drag and drop your file or click "Choose File"
+4. Supported formats:
+   • .json (Postman Collections, OpenAPI)
+   • .yaml/.yml (OpenAPI/Swagger)
+   • .http/.rest (HTTP files)
+5. Review the import preview
+6. Click "Import Collection"`,
+        language: 'text',
+        runnable: false
+      },
+      {
+        title: 'Export Workflow',
+        description: 'Export collections in different formats',
+        code: `1. Select collection in sidebar
+2. Click "Export" button
+3. Choose export format:
+   • Postman Collection v2.1
+   • OpenAPI 3.0/3.1 or Swagger 2.0
+   • HTTP File (.http)
+4. Configure format-specific options
+5. Click "Export" to download`,
+        language: 'text',
+        runnable: false
+      },
+      {
+        title: 'Format Conversion Examples',
+        description: 'How requests are converted between formats',
+        code: `# HTTP File → Postman Collection
+### Get User
+GET https://api.example.com/users/{{userId}}
+Authorization: Bearer {{token}}
+
+# Becomes Postman request with:
+• Method: GET
+• URL: https://api.example.com/users/{{userId}}
+• Headers: Authorization = Bearer {{token}}
+• Variables: userId, token
+
+# Postman Collection → OpenAPI
+{
+  "method": "GET", 
+  "url": "/users/{{userId}}",
+  "auth": {"type": "bearer"}
+}
+
+# Becomes OpenAPI path:
+/users/{userId}:
+  get:
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: userId
+        in: path
+        required: true`,
+        language: 'yaml',
         runnable: false
       }
     ]
@@ -383,8 +705,17 @@ A: The app works offline, but you need internet to make API requests to external
 **Q: Is my data secure?**
 A: All data is stored locally in your browser. Nothing is sent to our servers.
 
+**Q: What file formats can I import?**
+A: The API Client supports Postman Collections (v2.1), OpenAPI/Swagger (2.0, 3.0, 3.1), and HTTP files (.http, .rest).
+
 **Q: Can I import from Postman?**
-A: Yes! Export your Postman collection as v2.1 format and import it directly.
+A: Yes! Export your Postman collection as v2.1 format and import it directly. All features including auth, variables, and scripts are preserved.
+
+**Q: How do I import OpenAPI specifications?**
+A: Use the Import dialog and select the OpenAPI tab. Paste your specification or upload a .json/.yaml file. The API Client will automatically convert paths to requests.
+
+**Q: What are HTTP files?**
+A: HTTP files (.http, .rest) are simple text files that define API requests. They're supported by VS Code REST Client and JetBrains IDEs.
 
 ## Technical Questions
 
@@ -408,8 +739,11 @@ A: Currently local-only. Team sync features are planned.
 **Q: Is there a CLI version?**
 A: No, but you can export to cURL for command-line use.
 
+**Q: Can I export to different formats?**
+A: Yes! Export collections as Postman Collections, OpenAPI/Swagger specifications, or HTTP files depending on your needs.
+
 **Q: Can I generate API documentation?**
-A: Documentation generation is planned for a future release.
+A: Yes! Export your collection as an OpenAPI specification, which can be used with documentation tools like Swagger UI or Redoc.
 
 **Q: Does it support OAuth 2.0?**
 A: Manual OAuth is supported. Automated flow coming soon.

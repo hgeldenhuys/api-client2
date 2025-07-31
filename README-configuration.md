@@ -219,7 +219,7 @@ If no configuration is provided, the API Client uses these defaults:
 - [x] ⌘1 - Collections
 - [x] ⌘2 - Environments  
 - [x] ⌘3 - Documentation
-- [x] ⌘4 - Submit Bug (if enabled)
+- [x] ⌘4 - Feedback (if enabled)
 
 ## Integration
 

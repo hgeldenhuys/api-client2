@@ -17,6 +17,13 @@ import {
   isFolderItem 
 } from '~/types/postman';
 import { CollectionWithMetadata, CollectionMetadata } from '~/types/request';
+import { 
+  FlatTreeItem,
+  flattenTree,
+  unflattenTree,
+  canMoveItem,
+  cloneTreeItem
+} from '~/utils/treeUtils';
 
 interface CollectionState {
   collections: Map<string, CollectionWithMetadata>;
@@ -26,6 +33,13 @@ interface CollectionState {
   // Computed getters for current collection state
   activeRequestId: string | null;
   openTabs: string[];
+  
+  // Clipboard state for copy/paste operations
+  clipboard: {
+    item: RequestItem | FolderItem | null;
+    sourceCollectionId: string | null;
+    timestamp: number;
+  };
   
   // Actions
   init: () => Promise<void>;
@@ -54,6 +68,15 @@ interface CollectionState {
   
   // Delta sync
   applyDelta: (collectionId: string, delta: Operation[]) => void;
+  
+  // Drag and drop operations
+  moveItem: (collectionId: string, draggedId: string, targetId: string, position: 'before' | 'after' | 'inside') => boolean;
+  reorderItems: (collectionId: string, parentId: string, oldIndex: number, newIndex: number) => void;
+  
+  // Copy/paste and duplicate operations
+  duplicateItem: (collectionId: string, itemId: string, parentId?: string) => string | null;
+  copyToClipboard: (collectionId: string, itemId: string) => void;
+  pasteFromClipboard: (collectionId: string, parentId: string | null) => string | null;
   
   // Utilities
   findRequestById: (collectionId: string, requestId: string) => RequestItem | null;
@@ -108,38 +131,56 @@ function findItemPath(
 function addItemToTree(
   items: (RequestItem | FolderItem)[],
   parentId: string | null,
-  newItem: RequestItem | FolderItem
+  newItem: RequestItem | FolderItem,
+  position?: 'start' | 'end',
+  targetIndex?: number
 ): void {
+
   if (!parentId) {
-    items.push(newItem);
+    // Adding to root level
+    if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= items.length) {
+      items.splice(targetIndex, 0, newItem);
+    } else if (position === 'start') {
+      items.unshift(newItem);
+    } else {
+      items.push(newItem);
+    }
     return;
   }
   
   for (const item of items) {
     if (isFolderItem(item) && item.id === parentId) {
-      item.item.push(newItem);
+      if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= item.item.length) {
+        item.item.splice(targetIndex, 0, newItem);
+      } else if (position === 'start') {
+        item.item.unshift(newItem);
+      } else {
+        item.item.push(newItem);
+      }
       return;
     }
     if (isFolderItem(item)) {
-      addItemToTree(item.item, parentId, newItem);
+      addItemToTree(item.item, parentId, newItem, position, targetIndex);
     }
   }
+  
 }
 
 function removeItemFromTree(
   items: (RequestItem | FolderItem)[],
   itemId: string
 ): boolean {
+  
   const index = items.findIndex(item => 
     (isRequestItem(item) || isFolderItem(item)) && item.id === itemId
   );
   
   if (index !== -1) {
-    items.splice(index, 1);
+    const removedItem = items.splice(index, 1)[0];
     return true;
   }
   
-  for (const item of items) {
+  for (const [i, item] of items.entries()) {
     if (isFolderItem(item)) {
       if (removeItemFromTree(item.item, itemId)) {
         return true;
@@ -168,6 +209,11 @@ export const useCollectionStore = create<CollectionState>()(
       isInitialized: false,
       activeRequestId: null,
       openTabs: [],
+      clipboard: {
+        item: null,
+        sourceCollectionId: null,
+        timestamp: 0
+      },
       
       init: async () => {
         const state = get();
@@ -584,6 +630,270 @@ export const useCollectionStore = create<CollectionState>()(
             collectionData.metadata.updatedAt = Date.now();
           }
         });
+      },
+      
+      // Drag and drop operations
+      moveItem: (collectionId, draggedId, targetId, position) => {
+        const state = get();
+        const collectionData = state.collections.get(collectionId);
+        if (!collectionData) return false;
+        
+        // Flatten the tree to work with dnd-kit structure
+        const expandedFolders = collectionData.metadata.expandedFolders || [];
+        const flatItems = flattenTree(
+          collectionData.collection.item,
+          collectionId,
+          collectionData.collection.info.name,
+          expandedFolders
+        );
+        
+        // Check if the move is valid
+        const validation = canMoveItem(flatItems, draggedId, targetId, position);
+        if (!validation.success) return false;
+        
+        // Find the dragged item in the original tree
+        const draggedItem = findItemInTree(collectionData.collection.item, draggedId, false) ||
+                            findItemInTree(collectionData.collection.item, draggedId, true);
+        
+        if (!draggedItem) return false;
+        
+        // Calculate all paths and positions BEFORE making any modifications
+        let newParentId: string | null = null;
+        let targetPath: (RequestItem | FolderItem)[] | null = null;
+        let insertionIndex: number | undefined = undefined;
+        let originalDraggedItemIndex: number | undefined = undefined;
+        let originalDraggedParentId: string | null = null;
+        
+        // Find the current location of the dragged item
+        const draggedPath = findItemPath(collectionData.collection.item, draggedId);
+        if (draggedPath && draggedPath.length > 1) {
+          originalDraggedParentId = draggedPath[draggedPath.length - 2].id || null;
+          const draggedParent = draggedPath[draggedPath.length - 2];
+          if (isFolderItem(draggedParent)) {
+            originalDraggedItemIndex = draggedParent.item.findIndex(item => item.id === draggedId);
+          }
+        } else if (draggedPath) {
+          // Dragged item is at root level
+          originalDraggedParentId = null;
+          originalDraggedItemIndex = collectionData.collection.item.findIndex(item => item.id === draggedId);
+        }
+        
+        if (position === 'inside') {
+          newParentId = targetId;
+        } else {
+          // Find the parent of the target item BEFORE removing anything
+          targetPath = findItemPath(collectionData.collection.item, targetId);
+          
+          if (targetPath && targetPath.length > 1) {
+            newParentId = targetPath[targetPath.length - 2].id || null;
+            
+            // Calculate insertion index for 'before' and 'after' positions
+            const targetItem = targetPath[targetPath.length - 1];
+            const parentItem = targetPath[targetPath.length - 2];
+            
+            if (isFolderItem(parentItem)) {
+              const targetIndex = parentItem.item.findIndex(item => item.id === targetItem.id);
+              if (targetIndex !== -1) {
+                insertionIndex = position === 'before' ? targetIndex : targetIndex + 1;
+                
+                // Adjust insertion index if we're moving within the same parent and the dragged item is before the target
+                if (originalDraggedParentId === newParentId && 
+                    originalDraggedItemIndex !== undefined && 
+                    originalDraggedItemIndex < targetIndex) {
+                  insertionIndex = insertionIndex - 1;
+                }
+              }
+            }
+          } else {
+            // Target is at root level
+            newParentId = null;
+            
+            const targetIndex = collectionData.collection.item.findIndex(item => item.id === targetId);
+            if (targetIndex !== -1) {
+              insertionIndex = position === 'before' ? targetIndex : targetIndex + 1;
+              
+              // Adjust insertion index if we're moving within root and the dragged item is before the target
+              if (originalDraggedParentId === null && 
+                  originalDraggedItemIndex !== undefined && 
+                  originalDraggedItemIndex < targetIndex) {
+                insertionIndex = insertionIndex - 1;
+              }
+            }
+          }
+        }
+        
+        set((state) => {
+          const collectionData = state.collections.get(collectionId);
+          if (!collectionData) return;
+          
+          // Remove the item from its current location
+          removeItemFromTree(collectionData.collection.item, draggedId);
+          
+          // Add the item to its new location
+          addItemToTree(collectionData.collection.item, newParentId, draggedItem, undefined, insertionIndex);
+          
+          // Update metadata to trigger reactivity
+          collectionData.metadata.updatedAt = Date.now();
+        });
+        
+        // Auto-save
+        debounceAutoSave(async () => {
+          const state = get();
+          const collectionData = state.collections.get(collectionId);
+          if (collectionData) {
+            try {
+              await storageService.saveCollection(collectionData.collection);
+            } catch (error) {
+              console.error('Failed to auto-save collection after move:', error);
+            }
+          }
+        });
+        
+        return true;
+      },
+      
+      reorderItems: (collectionId, parentId, oldIndex, newIndex) => {
+        set((state) => {
+          const collectionData = state.collections.get(collectionId);
+          if (!collectionData) return;
+          
+          // Find the parent container
+          let items: (RequestItem | FolderItem)[];
+          if (parentId === collectionId) {
+            // Root level items
+            items = collectionData.collection.item;
+          } else {
+            // Items within a folder
+            const folder = findItemInTree(collectionData.collection.item, parentId, true) as FolderItem;
+            if (!folder) return;
+            items = folder.item;
+          }
+          
+          // Reorder the items
+          if (oldIndex >= 0 && oldIndex < items.length && newIndex >= 0 && newIndex < items.length) {
+            const [movedItem] = items.splice(oldIndex, 1);
+            items.splice(newIndex, 0, movedItem);
+            collectionData.metadata.updatedAt = Date.now();
+          }
+        });
+        
+        // Auto-save
+        debounceAutoSave(async () => {
+          const state = get();
+          const collectionData = state.collections.get(collectionId);
+          if (collectionData) {
+            try {
+              await storageService.saveCollection(collectionData.collection);
+            } catch (error) {
+              console.error('Failed to auto-save collection after reorder:', error);
+            }
+          }
+        });
+      },
+      
+      // Copy/paste and duplicate operations
+      duplicateItem: (collectionId, itemId, parentId) => {
+        const state = get();
+        const collectionData = state.collections.get(collectionId);
+        if (!collectionData) return null;
+        
+        // Find the item to duplicate
+        const originalItem = findItemInTree(collectionData.collection.item, itemId, false) ||
+                           findItemInTree(collectionData.collection.item, itemId, true);
+        
+        if (!originalItem) return null;
+        
+        // Clone the item
+        const clonedItem = cloneTreeItem(originalItem);
+        const newId = clonedItem.id || generateId();
+        clonedItem.id = newId;
+        
+        set((state) => {
+          const collectionData = state.collections.get(collectionId);
+          if (!collectionData) return;
+          
+          // Determine parent - use provided parentId or same parent as original
+          let targetParentId: string | null = parentId ?? null;
+          if (parentId === undefined) {
+            const itemPath = findItemPath(collectionData.collection.item, itemId);
+            targetParentId = itemPath && itemPath.length > 1 ? 
+              itemPath[itemPath.length - 2].id || null : null;
+          }
+          
+          // Add the duplicated item
+          addItemToTree(collectionData.collection.item, targetParentId, clonedItem);
+          collectionData.metadata.updatedAt = Date.now();
+        });
+        
+        // Auto-save
+        debounceAutoSave(async () => {
+          const state = get();
+          const collectionData = state.collections.get(collectionId);
+          if (collectionData) {
+            try {
+              await storageService.saveCollection(collectionData.collection);
+            } catch (error) {
+              console.error('Failed to auto-save collection after duplicate:', error);
+            }
+          }
+        });
+        
+        return newId;
+      },
+      
+      copyToClipboard: (collectionId, itemId) => {
+        const state = get();
+        const collectionData = state.collections.get(collectionId);
+        if (!collectionData) return;
+        
+        // Find the item to copy
+        const item = findItemInTree(collectionData.collection.item, itemId, false) ||
+                    findItemInTree(collectionData.collection.item, itemId, true);
+        
+        if (!item) return;
+        
+        set((state) => {
+          state.clipboard = {
+            item: structuredClone(item), // Deep copy
+            sourceCollectionId: collectionId,
+            timestamp: Date.now()
+          };
+        });
+      },
+      
+      pasteFromClipboard: (collectionId, parentId) => {
+        const state = get();
+        const collectionData = state.collections.get(collectionId);
+        if (!collectionData || !state.clipboard.item) return null;
+        
+        // Clone the clipboard item
+        const clonedItem = cloneTreeItem(state.clipboard.item, 'Pasted ');
+        const newId = clonedItem.id || generateId();
+        clonedItem.id = newId;
+        
+        set((state) => {
+          const collectionData = state.collections.get(collectionId);
+          if (!collectionData) return;
+          
+          // Add the pasted item
+          addItemToTree(collectionData.collection.item, parentId, clonedItem);
+          collectionData.metadata.updatedAt = Date.now();
+        });
+        
+        // Auto-save
+        debounceAutoSave(async () => {
+          const state = get();
+          const collectionData = state.collections.get(collectionId);
+          if (collectionData) {
+            try {
+              await storageService.saveCollection(collectionData.collection);
+            } catch (error) {
+              console.error('Failed to auto-save collection after paste:', error);
+            }
+          }
+        });
+        
+        return newId;
       },
       
       findRequestById: (collectionId, requestId) => {

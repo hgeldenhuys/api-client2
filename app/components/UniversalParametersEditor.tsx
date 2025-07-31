@@ -36,6 +36,7 @@ import { cn } from '~/lib/utils';
 import { UrlVariableInput } from '~/components/UrlVariableInput';
 import { AddVariableDialog } from '~/components/AddVariableDialog';
 import { useVariableContext } from '~/hooks/useVariableContext';
+import {Checkbox} from "~/components/ui/checkbox";
 
 interface UniversalParametersEditorProps {
   parameters: UniversalParameter[];
@@ -318,8 +319,7 @@ const ParameterRow = React.memo(function ParameterRow({ parameter, onChange, onR
     )}>
       {/* Enabled checkbox */}
       <div className="col-span-1 flex items-center">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={parameter.enabled}
           onChange={handleEnabledChange}
           className="rounded"
@@ -428,7 +428,6 @@ const ParameterRow = React.memo(function ParameterRow({ parameter, onChange, onR
           value={parameter.description || ''}
           onChange={handleDescriptionChange}
           placeholder="Optional description"
-          className="h-8"
         />
       </div>
 
@@ -456,7 +455,7 @@ const ParameterRow = React.memo(function ParameterRow({ parameter, onChange, onR
           onClick={onRemove}
           className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
         >
-          <Trash2 className="h-3 w-3" />
+          <Trash2  />
         </Button>
       </div>
 

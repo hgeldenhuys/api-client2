@@ -25,7 +25,7 @@ export const defaultConfig: ApiClientConfig = {
   bugReporting: {
     enabled: true,
     onSubmitBug: (bugReport: BugReport) => {
-      console.log('Bug Report Submitted:', JSON.stringify(bugReport, null, 2));
+      console.log('Feedback Submitted:', JSON.stringify(bugReport, null, 2));
     },
   },
 };

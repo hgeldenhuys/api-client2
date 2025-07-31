@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCurrentView, useViewNavigation, ViewType } from '~/components/ViewRouter';
 import { cn } from '~/utils/cn';
-import { Folder, Globe, BookOpen, Bug } from 'lucide-react';
+import { Folder, Globe, BookOpen, MessageSquare } from 'lucide-react';
 import { useApiClientConfig } from '~/components/ConfigProvider';
 
 interface ViewTab {
@@ -20,20 +20,20 @@ const VIEW_TABS: ViewTab[] = [
   },
   {
     id: 'environment',
-    label: 'Environments',
+    label: 'Vars',
     icon: <Globe className="h-4 w-4" />,
     shortcut: '⌘2'
   },
   {
     id: 'documentation',
-    label: 'Documentation',
+    label: 'Help',
     icon: <BookOpen className="h-4 w-4" />,
     shortcut: '⌘3'
   },
   {
     id: 'bugreport',
-    label: 'Submit Bug',
-    icon: <Bug className="h-4 w-4" />,
+    label: 'Feedback',
+    icon: <MessageSquare className="h-4 w-4" />,
     shortcut: '⌘4'
   }
 ];

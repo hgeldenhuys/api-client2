@@ -27,6 +27,7 @@ import {
   ResizablePanelGroup,
 } from '~/components/ui/resizable';
 import {cn} from '~/utils/cn';
+import {Checkbox} from "~/components/ui/checkbox";
 
 type TTabs = 'summary' | 'environments' | 'globals';
 
@@ -747,8 +748,7 @@ export function EnvironmentView() {
                               ) : (
                                 <Badge variant="outline">Variable</Badge>
                               )}
-                              <input
-                                type="checkbox"
+                              <Checkbox
                                 checked={variable.enabled}
                                 onChange={(e) => updateGlobalVariable(index, {enabled: e.target.checked})}
                                 className="rounded"

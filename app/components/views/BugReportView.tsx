@@ -4,7 +4,7 @@ import { Input } from '~/components/ui/input';
 import { Badge } from '~/components/ui/badge';
 import { Card } from '~/components/ui/card';
 import { 
-  Bug, 
+  MessageSquare, 
   Send, 
   CheckCircle,
   AlertCircle,
@@ -28,37 +28,37 @@ interface FormField {
 const FORM_FIELDS: FormField[] = [
   {
     name: 'title',
-    label: 'Bug Title',
-    placeholder: 'Brief description of the issue',
+    label: 'Title',
+    placeholder: 'Brief description of your feedback',
     required: true,
     type: 'input'
   },
   {
     name: 'description',
     label: 'Description',
-    placeholder: 'Detailed description of the bug',
+    placeholder: 'Detailed description of your bug report, feature idea, or question',
     required: true,
     type: 'textarea'
   },
   {
     name: 'stepsToReproduce',
-    label: 'Steps to Reproduce',
-    placeholder: '1. Go to...\n2. Click on...\n3. See error',
-    required: true,
+    label: 'Steps to Reproduce (for bugs)',
+    placeholder: '1. Go to...\n2. Click on...\n3. See error\n\n(Leave blank for ideas/questions)',
+    required: false,
     type: 'textarea'
   },
   {
     name: 'expectedResult',
-    label: 'Expected Result',
-    placeholder: 'What you expected to happen',
-    required: true,
+    label: 'Expected Behavior/Outcome (for bugs/ideas)',
+    placeholder: 'What you expected to happen or would like to see',
+    required: false,
     type: 'textarea'
   },
   {
     name: 'actualResult',
-    label: 'Actual Result',
-    placeholder: 'What actually happened',
-    required: true,
+    label: 'Actual Behavior (for bugs)',
+    placeholder: 'What actually happened (Leave blank for ideas/questions)',
+    required: false,
     type: 'textarea'
   }
 ];
@@ -95,9 +95,8 @@ export function BugReportView() {
   };
 
   const validateForm = () => {
-    return FORM_FIELDS.filter(field => field.required).every(field => 
-      formData[field.name].trim() !== ''
-    );
+    // Only title and description are required for feedback
+    return formData.title.trim() !== '' && formData.description.trim() !== '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -150,13 +149,13 @@ export function BugReportView() {
       <div className="max-w-4xl mx-auto p-8">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
-            <Bug className="h-6 w-6 text-red-600 dark:text-red-400" />
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+            <MessageSquare className="h-6 w-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Submit Bug Report</h1>
+            <h1 className="text-2xl font-bold">Submit Feedback</h1>
             <p className="text-muted-foreground">
-              Help us improve the API Client by reporting issues you encounter
+              Help us improve the API Client by sharing bugs, ideas, or questions
             </p>
           </div>
         </div>
@@ -168,7 +167,7 @@ export function BugReportView() {
               <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
               <div>
                 <p className="font-medium text-green-800 dark:text-green-200">
-                  Bug report submitted successfully!
+                  Feedback submitted successfully!
                 </p>
                 <p className="text-sm text-green-700 dark:text-green-300">
                   Thank you for helping us improve the API Client.
@@ -187,7 +186,7 @@ export function BugReportView() {
                   Please fill in all required fields
                 </p>
                 <p className="text-sm text-red-700 dark:text-red-300">
-                  All fields marked with * are required to submit a bug report.
+                  Title and Description are required to submit feedback.
                 </p>
               </div>
             </div>
@@ -254,7 +253,7 @@ export function BugReportView() {
                     ) : (
                       <div className="flex items-center gap-2">
                         <Send className="h-4 w-4" />
-                        Submit Report
+                        Submit Feedback
                       </div>
                     )}
                   </Button>
@@ -304,23 +303,23 @@ export function BugReportView() {
             </Card>
 
             <Card className="p-4">
-              <h3 className="font-semibold mb-3">Tips for Better Bug Reports</h3>
+              <h3 className="font-semibold mb-3">Tips for Better Feedback</h3>
               <ul className="text-sm space-y-2">
                 <li className="flex items-start gap-2">
-                  <Badge variant="outline" className="text-xs">1</Badge>
-                  <span>Be specific about what you were trying to do</span>
+                  <Badge variant="outline" className="text-xs">🐛</Badge>
+                  <span><strong>Bug Reports:</strong> Include steps to reproduce</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Badge variant="outline" className="text-xs">2</Badge>
-                  <span>Include exact error messages if any</span>
+                  <Badge variant="outline" className="text-xs">💡</Badge>
+                  <span><strong>Ideas:</strong> Describe the problem and your solution</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Badge variant="outline" className="text-xs">3</Badge>
-                  <span>Describe what you expected vs what happened</span>
+                  <Badge variant="outline" className="text-xs">❓</Badge>
+                  <span><strong>Questions:</strong> Be specific about what you need help with</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Badge variant="outline" className="text-xs">4</Badge>
-                  <span>Include screenshots if helpful</span>
+                  <Badge variant="outline" className="text-xs">📷</Badge>
+                  <span>Screenshots and examples are always helpful</span>
                 </li>
               </ul>
             </Card>

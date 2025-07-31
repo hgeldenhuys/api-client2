@@ -2,6 +2,28 @@ import React from 'react';
 import { useCollectionStore } from '~/stores/collectionStore';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  DragOverlay,
+  type UniqueIdentifier
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from '@dnd-kit/modifiers';
 import { 
   Plus, 
   Search, 
@@ -32,6 +54,8 @@ import { AddRequestDialog } from '~/components/dialogs/AddRequestDialog';
 import { AddFolderDialog } from '~/components/dialogs/AddFolderDialog';
 import { DeleteConfirmDialog } from '~/components/dialogs/DeleteConfirmDialog';
 import { RenameDialog } from '~/components/dialogs/RenameDialog';
+import { DraggableTreeItem } from '~/components/DraggableTreeItem';
+import { flattenTree } from '~/utils/treeUtils';
 
 // Helper function to check if an item matches search query
 function matchesSearch(name: string, query: string): boolean {
@@ -86,6 +110,22 @@ export function CollectionExplorer() {
     renameTarget?: { type: 'collection' | 'folder' | 'request'; id: string; name: string };
   }>({});
   
+  // Drag and drop state
+  const [activeId, setActiveId] = React.useState<UniqueIdentifier | null>(null);
+  const [isDragging, setIsDragging] = React.useState(false);
+  
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 3, // Prevent accidental drags
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+  
   const { 
     collections, 
     activeCollectionId, 
@@ -97,7 +137,11 @@ export function CollectionExplorer() {
     deleteCollection,
     deleteFolder,
     deleteRequest,
-    renameRequest
+    renameRequest,
+    moveItem,
+    duplicateItem,
+    copyToClipboard,
+    pasteFromClipboard
   } = useCollectionStore();
   
   const toggleFolder = (collectionId: string, folderId: string) => {
@@ -139,6 +183,87 @@ export function CollectionExplorer() {
     setDialogContext({});
   };
   
+  // Drag and drop handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id);
+    setIsDragging(true);
+  };
+  
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    
+    setActiveId(null);
+    setIsDragging(false);
+    
+    if (!over || active.id === over.id) {
+      return;
+    }
+    
+    // Extract collection ID and item ID from the drag ID
+    // Format: collectionId:itemId
+    const [dragCollectionId, dragItemId] = String(active.id).split(':');
+    
+    // Extract collection ID, item ID, and position from the drop zone ID
+    // Format: collectionId:itemId:position or collectionId:itemId (for backwards compatibility)
+    const overIdParts = String(over.id).split(':');
+    let dropCollectionId: string, dropItemId: string, position: 'before' | 'after' | 'inside';
+    
+    
+    if (overIdParts.length >= 3) {
+      // New format with position: collectionId:itemId:position
+      [dropCollectionId, dropItemId, position] = overIdParts as [string, string, 'before' | 'after' | 'inside'];
+    } else if (overIdParts.length === 2) {
+      // Old format or item itself: collectionId:itemId
+      [dropCollectionId, dropItemId] = overIdParts;
+      
+      // Find the target item to determine default position
+      const collection = collections.get(dropCollectionId);
+      if (!collection) {
+        return;
+      }
+      
+      const findItemInCollection = (items: (RequestItem | FolderItem)[], targetId: string): RequestItem | FolderItem | null => {
+        for (const item of items) {
+          if (item.id === targetId) return item;
+          if (isFolderItem(item)) {
+            const found = findItemInCollection(item.item, targetId);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      
+      const targetItem = findItemInCollection(collection.collection.item, dropItemId);
+      if (!targetItem) {
+        return;
+      }
+      
+      // Default position based on item type
+      position = isFolderItem(targetItem) ? 'inside' : 'after';
+    } else {
+      return;
+    }
+    
+    if (!dragCollectionId || !dragItemId || !dropCollectionId || !dropItemId) {
+      return;
+    }
+    
+    // For now, only support drag and drop within the same collection  
+    if (dragCollectionId !== dropCollectionId) {
+      return;
+    }
+    
+    
+    // Try to move the item
+    const success = moveItem(dragCollectionId, dragItemId, dropItemId, position);
+    
+  };
+  
+  const handleDragOver = (event: DragOverEvent) => {
+    // Optional: Handle drag over events for visual feedback
+  };
+  
   const renderItem = (
     item: RequestItem | FolderItem, 
     collectionId: string,
@@ -150,156 +275,77 @@ export function CollectionExplorer() {
     const isExpanded = expandedFolders.includes(itemId);
     const isActive = activeRequestId === itemId;
     
-    if (isRequestItem(item)) {
-      return (
-        <div
-          key={itemId}
-          role="button"
-          tabIndex={0}
-          className={`
-            flex items-center gap-2 px-2 py-1.5 cursor-pointer
-            hover:bg-accent rounded-sm group
-            ${isActive ? 'bg-accent' : ''}
-          `}
-          style={{ paddingLeft: `${(depth * UI.INDENT_SIZE) + 8}px` }}
-          onClick={() => handleRequestClick(collectionId, itemId)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              handleRequestClick(collectionId, itemId);
+    return (
+      <DraggableTreeItem
+        key={itemId}
+        item={item}
+        collectionId={collectionId}
+        depth={depth}
+        isExpanded={isExpanded}
+        isActive={isActive}
+        onItemClick={isRequestItem(item) ? () => handleRequestClick(collectionId, itemId) : undefined}
+        onToggle={isFolderItem(item) ? () => toggleFolder(collectionId, itemId) : undefined}
+        onAddRequest={() => {
+          setDialogContext({ collectionId, parentId: itemId });
+          setAddRequestDialogOpen(true);
+        }}
+        onAddFolder={() => {
+          setDialogContext({ collectionId, parentId: itemId });
+          setAddFolderDialogOpen(true);
+        }}
+        onRename={() => {
+          setDialogContext({
+            collectionId,
+            renameTarget: { 
+              type: isRequestItem(item) ? 'request' : 'folder', 
+              id: itemId, 
+              name: item.name 
             }
-          }}
-        >
-          <FileText className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm flex-1 truncate">{item.name}</span>
-          <span className={`
-            text-xs font-medium px-1.5 py-0.5 rounded
-            ${getMethodColorClasses(item.request.method)}
-          `}>
-            {item.request.method}
-          </span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreVertical className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => {
-                setDialogContext({
-                  collectionId,
-                  renameTarget: { type: 'request', id: itemId, name: item.name }
-                });
-                setRenameDialogOpen(true);
-              }}>
-                <Edit2 className="h-4 w-4 mr-2" />
-                Rename
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                className="text-destructive"
-                onClick={() => {
-                  setDialogContext({
-                    collectionId,
-                    deleteTarget: { type: 'request', id: itemId, name: item.name }
-                  });
-                  setDeleteConfirmOpen(true);
-                }}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      );
-    }
-    
-    if (isFolderItem(item)) {
-      return (
-        <div key={itemId}>
-          <div
-            role="button"
-            tabIndex={0}
-            className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-accent rounded-sm group"
-            style={{ paddingLeft: `${(depth * UI.INDENT_SIZE) + 8}px` }}
-            onClick={() => toggleFolder(collectionId, itemId)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                toggleFolder(collectionId, itemId);
-              }
-            }}
-          >
-            {isExpanded ? (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            )}
-            <Folder className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm flex-1 truncate">{item.name}</span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreVertical className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => {
-                  setDialogContext({ collectionId, parentId: itemId });
-                  setAddRequestDialogOpen(true);
-                }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Request
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  setDialogContext({ collectionId, parentId: itemId });
-                  setAddFolderDialogOpen(true);
-                }}>
-                  <FolderPlus className="h-4 w-4 mr-2" />
-                  Add Folder
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  className="text-destructive"
-                  onClick={() => {
-                    setDialogContext({
-                      collectionId,
-                      deleteTarget: { type: 'folder', id: itemId, name: item.name }
-                    });
-                    setDeleteConfirmOpen(true);
-                  }}
-                >
-                  Delete Folder
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          {isExpanded && (
-            <div>
-              {item.item.map(subItem => renderItem(subItem, collectionId, depth + 1))}
-            </div>
-          )}
-        </div>
-      );
-    }
-    
-    return null;
+          });
+          setRenameDialogOpen(true);
+        }}
+        onDelete={() => {
+          setDialogContext({
+            collectionId,
+            deleteTarget: { 
+              type: isRequestItem(item) ? 'request' : 'folder', 
+              id: itemId, 
+              name: item.name 
+            }
+          });
+          setDeleteConfirmOpen(true);
+        }}
+        onDuplicate={() => {
+          duplicateItem(collectionId, itemId);
+        }}
+        onCopy={() => {
+          copyToClipboard(collectionId, itemId);
+        }}
+        onCut={() => {
+          // TODO: Implement cut functionality
+          copyToClipboard(collectionId, itemId);
+        }}
+      >
+        {isFolderItem(item) && isExpanded && (
+          <>
+            {item.item.map(subItem => renderItem(subItem, collectionId, depth + 1))}
+          </>
+        )}
+      </DraggableTreeItem>
+    );
   };
   
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b">
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+    >
+      <div className="h-full flex flex-col">
+        <div className="p-4 border-b">
         <div className="relative mb-3">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -355,6 +401,16 @@ export function CollectionExplorer() {
             )
             .map(([id, { collection }]) => {
               const filteredItems = filterItems(collection.item, searchQuery);
+              // Create flat list of all sortable IDs for this collection
+              const expandedFolders = collections.get(id)?.metadata.expandedFolders || [];
+              const flatItems = flattenTree(
+                filteredItems,
+                id,
+                collection.info.name,
+                expandedFolders
+              );
+              const sortableIds = flatItems.map(item => `${id}:${item.id}`);
+              
               return (
                 <div key={id} className="mb-4">
                   <div 
@@ -423,9 +479,14 @@ export function CollectionExplorer() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <div className="ml-2">
-                    {filteredItems.map(item => renderItem(item, id))}
-                  </div>
+                  <SortableContext 
+                    items={sortableIds}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="ml-2">
+                      {filteredItems.map(item => renderItem(item, id))}
+                    </div>
+                  </SortableContext>
                 </div>
               );
             })
@@ -478,6 +539,15 @@ export function CollectionExplorer() {
         currentName={dialogContext.renameTarget?.name || ''}
         type={dialogContext.renameTarget?.type || 'request'}
       />
-    </div>
+      </div>
+      
+      <DragOverlay>
+        {activeId ? (
+          <div className="bg-accent border border-border rounded-md px-2 py-1 shadow-lg">
+            <span className="text-sm">Moving item...</span>
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

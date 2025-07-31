@@ -16,3 +16,4 @@ proxy-server/dist/
 **/api-client-proxy*
 /test-results/
 /playwright-report/
+*/.react-router/**/*

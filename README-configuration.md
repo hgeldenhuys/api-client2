@@ -217,8 +217,8 @@ If no configuration is provided, the API Client uses these defaults:
 
 ### ✅ Keyboard Shortcuts
 - [x] ⌘1 - Collections
-- [x] ⌘2 - Environments  
-- [x] ⌘3 - Documentation
+- [x] ⌘2 - Vars  
+- [x] ⌘3 - Help
 - [x] ⌘4 - Feedback (if enabled)
 
 ## Integration

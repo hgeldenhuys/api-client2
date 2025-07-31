@@ -93,7 +93,7 @@ export function ViewRouter({
     case 'environment':
       return <>{environmentView}</>;
     case 'documentation':
-      return <>{documentationView || <div className="p-8 text-center text-muted-foreground">Documentation view coming soon...</div>}</>;
+      return <>{documentationView || <div className="p-8 text-center text-muted-foreground">Help view coming soon...</div>}</>;
     case 'bugreport':
       return <>{bugReportView || <div className="p-8 text-center text-muted-foreground">Feedback view coming soon...</div>}</>;
     case 'globals':

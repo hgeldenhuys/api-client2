@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env bun --bun
 
 import {
   getLatestAudioForSession,
@@ -11,10 +11,10 @@ async function main() {
   const agentName = args[0];
   const cardIdStr = args[1];
   const message = args[2] || ""; // Make message optional with empty default
-  
+
   const cardId = cardIdStr ? Number.parseInt(cardIdStr) : NaN;
 
-  if (!agentName || !cardId || isNaN(cardId)) {
+  if (!agentName || !cardId || Number.isNaN(cardId)) {
     CLOUDIOS.error("Usage: /cld:complete <agent-name> <card-id> [message]");
     process.exit(1);
   }
@@ -30,8 +30,11 @@ async function main() {
   // Get the latest audio info for this session
   const audioInfo = await getLatestAudioForSession(session_id, process.cwd());
 
-  const detailsObj: any = {
+  const detailsObj = {
     completion_message: message,
+    audio_summary: "",
+    audio_message_id: "",
+    audio_mp3_path: "",
   };
 
   if (audioInfo) {
@@ -52,13 +55,18 @@ async function main() {
 
   // Pass the details as JSON string
   const details = JSON.stringify(detailsObj);
-  
+
   try {
-    const success = await CLOUDIOS.moveCardTo("review", cardId, session_id, details);
+    const success = await CLOUDIOS.moveCardTo(
+      "review",
+      cardId,
+      session_id,
+      details,
+    );
     if (success) {
       CLOUDIOS.success(`✅ Card ${cardId} moved to Review column`);
       if (message) {
-        CLOUDIOS.info(`📝 Completion message: ${message}`);
+        CLOUDIOS.debug(`📝 Completion message: ${message}`);
       }
     } else {
       CLOUDIOS.error(`❌ Failed to move card ${cardId}`);

@@ -78,6 +78,7 @@ export class RequestExecutor {
       };
       
       // Execute pre-request script if exists
+      let preRequestResults: any = undefined;
       if (preRequestScript) {
         try {
           const scriptExecutor = getScriptExecutor();
@@ -102,10 +103,14 @@ export class RequestExecutor {
             globals
           };
           
-          const preRequestResults = await scriptExecutor.executePreRequestScript(
+          preRequestResults = await scriptExecutor.executePreRequestScript(
             preRequestScript,
             scriptContext
           );
+          
+          // Store pre-request script results (including any errors)
+          const requestStore = useRequestStore.getState();
+          requestStore.setPreRequestScriptResult(preRequestResults);
           
           // Apply request modifications from pre-request script
           if (preRequestResults.requestUpdates) {
@@ -124,6 +129,7 @@ export class RequestExecutor {
             
             // Update headers
             if (updates.headers) {
+              console.log('Applying header updates from pre-request script:', updates.headers);
               Object.entries(updates.headers).forEach(([key, value]) => {
                 if (value === null) {
                   // Remove header
@@ -134,6 +140,7 @@ export class RequestExecutor {
                 }
               });
               requestContext.headers = processedHeaders;
+              console.log('Headers after pre-request script:', processedHeaders);
             }
             
             // Update body
@@ -153,29 +160,25 @@ export class RequestExecutor {
               }
             }
           }
-          
-          // Store pre-request script results
-          const requestStore = useRequestStore.getState();
-          requestStore.setPreRequestScriptResult(preRequestResults);
         } catch (error) {
           console.error('Pre-request script error:', error);
+          
+          // Store the error in the script result so it's visible to the user
+          const errorResult = {
+            tests: [],
+            consoleOutput: [`[ERROR] ${error instanceof Error ? error.message : String(error)}`],
+            error: error instanceof Error ? error.message : String(error)
+          };
+          preRequestResults = errorResult;
+          const requestStore = useRequestStore.getState();
+          requestStore.setPreRequestScriptResult(errorResult);
+          
           // Continue with request even if script fails
         }
       }
       
       // Re-process auth if it was updated by script
-      let requestUpdates: any = undefined;
-      try {
-        const requestStore = useRequestStore.getState();
-        const preRequestResult = requestStore.preRequestScriptResult;
-        if (preRequestResult?.requestUpdates) {
-          requestUpdates = preRequestResult.requestUpdates;
-        }
-      } catch {
-        // Ignore if requestStore is not available
-      }
-      
-      if (requestUpdates?.auth !== undefined) {
+      if (preRequestResults?.requestUpdates?.auth !== undefined) {
         const newAuthResult = this.processAuth(effectiveAuth, context, requestId);
         
         // Update headers with new auth

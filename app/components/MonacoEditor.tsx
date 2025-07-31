@@ -14,6 +14,10 @@ interface MonacoEditorProps {
   placeholder?: string;
 }
 
+// Track whether providers have been registered to avoid duplicates
+let apiScriptProvidersRegistered = false;
+let jsonProvidersRegistered = false;
+
 export function MonacoEditor({
   value,
   onChange,
@@ -280,10 +284,27 @@ export function MonacoEditor({
     // PM object type definitions for IntelliSense
     const pmLibSource = `
 declare namespace pm {
+  interface HeaderItem {
+    key: string;
+    value: string;
+    disabled?: boolean;
+  }
+  
+  interface HeaderList {
+    add(header: HeaderItem | { key: string; value: string }): void;
+    upsert(header: HeaderItem | { key: string; value: string }): void;
+    remove(key: string): void;
+    has(key: string): boolean;
+    get(key: string): string | undefined;
+    each(callback: (header: HeaderItem) => void): void;
+    toObject(): { [key: string]: string };
+    count(): number;
+  }
+  
   interface Request {
     url: string;
     method: string;
-    headers: { [key: string]: string };
+    headers: HeaderList;
     body?: any;
   }
   
@@ -380,7 +401,8 @@ declare const console: Console;
     editorRef.current = editor;
     
     // Only register completion providers for api-script language
-    if (language === 'api-script') {
+    if (language === 'api-script' && !apiScriptProvidersRegistered) {
+      apiScriptProvidersRegistered = true;
       // Register completion provider for variables and PM API
       monaco.languages.registerCompletionItemProvider('api-script', {
         triggerCharacters: ['{', '.', "'", '"'],
@@ -560,7 +582,7 @@ declare const console: Console;
             const requestProperties = [
               { label: 'url', kind: monaco.languages.CompletionItemKind.Property, detail: 'string', documentation: 'The request URL' },
               { label: 'method', kind: monaco.languages.CompletionItemKind.Property, detail: 'string', documentation: 'HTTP method (GET, POST, PUT, etc.)' },
-              { label: 'headers', kind: monaco.languages.CompletionItemKind.Property, detail: 'object', documentation: 'Request headers as key-value pairs' },
+              { label: 'headers', kind: monaco.languages.CompletionItemKind.Property, detail: 'HeaderList', documentation: 'Request headers collection with methods: add, upsert, remove, get, has' },
               { label: 'body', kind: monaco.languages.CompletionItemKind.Property, detail: 'any', documentation: 'Request body content' },
               { label: 'auth', kind: monaco.languages.CompletionItemKind.Property, detail: 'object', documentation: 'Authentication details' }
             ];
@@ -572,6 +594,35 @@ declare const console: Console;
             }));
             
             suggestions.push(...requestSuggestions);
+          }
+          
+          // PM Request.headers methods
+          if (beforePosition.endsWith('pm.request.headers.')) {
+            const range = {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: position.column,
+              endColumn: position.column
+            };
+            
+            const headerMethods = [
+              { label: 'add', kind: monaco.languages.CompletionItemKind.Method, detail: '(header: {key: string, value: string})', documentation: 'Add a new header' },
+              { label: 'upsert', kind: monaco.languages.CompletionItemKind.Method, detail: '(header: {key: string, value: string})', documentation: 'Update existing header or add if not exists' },
+              { label: 'remove', kind: monaco.languages.CompletionItemKind.Method, detail: '(key: string)', documentation: 'Remove a header by key' },
+              { label: 'get', kind: monaco.languages.CompletionItemKind.Method, detail: '(key: string)', documentation: 'Get header value by key' },
+              { label: 'has', kind: monaco.languages.CompletionItemKind.Method, detail: '(key: string)', documentation: 'Check if header exists' },
+              { label: 'each', kind: monaco.languages.CompletionItemKind.Method, detail: '(callback: Function)', documentation: 'Iterate over all headers' },
+              { label: 'toObject', kind: monaco.languages.CompletionItemKind.Method, detail: '()', documentation: 'Convert headers to plain object' },
+              { label: 'count', kind: monaco.languages.CompletionItemKind.Method, detail: '()', documentation: 'Get number of headers' }
+            ];
+            
+            const headerSuggestions = headerMethods.map(method => ({
+              ...method,
+              insertText: method.label,
+              range: range
+            }));
+            
+            suggestions.push(...headerSuggestions);
           }
           
           // PM Response properties and methods
@@ -731,7 +782,9 @@ declare const console: Console;
     }
     
     // Also provide variable completions for JSON
-    monaco.languages.registerCompletionItemProvider('json', {
+    if (!jsonProvidersRegistered) {
+      jsonProvidersRegistered = true;
+      monaco.languages.registerCompletionItemProvider('json', {
       triggerCharacters: ['{'],
       provideCompletionItems: (model, position) => {
         const textUntilPosition = model.getValueInRange({
@@ -768,6 +821,7 @@ declare const console: Console;
         return { suggestions };
       }
     });
+    }
   };
   
   return (

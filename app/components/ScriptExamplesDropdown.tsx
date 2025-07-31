@@ -25,16 +25,31 @@ const preRequestExamples: ScriptExample[] = [
   {
     name: 'Modify Request Headers',
     description: 'Add or update request headers dynamically',
-    code: `// Add authentication header
+    code: `// Add authentication header using upsert (updates if exists, adds if not)
 const token = pm.environment.get('authToken') || 'your-api-token';
-pm.request.addHeader('Authorization', \`Bearer \${token}\`);
+pm.request.headers.upsert({
+  key: 'Authorization',
+  value: \`Bearer \${token}\`
+});
 
 // Add custom headers
-pm.request.addHeader('X-API-Version', 'v2');
-pm.request.addHeader('X-Request-ID', Date.now().toString());
+pm.request.headers.add({
+  key: 'X-API-Version',
+  value: 'v2'
+});
+
+pm.request.headers.add({
+  key: 'X-Request-ID',
+  value: Date.now().toString()
+});
 
 // Remove a header if needed
-// pm.request.removeHeader('User-Agent');`
+// pm.request.headers.remove('User-Agent');
+
+// Check if header exists
+if (pm.request.headers.has('Content-Type')) {
+  console.log('Content-Type:', pm.request.headers.get('Content-Type'));
+}`
   },
   {
     name: 'Set Bearer Token',
@@ -106,7 +121,10 @@ const requestBody = {
 pm.request.setBody(JSON.stringify(requestBody));
 
 // Add Content-Type header for JSON
-pm.request.addHeader('Content-Type', 'application/json');`
+pm.request.headers.upsert({
+  key: 'Content-Type',
+  value: 'application/json'
+});`
   },
   {
     name: 'Set Authentication Token',

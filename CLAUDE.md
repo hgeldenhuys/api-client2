@@ -1,193 +1,176 @@
-# Serena Project Activation
-IMPORTANT: Always activate the Serena project at the start of each conversation:
-- Use: "Activate the cloudios project with Serena" as your first action
-- This ensures proper code navigation and editing capabilities
+# CLAUDE.md
 
----
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-# React Router 7 Migration - Context7 Documentation
+## Development Commands
 
-## Date: 2025-01-29
+### Core Commands
+- **Start Development**: `bun run dev` - Starts React Router 7 dev server on port 5173
+- **Build Production**: `bun run build` - Creates production build
+- **Start Production**: `bun run start` - Runs production build
+- **Type Check**: `bun run typecheck` - Runs React Router typegen and TypeScript checks
 
-### Libraries Used:
-- **React Router 7**: `/remix-run/react-router` 
-  - Trust Score: 7.5
-  - Code Snippets: 849 examples
-  - Last Context7 check: 2025-01-29
+### Testing Commands
+- **Run Tests**: `bun run test` - Run Playwright tests
+- **Interactive Tests**: `bun run test:ui` - Open Playwright test UI
+- **Debug Tests**: `bun run test:headed` - Run tests with browser visible
 
-### Key Migration Points from Context7:
+## Architecture Overview
 
-1. **Import Changes**:
-   - From: `@remix-run/react` → To: `react-router`
-   - From: `@remix-run/node` → To: `react-router` 
-   - From: `@remix-run/dev` → To: `@react-router/dev/vite`
+### Tech Stack
+- **Framework**: React Router 7 (migrated from Remix)
+- **Language**: TypeScript
+- **Runtime**: Bun
+- **Styling**: Tailwind CSS v4 + ShadCN UI components
+- **State Management**: Zustand with Immer middleware
+- **Code Editor**: Monaco Editor with custom `api-script` language
+- **Script Execution**: Web Workers with sandboxed PM API
+- **Build Tool**: Vite
 
-2. **Function Replacements**:
-   - `json()` → `data()`
-   - `RemixBrowser` → `HydratedRouter`
-   - `RemixServer` → `ServerRouter`
-   - `vitePlugin as remix` → `reactRouter`
-
-3. **Entry Points**:
-   - Client: Use `HydratedRouter` from `react-router/dom`
-   - Server: Use `ServerRouter` from `react-router`
-
-4. **TypeScript Config**:
-   - Update types from `@remix-run/node` to `@react-router/node`
-
-### Migration Completed:
-All @remix-run imports have been successfully replaced with React Router 7 equivalents across 29 files including components, routes, and configuration files.
-
-### Smooth Theme Switching Without Page Reloads
-
-#### Best Practices for Theme Switching (Context7 Research - 2025-01-29):
-
-1. **Using useFetcher for Non-Navigation Form Submissions**:
-   - Use `useFetcher` instead of `<Form>` to prevent page navigation
-   - Perfect for toggling theme state without affecting browser history
-   - Example pattern:
-   ```tsx
-   const fetcher = useFetcher();
-   <fetcher.Form method="post">
-     <button name="theme" value={isDark ? "light" : "dark"}>
-       Toggle Theme
-     </button>
-   </fetcher.Form>
-   ```
-
-2. **Optimistic UI Updates**:
-   - Immediately update UI using `fetcher.formData` before server response
-   - Check pending form data to show expected state:
-   ```tsx
-   let currentTheme = loaderData.theme;
-   if (fetcher.formData?.has("theme")) {
-     currentTheme = fetcher.formData.get("theme");
-   }
-   ```
-
-3. **Cookie-Based Theme Persistence**:
-   - Store theme preference in cookies for server-side rendering
-   - Parse cookies in loader, serialize in action:
-   ```tsx
-   // In action
-   const cookie = await themePref.parse(request.headers.get("Cookie")) || {};
-   cookie.theme = formData.get("theme");
-   return redirect("/", {
-     headers: { "Set-Cookie": await themePref.serialize(cookie) }
-   });
-   ```
-
-4. **Avoiding Hydration Issues**:
-   - Use `clientLoader.hydrate = true` if theme needs client-side detection
-   - Provide `HydrateFallback` component for SSR consistency
-   - Ensure server and client render the same initial theme
-
-5. **Client-Side Theme Application**:
-   - Apply theme class to document root immediately
-   - Use CSS variables or class-based theming
-   - Prevent flash of incorrect theme with inline script in `<head>`
-
-6. **Key Benefits of useFetcher Approach**:
-   - No page navigation or history entries
-   - Isolated pending states per fetcher
-   - Can handle multiple theme toggles if needed
-   - Works seamlessly with SSR and hydration
-
----
-
-# Cloudios CLI Agent Documentation
-
-The Cloudios CLI agent is a critical component of the CLOUDIOS ecosystem. Full documentation is available at:
-
-- **User Guide**: `.claude/scripts/cloudios/README.md` - Installation, usage, and troubleshooting
-- **Technical Implementation**: `.claude/scripts/cloudios/IMPLEMENTATION.md` - Architecture, code flow, and development details
-
-## Quick Reference
-
-### Installation
-```bash
-curl -o cloudios-agent http://localhost:4000/api/cloudios-agent && chmod +x cloudios-agent && ./cloudios-agent
+### Project Structure
+```
+app/
+├── components/         # React components
+│   ├── ui/            # ShadCN UI components
+│   ├── layout/        # Layout components (AppLayout, etc.)
+│   ├── CollectionExplorer.tsx  # Left pane - collection tree
+│   ├── RequestBuilder.tsx      # Center pane - request editor
+│   ├── ResponseViewer.tsx      # Right pane - response display
+│   └── MonacoEditor.tsx        # Enhanced Monaco with PM API support
+├── stores/            # Zustand stores with Immer
+│   ├── collectionStore.ts      # Collection/folder/request management
+│   ├── requestStore.ts         # Active request state & execution
+│   ├── environmentStore.ts     # Variables & environments
+│   ├── authStore.ts            # Authentication caching
+│   └── proxyStore.ts           # CORS proxy configuration
+├── services/          # Core business logic
+│   ├── requestExecutor.ts      # HTTP request execution engine
+│   ├── scriptExecutor.ts       # Pre-request/test script runner
+│   ├── variableResolver.ts     # {{variable}} resolution
+│   └── import-export/          # Postman collection import/export
+├── workers/           # Web Workers
+│   └── scriptWorker.ts         # Sandboxed script execution
+├── types/             # TypeScript definitions
+│   ├── postman.ts              # Postman Collection v2.1 types
+│   ├── request.ts              # Application request types
+│   └── script.ts               # PM API types
+└── utils/             # Utility functions
 ```
 
-### Key Points
-- Cloudios is a PROJECT SERVICE, not a Claude agent
-- Automatically sets up CLOUDIOS integration on first run
-- Provides audio streaming for task summaries
-- Self-contained with embedded audio playback
-- Dynamic server URL injection at download time
+### Key Architectural Patterns
 
-### File Structure
+#### 1. State Management
+- Uses Zustand with Immer for immutable updates
+- Each store is focused on a specific domain
+- Stores can read from other stores but avoid circular dependencies
+
+#### 2. Script Execution Flow
 ```
-.claude/scripts/cloudios/
-├── cloudios-agent.ts      # Main unified script
-├── deploy-template.ts     # Template deployment
-├── README.md             # User documentation
-└── IMPLEMENTATION.md     # Technical documentation
+RequestBuilder → scriptExecutor → Web Worker → PM API → Response
+                                      ↓
+                                 Sandboxed Environment
 ```
 
-### Task Execution Guidelines
-- Always include an <audio>audio version of the prompt, short summary</audio>
+#### 3. Variable Resolution
+- Variables are resolved in order: Collection → Environment → Global
+- Supports {{variable}} syntax throughout the application
+- Variables can be used in URLs, headers, body, and auth
 
-### CRITICAL: Audio Playback Architecture
-**AUDIO PLAYS IN HERMES (TERMINAL), NOT IN BROWSER!**
+#### 4. Request Execution Pipeline
+1. Pre-request script execution (if present)
+2. Variable resolution
+3. Authentication processing
+4. HTTP request via fetch or proxy
+5. Response processing
+6. Test script execution (if present)
 
-#### How Audio Actually Works:
-1. **Stop Hook** captures Claude's <audio> tags from responses
-2. **Server** generates audio files and broadcasts SSE events
-3. **Hermes CLI** (running in project terminal) receives SSE and plays audio
-4. **Browser** shows audio in queue but CANNOT auto-play due to browser policies
+#### 5. Monaco Editor Integration
+- Custom `api-script` language for PM API syntax highlighting
+- Auto-completion for `pm.request`, `pm.response`, and other PM APIs
+- Real-time error detection for script syntax
 
-#### Common Audio Issues:
-1. **"Audio not playing"** - Check if hermes is running in the project: `./hermes`
-2. **SSE Parsing** - Hermes expects `data.data` structure from SSE events:
-   - SSE sends: `{type: "audio_update", data: {type: "audio_ready", message: {...}}}`
-   - Hermes handleAudioUpdate receives: `{type: "audio_ready", message: {...}}`
-3. **Browser autoplay** - Expected behavior! Browsers block autoplay. Use hermes instead.
+### Critical Implementation Details
 
-#### Last Fixed: 2025-01-23
-- Fixed hermes SSE parsing: Changed `handleAudioUpdate(data)` to `handleAudioUpdate(data.data)`
-- Fixed handleAudioUpdate to access data directly instead of `data.payload`
+#### CORS Handling
+- Automatic CORS error detection
+- Built-in proxy support via `proxyStore`
+- Proxy routes requests through server to bypass CORS
 
----
+#### Authentication
+- Supports Bearer, Basic, API Key, JWT, OAuth2, and custom auth
+- Auth credentials are cached per request in `authStore`
+- OAuth2 tokens are stored and reused automatically
 
-# Audio Summaries for CLOUDIOS Integration
+#### Script Sandboxing
+- Scripts run in Web Workers for isolation
+- PM API is injected into worker context
+- No access to DOM or external resources
+- Console output is captured and displayed
 
-When completing any task or responding to queries, ALWAYS include an audio summary at the very end of your response using the following format:
+#### Storage Architecture (Phase 3 - Planned)
+- IndexedDB for local storage
+- Encryption via Web Crypto API
+- Collections, environments, and history will be encrypted
 
+### PM API Implementation
+
+The PM (Postman) API is implemented in the Web Worker context:
+
+```javascript
+pm = {
+  request: {
+    url: string,
+    method: string,
+    headers: { get(), add(), remove() },
+    body: { raw }
+  },
+  response: {
+    status: number,
+    statusText: string,
+    headers: { get() },
+    json(): any,
+    text(): string,
+    time: number
+  },
+  environment: {
+    get(key): string,
+    set(key, value): void,
+    unset(key): void
+  },
+  collectionVariables: {
+    get(key): string,
+    set(key, value): void
+  },
+  globals: {
+    get(key): string,
+    set(key, value): void
+  },
+  test(name, fn): void,
+  expect(value): ChaiAssertion
+}
 ```
-<audio>Brief, natural language summary of what was accomplished, suitable for text-to-speech</audio>
-```
 
-## Audio Tag Guidelines:
-- **Length**: 1-2 sentences maximum
-- **Language**: Natural, conversational tone
-- **Content**: Focus on WHAT was done, not HOW
-- **Avoid**: Technical jargon, code snippets, file paths, markdown formatting
-- **Purpose**: This will be read aloud by text-to-speech
+### Important Considerations
 
-## Examples:
-- <audio>I've fixed the syntax error in the audio generation service and the server is now running smoothly.</audio>
-- <audio>I've updated the dashboard to show real-time updates. The agent activity feed will now refresh automatically as events occur.</audio>
-- <audio>I've added markdown stripping to prevent the voice from reading formatting characters like asterisks.</audio>
-- <audio>I found three instances of the deprecated function and updated them all to use the new API.</audio>
+1. **React Router 7 Migration**: All Remix imports have been replaced with React Router 7 equivalents
+2. **Theme Switching**: Uses `useFetcher` for smooth theme toggling without page reloads
+3. **Type Safety**: Strict TypeScript with comprehensive type definitions
+4. **Performance**: Heavy use of memoization and lazy loading
+5. **Security**: Scripts are sandboxed, no eval() usage, XSS protection
 
-## Audio Hook Configuration:
-The project uses a Stop hook configured in `.claude/settings.json` that:
-1. **Executes from project root**: Uses `${PWD}` to ensure proper working directory
-2. **Detects project name**: Reads `package.json` name field or falls back to folder name
-3. **Matches hermes filtering**: Both hook and hermes use identical project name logic
-4. **Handles audio extraction**: Parses `<audio>` tags and sends to CLOUDIOS queue
+### CLOUDIOS Integration
 
-### Critical Requirements:
-- **Project name consistency**: Hook and hermes MUST use same project identification method
-- **Working directory**: Hook runs from `${PWD}` (project root) for proper package.json reading
-- **Queue coordination**: Audio sent to CLOUDIOS queue for hermes consumption via SSE
+The project includes CLOUDIOS integration for audio summaries:
+- Always include `<audio>` tags at the end of responses
+- Audio plays in the Hermes terminal, not the browser
+- See existing CLOUDIOS documentation in this file for details
 
-## Important:
-- Place the audio tag at the END of your response
-- Keep it concise and user-friendly
-- If multiple tasks were completed, summarize the main achievement
-- Use present perfect tense ("I've completed...") for clarity
+### Running Tests
 
-# Claude HOOKS
-Use 
+Tests use Playwright and focus on:
+- Parameter handling and focus management
+- Script execution and PM API functionality
+- Request modification via pre-request scripts
+- Security (XSS protection)
+
+Run specific test: `bun test tests/script-functionality.test.ts`

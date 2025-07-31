@@ -60,16 +60,19 @@ function getAuthParam(params: AuthParam[] | undefined, key: string): string {
 }
 
 function setAuthParam(params: AuthParam[] | undefined, key: string, value: string): AuthParam[] {
-  const existing = params || [];
-  const index = existing.findIndex(p => p.key === key);
+  // Create a new array to avoid mutating immutable objects
+  const newParams = [...(params || [])];
+  const index = newParams.findIndex(p => p.key === key);
   
   if (index >= 0) {
-    existing[index] = { key, value, type: 'string' };
+    // Replace existing param
+    newParams[index] = { key, value, type: 'string' };
   } else {
-    existing.push({ key, value, type: 'string' });
+    // Add new param
+    newParams.push({ key, value, type: 'string' });
   }
   
-  return [...existing];
+  return newParams;
 }
 
 export function AuthenticationEditor({ auth, onChange, collectionAuth }: AuthenticationEditorProps) {
@@ -86,11 +89,32 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
   };
 
   const updateParam = (authType: AuthType, key: string, value: string) => {
-    if (!effectiveAuth) return;
+    // If we're editing an inherited auth or no auth exists, create a new auth object
+    let authToUpdate = effectiveAuth;
+    
+    if (!auth && collectionAuth) {
+      // When editing inherited auth, create a deep copy to avoid mutation
+      authToUpdate = {
+        type: collectionAuth.type,
+        ...Object.keys(collectionAuth).reduce((acc, key) => {
+          if (key !== 'type' && collectionAuth[key as keyof Auth]) {
+            // Deep copy the auth params array
+            acc[key] = [...(collectionAuth[key as keyof Auth] as AuthParam[] || [])];
+          }
+          return acc;
+        }, {} as any)
+      };
+    } else if (!authToUpdate) {
+      // Create a new auth object when no auth exists
+      authToUpdate = {
+        type: authType,
+        [authType]: []
+      };
+    }
     
     const updatedAuth = {
-      ...effectiveAuth,
-      [authType]: setAuthParam(effectiveAuth[authType as keyof Auth] as AuthParam[], key, value)
+      ...authToUpdate,
+      [authType]: setAuthParam(authToUpdate[authType as keyof Auth] as AuthParam[], key, value)
     };
     
     onChange(updatedAuth);

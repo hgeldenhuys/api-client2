@@ -35,6 +35,16 @@ export function ResponseViewer() {
   
   const [responseView, setResponseView] = React.useState<'pretty' | 'raw' | 'preview'>('pretty');
   
+  // Helper function to get console line styling based on content
+  const getConsoleLineClass = (line: string): string => {
+    if (line.startsWith('[ERROR]')) return 'text-red-500';
+    if (line.startsWith('[WARN]')) return 'text-yellow-500';
+    if (line.startsWith('[INFO]')) return 'text-blue-500';
+    if (line.startsWith('[DEBUG]')) return 'text-gray-500';
+    if (line.startsWith('[ALERT]')) return 'text-orange-500';
+    return 'text-muted-foreground';
+  };
+  
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -400,7 +410,7 @@ export function ResponseViewer() {
                   <div className="text-xs font-semibold text-muted-foreground uppercase">Pre-request Script</div>
                   <div className="space-y-1">
                     {preRequestScriptResult.consoleOutput.map((line, index) => (
-                      <div key={`pre-${index}`} className="text-muted-foreground">
+                      <div key={`pre-${index}`} className={getConsoleLineClass(line)}>
                         {line}
                       </div>
                     ))}
@@ -412,7 +422,7 @@ export function ResponseViewer() {
                   <div className="text-xs font-semibold text-muted-foreground uppercase">Test Script</div>
                   <div className="space-y-1">
                     {testScriptResult.consoleOutput.map((line, index) => (
-                      <div key={`test-${index}`} className="text-muted-foreground">
+                      <div key={`test-${index}`} className={getConsoleLineClass(line)}>
                         {line}
                       </div>
                     ))}

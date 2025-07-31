@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Input Manual Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .instructions {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #fff;
+            border-left: 3px solid #007bff;
+        }
+        .error-box {
+            background-color: #ffebee;
+            padding: 15px;
+            border-radius: 5px;
+            color: #c62828;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .success-box {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            color: #2e7d32;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Manual Test Instructions for Auth Input Issue</h1>
+    
+    <div class="test-section">
+        <h2>Issue Description</h2>
+        <div class="error-box">
+            Error: "Uncaught TypeError: Cannot add property 0, object is not extensible"<br>
+            Location: AuthenticationEditor.tsx:69 (Array.push)
+        </div>
+        <p>This error occurs when trying to type in authentication input fields.</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Steps</h2>
+        <div class="instructions">
+            <p><strong>Prerequisites:</strong> Make sure the dev server is running on http://localhost:5173</p>
+        </div>
+        
+        <div class="step">
+            <strong>Step 1:</strong> Open the application at http://localhost:5173
+        </div>
+        
+        <div class="step">
+            <strong>Step 2:</strong> Click on "New Request" button to create a new request
+        </div>
+        
+        <div class="step">
+            <strong>Step 3:</strong> Click on the "Auth" tab
+        </div>
+        
+        <div class="step">
+            <strong>Step 4:</strong> Select "Bearer Token" from the authentication type dropdown
+        </div>
+        
+        <div class="step">
+            <strong>Step 5:</strong> Try to type in the Bearer token input field
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Expected Results</h2>
+        <div class="success-box">
+            ✓ The input field should accept text without errors<br>
+            ✓ The typed value should appear in the input field<br>
+            ✓ No console errors should occur
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>What Was Fixed</h2>
+        <ul>
+            <li><strong>Issue:</strong> The auth params array was immutable (from Zustand store)</li>
+            <li><strong>Fix 1:</strong> Modified <code>setAuthParam</code> to create a new array instead of mutating</li>
+            <li><strong>Fix 2:</strong> Added deep copy logic when editing inherited auth from collection</li>
+            <li><strong>Fix 3:</strong> Ensured proper auth object creation when none exists</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Additional Test Cases</h2>
+        <ol>
+            <li>Test Basic Auth with username and password fields</li>
+            <li>Test API Key auth with key name and value fields</li>
+            <li>Test switching between auth types and verify values persist</li>
+            <li>Test with inherited auth from collection (if available)</li>
+        </ol>
+    </div>
+</body>
+</html>

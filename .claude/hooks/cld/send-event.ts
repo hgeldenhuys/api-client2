@@ -56,10 +56,23 @@ async function main() {
     );
     process.exit(0);
   }
+  
+  // Handle UserPromptSubmit events - create new prompt context
+  if (event.hook_event_name === "UserPromptSubmit") {
+    const prompt = event.prompt || "";
+    CLOUDIOS.createPromptContext(event.session_id, prompt, event.cwd);
+    CLOUDIOS.debug(`Created new prompt context for session ${event.session_id}`);
+  }
+  
+  // Read current prompt context and attach prompt_id
+  const context = CLOUDIOS.readPromptContext(event.cwd);
+  const prompt_id = context?.prompt_id;
+  
   const data: SendEventEvent = {
     ...event,
     timestamp: Date.now(),
     agent_name,
+    prompt_id,
   };
 
   const serverUrl = `${paths().CLOUDIOS_URL}/api/hooks`;

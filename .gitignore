@@ -14,3 +14,5 @@ proxy-server/dist/
 **/proxy-server/dist/
 **/*proxy*
 **/api-client-proxy*
+/test-results/
+/playwright-report/

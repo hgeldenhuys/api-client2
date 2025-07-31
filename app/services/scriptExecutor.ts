@@ -10,6 +10,7 @@ import { TIMEOUTS } from '~/constants';
 
 export class ScriptExecutor {
   private worker: Worker | null = null;
+  private initializationError: string | null = null;
   private pendingExecutions: Map<string, {
     resolve: (result: ScriptResult) => void;
     reject: (error: Error) => void;
@@ -29,8 +30,13 @@ export class ScriptExecutor {
       
       this.worker.addEventListener('message', this.handleWorkerMessage.bind(this));
       this.worker.addEventListener('error', this.handleWorkerError.bind(this));
+      
+      // Clear any previous initialization error
+      this.initializationError = null;
     } catch (error) {
       console.error('Failed to initialize script worker:', error);
+      this.initializationError = `Failed to initialize script worker: ${error instanceof Error ? error.message : String(error)}`;
+      this.worker = null;
     }
   }
   
@@ -46,7 +52,15 @@ export class ScriptExecutor {
     this.pendingExecutions.delete(id);
     
     if (type === 'error') {
-      pending.reject(new Error(error ?? 'Unknown script error'));
+      // Don't reject - return the error as a result so it can be displayed
+      const errorMessage = error ?? 'Unknown script error';
+      const result: ScriptResult = {
+        tests: tests ?? [],
+        consoleOutput: [...(consoleOutput ?? []), `[ERROR] ${errorMessage}`],
+        error: errorMessage,
+        requestUpdates: requestUpdates
+      };
+      pending.resolve(result);
     } else {
       const result: ScriptResult = {
         tests: tests ?? [],
@@ -54,6 +68,10 @@ export class ScriptExecutor {
         error: undefined,
         requestUpdates: requestUpdates
       };
+      
+      if (requestUpdates) {
+        console.log('Script executor received requestUpdates:', requestUpdates);
+      }
       
       // TODO: Apply environment and global updates
       if (environmentUpdates) {
@@ -137,7 +155,22 @@ export class ScriptExecutor {
     }
   ): Promise<ScriptResult> {
     if (!this.worker) {
-      throw new Error('Script worker not initialized');
+      // Return initialization error in console output instead of throwing
+      const errorMessage = this.initializationError || 'Script worker not initialized';
+      const consoleMessages = [
+        `[ERROR] ${errorMessage}`,
+        `[ERROR] Scripts cannot be executed until this issue is resolved.`,
+        `[ERROR] Possible causes:`,
+        `[ERROR]   - Web Worker support is disabled in your browser`,
+        `[ERROR]   - Content Security Policy blocking worker creation`,
+        `[ERROR]   - Script worker file failed to load`
+      ];
+      return {
+        tests: [],
+        consoleOutput: consoleMessages,
+        error: errorMessage,
+        requestUpdates: undefined
+      };
     }
     
     const id = `exec-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -162,6 +195,14 @@ export class ScriptExecutor {
         }
       }, TIMEOUTS.SCRIPT_EXECUTION_TIMEOUT);
     });
+  }
+  
+  isWorkerHealthy(): boolean {
+    return this.worker !== null && this.initializationError === null;
+  }
+  
+  getInitializationError(): string | null {
+    return this.initializationError;
   }
   
   terminate() {

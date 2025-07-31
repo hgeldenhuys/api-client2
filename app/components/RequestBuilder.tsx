@@ -279,6 +279,9 @@ export function RequestBuilder() {
   const handleSendRequest = async () => {
     if (!url) return;
     
+    // Get the current request for auth
+    const currentRequest = activeCollectionId && activeRequestId ? findRequestById(activeCollectionId, activeRequestId) : null;
+    
     const grouped = groupParametersByLocation(parameters);
     
     // Build URL with query parameters AND path variables replaced
@@ -328,7 +331,7 @@ export function RequestBuilder() {
         value: replaceVariables(p.value)
       })),
       body: requestBody,
-      auth: request?.auth
+      auth: currentRequest?.auth
     }, activeRequestId || 'temp-request', {
       preRequest: preRequestScript || undefined,
       test: testScript || undefined
@@ -630,7 +633,7 @@ export function RequestBuilder() {
                     value={preRequestScript}
                     onChange={(value) => setPreRequestScript(value || '')}
                     language="api-script"
-                    placeholder="// Example: Set an auth token&#10;pm.environment.set('authToken', 'your-token-here');"
+                    placeholder="// Example: Set headers&#10;pm.request.headers.add({ key: 'X-Auth-Token', value: pm.environment.get('token') });&#10;&#10;// Example: Set environment variable&#10;pm.environment.set('authToken', 'your-token-here');"
                     theme={theme === "dark" ? "vs-dark" : "vs"}
                   />
                 </React.Suspense>

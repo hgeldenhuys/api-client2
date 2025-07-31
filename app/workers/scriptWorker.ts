@@ -25,6 +25,7 @@ interface ScriptContext {
   };
   environment: Record<string, string>;
   globals: Record<string, string>;
+  collectionVariables: Record<string, string>;
 }
 
 interface WorkerResult {
@@ -118,11 +119,58 @@ function createPMObject(context: ScriptContext) {
     auth: context.request.auth ? JSON.parse(JSON.stringify(context.request.auth)) : undefined
   };
   
+  // Create HeaderList implementation
+  class HeaderList {
+    private headers: Record<string, string> = { ...context.request.headers };
+    
+    add(header: { key: string; value: string }) {
+      this.headers[header.key] = header.value;
+      if (!requestUpdates.headers) requestUpdates.headers = {};
+      requestUpdates.headers[header.key] = header.value;
+    }
+    
+    upsert(header: { key: string; value: string }) {
+      this.headers[header.key] = header.value;
+      if (!requestUpdates.headers) requestUpdates.headers = {};
+      requestUpdates.headers[header.key] = header.value;
+    }
+    
+    remove(key: string) {
+      delete this.headers[key];
+      if (!requestUpdates.headers) requestUpdates.headers = {};
+      requestUpdates.headers[key] = null; // Mark for deletion
+    }
+    
+    get(key: string): string | undefined {
+      return this.headers[key];
+    }
+    
+    has(key: string): boolean {
+      return key in this.headers;
+    }
+    
+    each(callback: (header: { key: string; value: string }) => void) {
+      Object.entries(this.headers).forEach(([key, value]) => {
+        callback({ key, value });
+      });
+    }
+    
+    toObject(): Record<string, string> {
+      return { ...this.headers };
+    }
+    
+    count(): number {
+      return Object.keys(this.headers).length;
+    }
+  }
+  
+  const headerList = new HeaderList();
+  
   const pm = {
     request: {
       url: mutableRequest.url,
       method: mutableRequest.method,
-      headers: mutableRequest.headers,
+      headers: headerList,
       body: mutableRequest.body,
       
       // Methods to modify the request
@@ -137,15 +185,11 @@ function createPMObject(context: ScriptContext) {
       },
       
       addHeader: (key: string, value: string) => {
-        mutableRequest.headers[key] = value;
-        if (!requestUpdates.headers) requestUpdates.headers = {};
-        requestUpdates.headers[key] = value;
+        headerList.add({ key, value });
       },
       
       removeHeader: (key: string) => {
-        delete mutableRequest.headers[key];
-        if (!requestUpdates.headers) requestUpdates.headers = {};
-        requestUpdates.headers[key] = null; // Mark for deletion
+        headerList.remove(key);
       },
       
       setBody: (body: any) => {
@@ -212,6 +256,18 @@ function createPMObject(context: ScriptContext) {
         globalUpdates[key] = '';
       },
       has: (key: string) => key in context.globals
+    },
+    
+    collectionVariables: {
+      get: (key: string) => context.collectionVariables[key],
+      set: (key: string, value: string) => {
+        context.collectionVariables[key] = value;
+        // Note: Collection variables are typically not persisted from scripts
+      },
+      unset: (key: string) => {
+        delete context.collectionVariables[key];
+      },
+      has: (key: string) => key in context.collectionVariables
     },
     
     test: (name: string, fn: () => void) => {
@@ -433,7 +489,24 @@ self.addEventListener('message', async (event: MessageEvent<WorkerMessage>) => {
       
       // Create execution function with timeout
       // NOSONAR - Dynamic code execution is required for script functionality in isolated worker
-      const executeScript = new Function('pm', script);
+      const executeScript = new Function('pm', `
+        try {
+          ${script}
+        } catch (error) {
+          // Enhance error messages for common mistakes
+          if (error instanceof TypeError && error.message.includes("Cannot read properties of undefined")) {
+            // Check for common PM API mistakes
+            const errorStr = error.toString();
+            if (errorStr.includes("collectionVariables") && errorStr.includes("'get'")) {
+              throw new Error("pm.collectionVariables is not available. Did you mean pm.variables or pm.environment?");
+            }
+            if (errorStr.includes("variables") && errorStr.includes("'get'")) {
+              throw new Error("pm.variables is not available in pre-request scripts. Use pm.environment, pm.globals, or pm.collectionVariables instead.");
+            }
+          }
+          throw error;
+        }
+      `);
       
       // Set up timeout
       const timeoutId = setTimeout(() => {
@@ -462,11 +535,24 @@ self.addEventListener('message', async (event: MessageEvent<WorkerMessage>) => {
         throw error;
       }
     } catch (error) {
+      // Enhanced error handling for common mistakes
+      let errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Check for common syntax errors
+      if (errorMessage.includes('Invalid left-hand side in assignment')) {
+        // Check if it's the common header mistake
+        if (script.includes('.headers.add(') || script.includes('.headers.upsert(')) {
+          errorMessage = `Syntax Error: Header methods require an object parameter.
+Example: pm.request.headers.add({ key: 'Header-Name', value: 'Header-Value' })
+Your code appears to be using: methodName() = value, which is invalid JavaScript.`;
+        }
+      }
+      
       // Send error result
       const result: WorkerResult = {
         id,
         type: 'error',
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
         consoleOutput,
         tests
       };

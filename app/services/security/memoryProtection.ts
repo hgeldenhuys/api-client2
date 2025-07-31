@@ -2,7 +2,7 @@
  * Memory protection utilities to prevent XSS access to sensitive data
  */
 
-import { EncryptionService } from '../storage/encryption';
+import { EncryptionService } from "../storage/encryption";
 
 export class MemoryProtection {
   private static sensitiveRefs = new WeakSet();
@@ -55,22 +55,22 @@ export class MemoryProtection {
    */
   static createSecureWrapper<T extends (...args: any[]) => any>(
     operation: T,
-    clearResult: boolean = true
+    clearResult: boolean = true,
   ): T {
     return ((...args: any[]) => {
       try {
         const result = operation(...args);
-        
-        if (clearResult && typeof result === 'object' && result !== null) {
+
+        if (clearResult && typeof result === "object" && result !== null) {
           this.markSensitive(result);
           this.scheduleClearing(result, 10000); // Clear after 10 seconds
         }
-        
+
         return result;
       } catch (error) {
         // Clear arguments from memory on error
-        args.forEach(arg => {
-          if (typeof arg === 'object' && arg !== null) {
+        args.forEach((arg) => {
+          if (typeof arg === "object" && arg !== null) {
             this.clearSensitiveData(arg);
           }
         });
@@ -84,50 +84,50 @@ export class MemoryProtection {
    */
   static createSecureProxy<T extends object>(
     target: T,
-    sensitiveKeys: (keyof T)[]
+    sensitiveKeys: (keyof T)[],
   ): T {
     const sensitiveKeySet = new Set(sensitiveKeys);
-    
+
     return new Proxy(target, {
       get(obj, prop) {
         const value = (obj as any)[prop];
-        
+
         if (sensitiveKeySet.has(prop as keyof T)) {
           // Log access to sensitive properties for monitoring
           console.warn(`Access to sensitive property: ${String(prop)}`);
-          
+
           // Return a copy to prevent reference retention
-          if (typeof value === 'object' && value !== null) {
+          if (typeof value === "object" && value !== null) {
             return JSON.parse(JSON.stringify(value));
           }
         }
-        
+
         return value;
       },
-      
+
       set(obj, prop, value) {
         if (sensitiveKeySet.has(prop as keyof T)) {
           // Mark sensitive data
-          if (typeof value === 'object' && value !== null) {
+          if (typeof value === "object" && value !== null) {
             MemoryProtection.markSensitive(value);
           }
         }
-        
+
         (obj as any)[prop] = value;
         return true;
       },
-      
+
       deleteProperty(obj, prop) {
         if (sensitiveKeySet.has(prop as keyof T)) {
           const value = (obj as any)[prop];
-          if (typeof value === 'object' && value !== null) {
+          if (typeof value === "object" && value !== null) {
             MemoryProtection.clearSensitiveData(value);
           }
         }
-        
+
         delete (obj as any)[prop];
         return true;
-      }
+      },
     });
   }
 
@@ -135,38 +135,41 @@ export class MemoryProtection {
    * Monitor for potential XSS attempts accessing sensitive data
    */
   static installAccessMonitor(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     // Monitor console access attempts
     const originalConsole = { ...console };
-    
-    ['log', 'warn', 'error', 'info', 'debug'].forEach(method => {
+
+    ["log", "warn", "error", "info", "debug"].forEach((method) => {
       (console as any)[method] = (...args: any[]) => {
         // Check if any argument contains sensitive patterns
-        const hasSecrets = args.some(arg => 
-          typeof arg === 'string' && 
-          (arg.includes('secret') || arg.includes('token') || arg.includes('key'))
+        const hasSecrets = args.some(
+          (arg) =>
+            typeof arg === "string" &&
+            (arg.includes("secret") ||
+              arg.includes("token") ||
+              arg.includes("key")),
         );
-        
+
         if (hasSecrets) {
-          console.warn('Potential sensitive data exposure attempt detected');
+          console.warn("Potential sensitive data exposure attempt detected");
         }
-        
+
         return (originalConsole as any)[method](...args);
       };
     });
 
     // Monitor global variable access
-    if (typeof Proxy !== 'undefined') {
+    if (typeof Proxy !== "undefined") {
       const originalGlobal = window as any;
-      
+
       // Protect against common XSS patterns
-      Object.defineProperty(window, 'useEnvironmentStore', {
+      Object.defineProperty(window, "useEnvironmentStore", {
         get: () => {
-          console.warn('Direct access to environment store detected');
+          console.warn("Direct access to environment store detected");
           return originalGlobal.useEnvironmentStore;
         },
-        configurable: false
+        configurable: false,
       });
     }
   }
@@ -176,9 +179,9 @@ export class MemoryProtection {
    */
   static cleanup(): void {
     // Clear all pending timers
-    this.clearTimers.forEach(timer => clearTimeout(timer));
+    this.clearTimers.forEach((timer) => clearTimeout(timer));
     this.clearTimers.clear();
-    
+
     // Note: WeakSet automatically cleans up when objects are garbage collected
   }
 }

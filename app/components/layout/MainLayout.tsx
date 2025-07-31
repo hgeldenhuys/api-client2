@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface MainLayoutProps {
   topBar?: React.ReactNode;
@@ -13,9 +13,7 @@ export function MainLayout({ topBar, children }: MainLayoutProps) {
           {topBar}
         </div>
       )}
-      <div className="flex-1 overflow-hidden">
-        {children}
-      </div>
+      <div className="flex-1 overflow-hidden">{children}</div>
     </div>
   );
 }

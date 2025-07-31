@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,22 +6,25 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
-import { Textarea } from '~/components/ui/textarea';
-import { useCollectionStore } from '~/stores/collectionStore';
-import { PostmanCollection } from '~/types/postman';
+} from "~/components/ui/dialog";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
+import { useCollectionStore } from "~/stores/collectionStore";
+import { PostmanCollection } from "~/types/postman";
 
 interface NewCollectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function NewCollectionDialog({ open, onOpenChange }: NewCollectionDialogProps) {
-  const [name, setName] = React.useState('');
-  const [description, setDescription] = React.useState('');
+export function NewCollectionDialog({
+  open,
+  onOpenChange,
+}: NewCollectionDialogProps) {
+  const [name, setName] = React.useState("");
+  const [description, setDescription] = React.useState("");
   const { addCollection } = useCollectionStore();
 
   const handleCreate = async () => {
@@ -32,16 +35,17 @@ export function NewCollectionDialog({ open, onOpenChange }: NewCollectionDialogP
         name: name.trim(),
         _postman_id: `collection-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         description: description.trim() || undefined,
-        schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
+        schema:
+          "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
       },
-      item: []
+      item: [],
     };
 
     await addCollection(newCollection);
-    
+
     // Reset form and close dialog
-    setName('');
-    setDescription('');
+    setName("");
+    setDescription("");
     onOpenChange(false);
   };
 

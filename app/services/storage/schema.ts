@@ -1,7 +1,7 @@
-import { DBSchema } from 'idb';
-import type { PostmanCollection } from '~/types/postman';
-import type { Environment } from '~/stores/environmentStore';
-import type { TestResult } from '~/types/request';
+import { DBSchema } from "idb";
+import type { PostmanCollection } from "~/types/postman";
+import type { Environment } from "~/stores/environmentStore";
+import type { TestResult } from "~/types/request";
 
 export interface CollectionWithMetadata {
   id: string;
@@ -38,7 +38,7 @@ export interface StoredEnvironment extends Environment {
 }
 
 export interface StoredGlobalVariables {
-  variables: import('~/stores/environmentStore').EnvironmentVariable[];
+  variables: import("~/stores/environmentStore").EnvironmentVariable[];
   isEncrypted: boolean;
   encryptedFields?: string[]; // Track which fields are encrypted (e.g., "0.value", "2.value")
 }
@@ -47,25 +47,25 @@ export interface ApiClientDB extends DBSchema {
   collections: {
     key: string;
     value: CollectionWithMetadata;
-    indexes: { 
-      'by-name': string;
-      'by-updated': Date;
+    indexes: {
+      "by-name": string;
+      "by-updated": Date;
     };
   };
   environments: {
     key: string;
     value: StoredEnvironment;
     indexes: {
-      'by-name': string;
+      "by-name": string;
     };
   };
   history: {
     key: string;
     value: RequestExecution;
-    indexes: { 
-      'by-collection': string;
-      'by-request': string;
-      'by-timestamp': Date;
+    indexes: {
+      "by-collection": string;
+      "by-request": string;
+      "by-timestamp": Date;
     };
   };
   settings: {
@@ -77,23 +77,23 @@ export interface ApiClientDB extends DBSchema {
   };
 }
 
-export const DB_NAME = 'api-client-db';
+export const DB_NAME = "api-client-db";
 export const DB_VERSION = 1;
 
 // Fields that should be encrypted
 export const SENSITIVE_FIELDS = {
   collection: [
-    'auth',
-    'variable', // Variables that might contain secrets
+    "auth",
+    "variable", // Variables that might contain secrets
   ],
   environment: [
-    'values', // Environment variable values
+    "values", // Environment variable values
   ],
   request: [
-    'auth',
-    'header', // Headers might contain API keys
+    "auth",
+    "header", // Headers might contain API keys
   ],
   globalVariables: [
-    'value', // Global variable values marked as secrets
+    "value", // Global variable values marked as secrets
   ],
 };

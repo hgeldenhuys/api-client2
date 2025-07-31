@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,19 +6,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
+} from "~/components/ui/dialog";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group';
-import { useVariableContext } from '~/hooks/useVariableContext';
+} from "~/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
+import { useVariableContext } from "~/hooks/useVariableContext";
 
 interface AddVariableDialogProps {
   open: boolean;
@@ -27,19 +27,19 @@ interface AddVariableDialogProps {
   onSuccess?: () => void;
 }
 
-export function AddVariableDialog({ 
-  open, 
-  onOpenChange, 
-  variableName: defaultName = '',
-  onSuccess 
+export function AddVariableDialog({
+  open,
+  onOpenChange,
+  variableName: defaultName = "",
+  onSuccess,
 }: AddVariableDialogProps) {
   const { addVariable, isEnvironmentActive } = useVariableContext();
   const [name, setName] = useState(defaultName);
-  const [value, setValue] = useState('');
-  const [scope, setScope] = useState<'global' | 'environment'>(
-    isEnvironmentActive ? 'environment' : 'global'
+  const [value, setValue] = useState("");
+  const [scope, setScope] = useState<"global" | "environment">(
+    isEnvironmentActive ? "environment" : "global",
   );
-  const [type, setType] = useState<'default' | 'secret'>('default');
+  const [type, setType] = useState<"default" | "secret">("default");
 
   React.useEffect(() => {
     if (defaultName) {
@@ -49,24 +49,24 @@ export function AddVariableDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim() || !value.trim()) return;
-    
+
     addVariable(name, value, scope);
-    
+
     // Reset form
-    setName('');
-    setValue('');
-    setType('default');
-    
+    setName("");
+    setValue("");
+    setType("default");
+
     onOpenChange(false);
     onSuccess?.();
   };
 
   const handleCancel = () => {
     setName(defaultName);
-    setValue('');
-    setType('default');
+    setValue("");
+    setType("default");
     onOpenChange(false);
   };
 
@@ -80,7 +80,7 @@ export function AddVariableDialog({
               Create a new variable that can be used in your requests.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
@@ -95,14 +95,14 @@ export function AddVariableDialog({
                 required
               />
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="value" className="text-right">
                 Value
               </Label>
               <Input
                 id="value"
-                type={type === 'secret' ? 'password' : 'text'}
+                type={type === "secret" ? "password" : "text"}
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 className="col-span-3"
@@ -110,12 +110,12 @@ export function AddVariableDialog({
                 required
               />
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Scope</Label>
-              <RadioGroup 
-                value={scope} 
-                onValueChange={(v) => setScope(v as 'global' | 'environment')}
+              <RadioGroup
+                value={scope}
+                onValueChange={(v) => setScope(v as "global" | "environment")}
                 className="col-span-3"
               >
                 <div className="flex items-center space-x-2">
@@ -134,10 +134,13 @@ export function AddVariableDialog({
                 )}
               </RadioGroup>
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Type</Label>
-              <Select value={type} onValueChange={(v) => setType(v as 'default' | 'secret')}>
+              <Select
+                value={type}
+                onValueChange={(v) => setType(v as "default" | "secret")}
+              >
                 <SelectTrigger className="col-span-3">
                   <SelectValue />
                 </SelectTrigger>
@@ -148,7 +151,7 @@ export function AddVariableDialog({
               </Select>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel

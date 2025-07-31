@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import { useCollectionStore } from '~/stores/collectionStore';
-import { UniversalParameter } from '~/types/postman';
-import { createUniversalParameter } from '~/utils/parameterLocations';
-import { 
-  getLanguageFromContentType, 
+import { useEffect, useRef, useState } from "react";
+import { useCollectionStore } from "~/stores/collectionStore";
+import { UniversalParameter } from "~/types/postman";
+import { createUniversalParameter } from "~/utils/parameterLocations";
+import {
+  getLanguageFromContentType,
   getContentTypeFromLanguage,
-  isTextBasedContentType 
-} from '~/utils/contentTypeLanguageMap';
+  isTextBasedContentType,
+} from "~/utils/contentTypeLanguageMap";
 
 interface UseContentTypeSyncOptions {
   activeRequestId: string | undefined;
@@ -28,16 +28,17 @@ export function useContentTypeSync({
   activeRequestId,
   parameters,
   onParametersChange,
-  defaultLanguage = 'json'
+  defaultLanguage = "json",
 }: UseContentTypeSyncOptions): UseContentTypeSyncReturn {
   const [language, setLanguageState] = useState(defaultLanguage);
   const isUpdatingRef = useRef(false);
 
   // Find Content-Type header in parameters
   const contentTypeParam = parameters.find(
-    param => param.location === 'header' && 
-    param.key.toLowerCase() === 'content-type' &&
-    param.enabled
+    (param) =>
+      param.location === "header" &&
+      param.key.toLowerCase() === "content-type" &&
+      param.enabled,
   );
 
   const contentType = contentTypeParam?.value;
@@ -66,22 +67,26 @@ export function useContentTypeSync({
 
     // Update or add Content-Type header
     const newContentType = getContentTypeFromLanguage(newLanguage);
-    
+
     let updatedParameters: UniversalParameter[];
-    
+
     if (contentTypeParam) {
       // Update existing Content-Type header
-      updatedParameters = parameters.map(param => 
-        param.id === contentTypeParam.id 
+      updatedParameters = parameters.map((param) =>
+        param.id === contentTypeParam.id
           ? { ...param, value: newContentType }
-          : param
+          : param,
       );
     } else {
       // Add new Content-Type header
-      const newParam = createUniversalParameter('Content-Type', newContentType, 'header');
+      const newParam = createUniversalParameter(
+        "Content-Type",
+        newContentType,
+        "header",
+      );
       updatedParameters = [...parameters, newParam];
     }
-    
+
     onParametersChange(updatedParameters);
 
     // Reset the flag after a brief delay to allow for state updates
@@ -93,6 +98,6 @@ export function useContentTypeSync({
   return {
     language,
     setLanguage,
-    isTextBased
+    isTextBased,
   };
 }

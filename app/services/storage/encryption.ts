@@ -5,26 +5,29 @@ export class EncryptionService {
   /**
    * Derives a cryptographic key from a password using PBKDF2
    */
-  static async deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
+  static async deriveKey(
+    password: string,
+    salt: Uint8Array,
+  ): Promise<CryptoKey> {
     const keyMaterial = await crypto.subtle.importKey(
-      'raw',
+      "raw",
       this.encoder.encode(password),
-      'PBKDF2',
+      "PBKDF2",
       false,
-      ['deriveKey']
+      ["deriveKey"],
     );
 
     return crypto.subtle.deriveKey(
       {
-        name: 'PBKDF2',
+        name: "PBKDF2",
         salt,
         iterations: 100000,
-        hash: 'SHA-256',
+        hash: "SHA-256",
       },
       keyMaterial,
-      { name: 'AES-GCM', length: 256 },
+      { name: "AES-GCM", length: 256 },
       false,
-      ['encrypt', 'decrypt']
+      ["encrypt", "decrypt"],
     );
   }
 
@@ -37,11 +40,11 @@ export class EncryptionService {
 
     const encryptedData = await crypto.subtle.encrypt(
       {
-        name: 'AES-GCM',
+        name: "AES-GCM",
         iv,
       },
       key,
-      encodedData
+      encodedData,
     );
 
     // Combine IV and encrypted data
@@ -58,7 +61,9 @@ export class EncryptionService {
    */
   static async decrypt(encryptedData: string, key: CryptoKey): Promise<string> {
     // Decode from base64
-    const combined = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+    const combined = Uint8Array.from(atob(encryptedData), (c) =>
+      c.charCodeAt(0),
+    );
 
     // Extract IV and data
     const iv = combined.slice(0, 12);
@@ -66,11 +71,11 @@ export class EncryptionService {
 
     const decryptedData = await crypto.subtle.decrypt(
       {
-        name: 'AES-GCM',
+        name: "AES-GCM",
         iv,
       },
       key,
-      data
+      data,
     );
 
     return this.decoder.decode(decryptedData);
@@ -89,17 +94,22 @@ export class EncryptionService {
   static async encryptFields<T extends Record<string, any>>(
     obj: T,
     fields: string[],
-    key: CryptoKey
+    key: CryptoKey,
   ): Promise<{ data: T; encryptedFields: string[] }> {
     const cloned = JSON.parse(JSON.stringify(obj)) as T;
     const encryptedFields: string[] = [];
 
     for (const field of fields) {
-      if (field in cloned && cloned[field] !== null && cloned[field] !== undefined) {
-        const value = typeof cloned[field] === 'string' 
-          ? cloned[field] 
-          : JSON.stringify(cloned[field]);
-        
+      if (
+        field in cloned &&
+        cloned[field] !== null &&
+        cloned[field] !== undefined
+      ) {
+        const value =
+          typeof cloned[field] === "string"
+            ? cloned[field]
+            : JSON.stringify(cloned[field]);
+
         (cloned as any)[field] = await this.encrypt(value, key);
         encryptedFields.push(field);
       }
@@ -114,12 +124,16 @@ export class EncryptionService {
   static async decryptFields<T extends Record<string, any>>(
     obj: T,
     encryptedFields: string[],
-    key: CryptoKey
+    key: CryptoKey,
   ): Promise<T> {
     const cloned = JSON.parse(JSON.stringify(obj)) as T;
 
     for (const field of encryptedFields) {
-      if (field in cloned && cloned[field] !== null && cloned[field] !== undefined) {
+      if (
+        field in cloned &&
+        cloned[field] !== null &&
+        cloned[field] !== undefined
+      ) {
         try {
           const decrypted = await this.decrypt(cloned[field], key);
           // Try to parse as JSON, fallback to string
@@ -142,29 +156,36 @@ export class EncryptionService {
    * Checks if encryption is available in the current environment
    */
   static isEncryptionAvailable(): boolean {
-    return typeof crypto !== 'undefined' && 
-           typeof crypto.subtle !== 'undefined' &&
-           typeof crypto.getRandomValues === 'function';
+    return (
+      typeof crypto !== "undefined" &&
+      typeof crypto.subtle !== "undefined" &&
+      typeof crypto.getRandomValues === "function"
+    );
   }
 
   /**
    * Encrypts global variables array, handling secret types securely
    */
-  static async encryptGlobalVariables<T extends { key: string; value: string; type?: string; enabled: boolean }[]>(
+  static async encryptGlobalVariables<
+    T extends { key: string; value: string; type?: string; enabled: boolean }[],
+  >(
     variables: T,
-    key: CryptoKey
+    key: CryptoKey,
   ): Promise<{ data: T; encryptedFields: string[] }> {
     const cloned = JSON.parse(JSON.stringify(variables)) as T;
     const encryptedFields: string[] = [];
 
     for (let i = 0; i < cloned.length; i++) {
       const variable = cloned[i];
-      if (variable.type === 'secret' && variable.value) {
+      if (variable.type === "secret" && variable.value) {
         try {
           (cloned[i] as any).value = await this.encrypt(variable.value, key);
           encryptedFields.push(`${i}.value`);
         } catch (error) {
-          console.error(`Failed to encrypt global variable ${variable.key}:`, error);
+          console.error(
+            `Failed to encrypt global variable ${variable.key}:`,
+            error,
+          );
           // Keep original value if encryption fails
         }
       }
@@ -176,11 +197,9 @@ export class EncryptionService {
   /**
    * Decrypts global variables array, handling secret types securely
    */
-  static async decryptGlobalVariables<T extends { key: string; value: string; type?: string; enabled: boolean }[]>(
-    variables: T,
-    encryptedFields: string[],
-    key: CryptoKey
-  ): Promise<T> {
+  static async decryptGlobalVariables<
+    T extends { key: string; value: string; type?: string; enabled: boolean }[],
+  >(variables: T, encryptedFields: string[], key: CryptoKey): Promise<T> {
     const cloned = JSON.parse(JSON.stringify(variables)) as T;
     const encryptedFieldsSet = new Set(encryptedFields);
 
@@ -190,7 +209,10 @@ export class EncryptionService {
         try {
           (cloned[i] as any).value = await this.decrypt(cloned[i].value, key);
         } catch (error) {
-          console.error(`Failed to decrypt global variable ${cloned[i].key}:`, error);
+          console.error(
+            `Failed to decrypt global variable ${cloned[i].key}:`,
+            error,
+          );
           // Leave field as is if decryption fails
         }
       }
@@ -203,14 +225,15 @@ export class EncryptionService {
    * Securely clears sensitive data from memory
    */
   static clearFromMemory(obj: any): void {
-    if (typeof obj === 'object' && obj !== null) {
+    if (typeof obj === "object" && obj !== null) {
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
-          if (typeof obj[key] === 'string') {
+          if (typeof obj[key] === "string") {
             // Overwrite string with random data
-            obj[key] = crypto.getRandomValues(new Uint8Array(obj[key].length))
-              .reduce((str, byte) => str + String.fromCharCode(byte), '');
-          } else if (typeof obj[key] === 'object') {
+            obj[key] = crypto
+              .getRandomValues(new Uint8Array(obj[key].length))
+              .reduce((str, byte) => str + String.fromCharCode(byte), "");
+          } else if (typeof obj[key] === "object") {
             this.clearFromMemory(obj[key]);
           }
           delete obj[key];

@@ -1,18 +1,19 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from "react";
 
 interface HtmlPreviewProps {
   html: string;
   className?: string;
 }
 
-export function HtmlPreview({ html, className = '' }: HtmlPreviewProps) {
+export function HtmlPreview({ html, className = "" }: HtmlPreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  
+
   useEffect(() => {
     if (iframeRef.current) {
       const iframe = iframeRef.current;
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      
+      const iframeDoc =
+        iframe.contentDocument || iframe.contentWindow?.document;
+
       if (iframeDoc) {
         // Add base styles to make content look good
         const styledHtml = `
@@ -159,14 +160,14 @@ export function HtmlPreview({ html, className = '' }: HtmlPreviewProps) {
             </body>
           </html>
         `;
-        
+
         iframeDoc.open();
         iframeDoc.write(styledHtml);
         iframeDoc.close();
       }
     }
   }, [html]);
-  
+
   return (
     <iframe
       ref={iframeRef}

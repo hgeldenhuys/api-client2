@@ -1,10 +1,10 @@
-import React from 'react';
-import { Eye, EyeOff } from 'lucide-react';
-import { Button } from '~/components/ui/button';
-import { Input, type InputProps } from '~/components/ui/input';
-import { cn } from '~/lib/utils';
+import React from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { Input, type InputProps } from "~/components/ui/input";
+import { cn } from "~/lib/utils";
 
-interface PasswordInputProps extends Omit<InputProps, 'type'> {
+interface PasswordInputProps extends Omit<InputProps, "type"> {
   /**
    * Whether to show the password by default
    */
@@ -19,15 +19,21 @@ interface PasswordInputProps extends Omit<InputProps, 'type'> {
   autoHideOnBlur?: boolean;
 }
 
-export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ 
-    defaultVisible = false, 
-    autoHideDelay = 10000, 
-    autoHideOnBlur = true,
-    className,
-    onBlur,
-    ...props 
-  }, ref) => {
+export const PasswordInput = React.forwardRef<
+  HTMLInputElement,
+  PasswordInputProps
+>(
+  (
+    {
+      defaultVisible = false,
+      autoHideDelay = 10000,
+      autoHideOnBlur = true,
+      className,
+      onBlur,
+      ...props
+    },
+    ref,
+  ) => {
     const [isVisible, setIsVisible] = React.useState(defaultVisible);
     const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
     const inputRef = React.useRef<HTMLInputElement>(null);
@@ -52,7 +58,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
 
     // Toggle visibility
     const toggleVisibility = React.useCallback(() => {
-      setIsVisible(prev => {
+      setIsVisible((prev) => {
         const newVisible = !prev;
         // If showing, set auto-hide timeout
         if (newVisible) {
@@ -67,13 +73,16 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
     }, [setAutoHideTimeout, clearAutoHideTimeout]);
 
     // Handle blur event
-    const handleBlur = React.useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-      if (autoHideOnBlur && isVisible) {
-        setIsVisible(false);
-        clearAutoHideTimeout();
-      }
-      onBlur?.(e);
-    }, [autoHideOnBlur, isVisible, onBlur, clearAutoHideTimeout]);
+    const handleBlur = React.useCallback(
+      (e: React.FocusEvent<HTMLInputElement>) => {
+        if (autoHideOnBlur && isVisible) {
+          setIsVisible(false);
+          clearAutoHideTimeout();
+        }
+        onBlur?.(e);
+      },
+      [autoHideOnBlur, isVisible, onBlur, clearAutoHideTimeout],
+    );
 
     // Set timeout when visibility changes to true
     React.useEffect(() => {
@@ -89,22 +98,25 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
     }, [clearAutoHideTimeout]);
 
     // Combine refs
-    const combinedRef = React.useCallback((node: HTMLInputElement) => {
-      inputRef.current = node;
-      if (typeof ref === 'function') {
-        ref(node);
-      } else if (ref) {
-        ref.current = node;
-      }
-    }, [ref]);
+    const combinedRef = React.useCallback(
+      (node: HTMLInputElement) => {
+        inputRef.current = node;
+        if (typeof ref === "function") {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      },
+      [ref],
+    );
 
     return (
       <div className="relative">
         <Input
           {...props}
           ref={combinedRef}
-          type={isVisible ? 'text' : 'password'}
-          className={cn('pr-10', className)}
+          type={isVisible ? "text" : "password"}
+          className={cn("pr-10", className)}
           onBlur={handleBlur}
         />
         <Button
@@ -121,12 +133,12 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
             <Eye className="h-4 w-4 text-muted-foreground" />
           )}
           <span className="sr-only">
-            {isVisible ? 'Hide password' : 'Show password'}
+            {isVisible ? "Hide password" : "Show password"}
           </span>
         </Button>
       </div>
     );
-  }
+  },
 );
 
-PasswordInput.displayName = 'PasswordInput';
+PasswordInput.displayName = "PasswordInput";

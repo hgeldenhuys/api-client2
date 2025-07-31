@@ -20,11 +20,11 @@ export class RuntimeGuards {
     if (store.getState) {
       const originalGetState = store.getState;
       this.originalFunctions.set(`${storeName}.getState`, originalGetState);
-      
+
       store.getState = () => {
-        RuntimeGuards.logAccess(storeName, 'getState');
+        RuntimeGuards.logAccess(storeName, "getState");
         const state = originalGetState();
-        
+
         // Return a deep clone to prevent reference retention
         return RuntimeGuards.createSecureCopy(state);
       };
@@ -34,19 +34,21 @@ export class RuntimeGuards {
     if (store.setState) {
       const originalSetState = store.setState;
       this.originalFunctions.set(`${storeName}.setState`, originalSetState);
-      
+
       store.setState = (updater: any, replace?: boolean) => {
-        RuntimeGuards.logAccess(storeName, 'setState');
-        
+        RuntimeGuards.logAccess(storeName, "setState");
+
         // Validate the updater function
-        if (typeof updater === 'function') {
+        if (typeof updater === "function") {
           const updaterString = updater.toString();
           if (RuntimeGuards.detectMaliciousCode(updaterString)) {
-            console.error('Potentially malicious state update detected and blocked');
+            console.error(
+              "Potentially malicious state update detected and blocked",
+            );
             return;
           }
         }
-        
+
         return originalSetState(updater, replace);
       };
     }
@@ -55,20 +57,20 @@ export class RuntimeGuards {
     if (store.subscribe) {
       const originalSubscribe = store.subscribe;
       this.originalFunctions.set(`${storeName}.subscribe`, originalSubscribe);
-      
+
       store.subscribe = (listener: Function) => {
-        RuntimeGuards.logAccess(storeName, 'subscribe');
-        
+        RuntimeGuards.logAccess(storeName, "subscribe");
+
         // Wrap listener to detect malicious behavior
         const secureListener = (...args: any[]) => {
           try {
             return listener(...args);
           } catch (error) {
-            console.error('Subscription listener threw error:', error);
+            console.error("Subscription listener threw error:", error);
             // Don't propagate potentially malicious errors
           }
         };
-        
+
         return originalSubscribe(secureListener);
       };
     }
@@ -78,7 +80,7 @@ export class RuntimeGuards {
    * Create a secure deep copy of state data
    */
   private static createSecureCopy(obj: any): any {
-    if (obj === null || typeof obj !== 'object') {
+    if (obj === null || typeof obj !== "object") {
       return obj;
     }
 
@@ -87,16 +89,16 @@ export class RuntimeGuards {
     }
 
     if (obj instanceof Array) {
-      return obj.map(item => this.createSecureCopy(item));
+      return obj.map((item) => this.createSecureCopy(item));
     }
 
-    if (typeof obj === 'object') {
+    if (typeof obj === "object") {
       const copy: any = {};
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
           // Filter out sensitive data in copies
           if (this.isSensitiveKey(key)) {
-            copy[key] = '[PROTECTED]';
+            copy[key] = "[PROTECTED]";
           } else {
             copy[key] = this.createSecureCopy(obj[key]);
           }
@@ -118,10 +120,10 @@ export class RuntimeGuards {
       /key/i,
       /password/i,
       /credential/i,
-      /auth/i
+      /auth/i,
     ];
 
-    return sensitivePatterns.some(pattern => pattern.test(key));
+    return sensitivePatterns.some((pattern) => pattern.test(key));
   }
 
   /**
@@ -143,10 +145,10 @@ export class RuntimeGuards {
       /indexedDB/,
       /postMessage/,
       /import\s*\(/,
-      /require\s*\(/
+      /require\s*\(/,
     ];
 
-    return maliciousPatterns.some(pattern => pattern.test(code));
+    return maliciousPatterns.some((pattern) => pattern.test(code));
   }
 
   /**
@@ -154,10 +156,12 @@ export class RuntimeGuards {
    */
   private static logAccess(storeName: string, method: string): void {
     const timestamp = new Date().toISOString();
-    console.debug(`[SecurityGuard] ${timestamp}: ${storeName}.${method} accessed`);
-    
+    console.debug(
+      `[SecurityGuard] ${timestamp}: ${storeName}.${method} accessed`,
+    );
+
     // In production, this could send to a security monitoring service
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       // Could implement logging to external service here
     }
   }
@@ -166,39 +170,44 @@ export class RuntimeGuards {
    * Install global runtime protection
    */
   static installGlobalProtection(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     // Protect against eval-based attacks
     if (window.eval) {
       const originalEval = window.eval;
-      (window as any).eval = function(code: string) {
-        console.warn('eval() usage detected - potential security risk');
-        
-        if (typeof code === 'string' && RuntimeGuards.detectMaliciousCode(code)) {
-          throw new Error('Malicious eval() attempt blocked');
+      (window as any).eval = function (code: string) {
+        console.warn("eval() usage detected - potential security risk");
+
+        if (
+          typeof code === "string" &&
+          RuntimeGuards.detectMaliciousCode(code)
+        ) {
+          throw new Error("Malicious eval() attempt blocked");
         }
-        
+
         return originalEval.call(this, code);
       };
     }
 
     // Protect against Function constructor
     const originalFunction = window.Function;
-    (window as any).Function = function(...args: any[]) {
+    (window as any).Function = function (...args: any[]) {
       const code = args[args.length - 1];
-      console.warn('Function constructor usage detected - potential security risk');
-      
-      if (typeof code === 'string' && RuntimeGuards.detectMaliciousCode(code)) {
-        throw new Error('Malicious Function() attempt blocked');
+      console.warn(
+        "Function constructor usage detected - potential security risk",
+      );
+
+      if (typeof code === "string" && RuntimeGuards.detectMaliciousCode(code)) {
+        throw new Error("Malicious Function() attempt blocked");
       }
-      
+
       return originalFunction.apply(this, args);
     };
 
     // Protect localStorage access
     if (window.localStorage) {
       const originalSetItem = window.localStorage.setItem;
-      window.localStorage.setItem = function(key: string, value: string) {
+      window.localStorage.setItem = function (key: string, value: string) {
         if (RuntimeGuards.isSensitiveKey(key)) {
           console.warn(`Sensitive data storage attempt detected: ${key}`);
         }
@@ -208,8 +217,11 @@ export class RuntimeGuards {
 
     // Protect against DOM manipulation of sensitive elements
     const originalQuerySelector = document.querySelector;
-    document.querySelector = function(selector: string) {
-      if (selector.includes('data-') && RuntimeGuards.isSensitiveKey(selector)) {
+    document.querySelector = function (selector: string) {
+      if (
+        selector.includes("data-") &&
+        RuntimeGuards.isSensitiveKey(selector)
+      ) {
         console.warn(`Suspicious DOM query detected: ${selector}`);
       }
       return originalQuerySelector.call(this, selector);
@@ -229,7 +241,7 @@ export class RuntimeGuards {
   static removeProtection(): void {
     // Restore original functions
     this.originalFunctions.forEach((originalFn, key) => {
-      const [storeName, methodName] = key.split('.');
+      const [storeName, methodName] = key.split(".");
       // Implementation would depend on having store references
     });
 
@@ -248,7 +260,7 @@ export class RuntimeGuards {
     return {
       protectedStores: Array.from(this.guardedStores),
       detectedThreats: 0, // Would track actual threats
-      lastAccess: new Date().toISOString()
+      lastAccess: new Date().toISOString(),
     };
   }
 }

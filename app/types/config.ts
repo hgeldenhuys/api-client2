@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export interface BugReport {
   title: string;
@@ -44,24 +44,24 @@ export interface ApiClientConfig {
 
 export const DEFAULT_CONFIG: ApiClientConfig = {
   branding: {
-    logoLink: '/',
+    logoLink: "/",
   },
   repository: {
-    label: 'View on GitHub',
-    url: 'https://github.com/api-client/docs',
+    label: "View on GitHub",
+    url: "https://github.com/api-client/docs",
   },
   support: {
-    label: 'Contact Support',
-    email: 'support@api-client.dev',
+    label: "Contact Support",
+    email: "support@api-client.dev",
   },
   community: {
-    label: 'Community Forum',
-    url: 'https://community.api-client.com',
+    label: "Community Forum",
+    url: "https://community.api-client.com",
   },
   bugReporting: {
     enabled: true,
     onSubmitBug: (bugReport: BugReport) => {
-      console.log('Bug Report Submitted:', JSON.stringify(bugReport, null, 2));
+      console.log("Bug Report Submitted:", JSON.stringify(bugReport, null, 2));
     },
   },
 };

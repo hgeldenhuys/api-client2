@@ -1,6 +1,6 @@
-import type { 
-  HTTPFile, 
-  HTTPRequest, 
+import type {
+  HTTPFile,
+  HTTPRequest,
   HTTPFileParseResult,
   HTTPParseError,
   HTTPParseWarning,
@@ -8,9 +8,9 @@ import type {
   HTTPHeader,
   HTTPRequestBody,
   HTTPParseContext,
-  HTTPFileValidationResult
-} from '~/types/http';
-import type { PostmanCollection, RequestItem } from '~/types/postman';
+  HTTPFileValidationResult,
+} from "~/types/http";
+import type { PostmanCollection, RequestItem } from "~/types/postman";
 
 export class HTTPFileImporter {
   /**
@@ -22,40 +22,49 @@ export class HTTPFileImporter {
       currentLine: 1,
       currentColumn: 1,
       variables: {},
-      strict: false
+      strict: false,
     };
 
     const errors: HTTPParseError[] = [];
     const warnings: HTTPParseWarning[] = [];
 
     try {
-      const requests = this.parseHTTPContent(content, context, errors, warnings);
-      
+      const requests = this.parseHTTPContent(
+        content,
+        context,
+        errors,
+        warnings,
+      );
+
       const httpFile: HTTPFile = {
         requests,
-        variables: Object.keys(context.variables).length > 0 ? context.variables : undefined,
+        variables:
+          Object.keys(context.variables).length > 0
+            ? context.variables
+            : undefined,
         metadata: {
           filename,
           created: new Date().toISOString(),
-          description: `Imported from ${filename || 'HTTP file'}`
-        }
+          description: `Imported from ${filename || "HTTP file"}`,
+        },
       };
 
       return {
         success: errors.length === 0,
         file: httpFile,
         errors: errors.length > 0 ? errors : undefined,
-        warnings: warnings.length > 0 ? warnings : undefined
+        warnings: warnings.length > 0 ? warnings : undefined,
       };
     } catch (error) {
       errors.push({
-        message: error instanceof Error ? error.message : 'Unknown parsing error',
-        severity: 'error'
+        message:
+          error instanceof Error ? error.message : "Unknown parsing error",
+        severity: "error",
       });
 
       return {
         success: false,
-        errors
+        errors,
       };
     }
   }
@@ -70,10 +79,12 @@ export class HTTPFileImporter {
     } catch (error) {
       return {
         success: false,
-        errors: [{
-          message: 'Failed to read file',
-          severity: 'error'
-        }]
+        errors: [
+          {
+            message: "Failed to read file",
+            severity: "error",
+          },
+        ],
       };
     }
   }
@@ -85,7 +96,10 @@ export class HTTPFileImporter {
     const items: RequestItem[] = [];
 
     httpFile.requests.forEach((httpRequest, index) => {
-      const postmanRequest = this.convertHTTPRequestToPostman(httpRequest, httpFile.variables);
+      const postmanRequest = this.convertHTTPRequestToPostman(
+        httpRequest,
+        httpFile.variables,
+      );
       if (postmanRequest) {
         items.push(postmanRequest);
       }
@@ -94,20 +108,26 @@ export class HTTPFileImporter {
     const collection: PostmanCollection = {
       info: {
         _postman_id: crypto.randomUUID(),
-        name: httpFile.metadata?.filename?.replace(/\.[^/.]+$/, '') || 'Imported HTTP Requests',
-        description: httpFile.metadata?.description || 'Imported from HTTP file',
-        schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
+        name:
+          httpFile.metadata?.filename?.replace(/\.[^/.]+$/, "") ||
+          "Imported HTTP Requests",
+        description:
+          httpFile.metadata?.description || "Imported from HTTP file",
+        schema:
+          "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
       },
-      item: items
+      item: items,
     };
 
     // Add variables
     if (httpFile.variables) {
-      collection.variable = Object.entries(httpFile.variables).map(([key, value]) => ({
-        key,
-        value,
-        type: 'string'
-      }));
+      collection.variable = Object.entries(httpFile.variables).map(
+        ([key, value]) => ({
+          key,
+          value,
+          type: "string",
+        }),
+      );
     }
 
     return collection;
@@ -124,7 +144,7 @@ export class HTTPFileImporter {
 
     // Check for duplicate request names
     const names = new Set<string>();
-    httpFile.requests.forEach(request => {
+    httpFile.requests.forEach((request) => {
       if (request.name) {
         if (names.has(request.name)) {
           duplicateNames.push(request.name);
@@ -137,22 +157,26 @@ export class HTTPFileImporter {
     const definedVariables = new Set(Object.keys(httpFile.variables || {}));
     const usedVariables = new Set<string>();
 
-    httpFile.requests.forEach(request => {
+    httpFile.requests.forEach((request) => {
       // Check URL for variables
-      this.extractVariables(request.url).forEach(v => usedVariables.add(v));
-      
+      this.extractVariables(request.url).forEach((v) => usedVariables.add(v));
+
       // Check headers for variables
-      request.headers?.forEach(header => {
-        this.extractVariables(header.value).forEach(v => usedVariables.add(v));
+      request.headers?.forEach((header) => {
+        this.extractVariables(header.value).forEach((v) =>
+          usedVariables.add(v),
+        );
       });
 
       // Check body for variables
       if (request.body) {
-        this.extractVariables(request.body.content).forEach(v => usedVariables.add(v));
+        this.extractVariables(request.body.content).forEach((v) =>
+          usedVariables.add(v),
+        );
       }
     });
 
-    usedVariables.forEach(variable => {
+    usedVariables.forEach((variable) => {
       if (!definedVariables.has(variable)) {
         missingVariables.push(variable);
       }
@@ -161,8 +185,8 @@ export class HTTPFileImporter {
     // Add warnings for missing variables
     if (missingVariables.length > 0) {
       warnings.push({
-        message: `Undefined variables used: ${missingVariables.join(', ')}`,
-        suggestion: 'Define these variables in the environment or file header'
+        message: `Undefined variables used: ${missingVariables.join(", ")}`,
+        suggestion: "Define these variables in the environment or file header",
       });
     }
 
@@ -173,7 +197,8 @@ export class HTTPFileImporter {
       requestCount: httpFile.requests.length,
       variableCount: Object.keys(httpFile.variables || {}).length,
       duplicateNames: duplicateNames.length > 0 ? duplicateNames : undefined,
-      missingVariables: missingVariables.length > 0 ? missingVariables : undefined
+      missingVariables:
+        missingVariables.length > 0 ? missingVariables : undefined,
     };
   }
 
@@ -184,13 +209,14 @@ export class HTTPFileImporter {
     content: string,
     context: HTTPParseContext,
     errors: HTTPParseError[],
-    warnings: HTTPParseWarning[]
+    warnings: HTTPParseWarning[],
   ): HTTPRequest[] {
     const requests: HTTPRequest[] = [];
     const lines = content.split(/\r?\n/);
-    
+
     let currentRequest: Partial<HTTPRequest> | null = null;
-    let currentSection: 'request' | 'headers' | 'body' | 'variables' = 'request';
+    let currentSection: "request" | "headers" | "body" | "variables" =
+      "request";
     let bodyLines: string[] = [];
     let inMultilineComment = false;
 
@@ -203,41 +229,47 @@ export class HTTPFileImporter {
 
       // Handle empty lines - in HTTP format, empty line after headers signals start of body
       if (!trimmedLine) {
-        if (currentSection === 'headers') {
+        if (currentSection === "headers") {
           // Empty line after headers - transition to body
-          currentSection = 'body';
-        } else if (currentSection === 'body' && bodyLines.length > 0) {
+          currentSection = "body";
+        } else if (currentSection === "body" && bodyLines.length > 0) {
           // Preserve empty lines within body
-          bodyLines.push('');
+          bodyLines.push("");
         }
         continue;
       }
 
       // Handle comments
-      if (trimmedLine.startsWith('#') || trimmedLine.startsWith('//')) {
+      if (trimmedLine.startsWith("#") || trimmedLine.startsWith("//")) {
         // Handle variable definitions in comments
-        if (trimmedLine.includes('=')) {
+        if (trimmedLine.includes("=")) {
           this.parseVariableDefinition(trimmedLine, context, warnings);
         }
         continue;
       }
 
       // Handle request separator
-      if (trimmedLine.startsWith('###')) {
+      if (trimmedLine.startsWith("###")) {
         // Save current request if it exists
         if (currentRequest && this.isValidRequest(currentRequest)) {
-          this.finalizeRequest(currentRequest, bodyLines, requests, context, errors);
+          this.finalizeRequest(
+            currentRequest,
+            bodyLines,
+            requests,
+            context,
+            errors,
+          );
         }
 
         // Start new request
         currentRequest = this.initializeNewRequest(trimmedLine, context);
-        currentSection = 'request';
+        currentSection = "request";
         bodyLines = [];
         continue;
       }
 
       // Parse request line (METHOD URL)
-      if (currentSection === 'request' && this.isHTTPRequestLine(trimmedLine)) {
+      if (currentSection === "request" && this.isHTTPRequestLine(trimmedLine)) {
         if (!currentRequest) {
           currentRequest = this.initializeNewRequest(null, context);
         }
@@ -246,13 +278,13 @@ export class HTTPFileImporter {
         if (parsed) {
           currentRequest.method = parsed.method;
           currentRequest.url = parsed.url;
-          currentSection = 'headers';
+          currentSection = "headers";
         }
         continue;
       }
 
       // Parse headers
-      if (currentSection === 'headers' || currentSection === 'request') {
+      if (currentSection === "headers" || currentSection === "request") {
         if (this.isHeaderLine(trimmedLine)) {
           if (!currentRequest) {
             currentRequest = this.initializeNewRequest(null, context);
@@ -265,25 +297,31 @@ export class HTTPFileImporter {
             }
             currentRequest.headers.push(header);
           }
-          currentSection = 'headers';
+          currentSection = "headers";
           continue;
-        } else if (currentSection === 'headers') {
+        } else if (currentSection === "headers") {
           // Non-header line after headers - transition to body and process this line as body
-          currentSection = 'body';
+          currentSection = "body";
           bodyLines.push(line);
           continue;
         }
       }
 
       // Parse body
-      if (currentSection === 'body') {
+      if (currentSection === "body") {
         bodyLines.push(line);
       }
     }
 
     // Finalize last request
     if (currentRequest && this.isValidRequest(currentRequest)) {
-      this.finalizeRequest(currentRequest, bodyLines, requests, context, errors);
+      this.finalizeRequest(
+        currentRequest,
+        bodyLines,
+        requests,
+        context,
+        errors,
+      );
     }
 
     return requests;
@@ -293,7 +331,17 @@ export class HTTPFileImporter {
    * Checks if line is an HTTP request line
    */
   private static isHTTPRequestLine(line: string): boolean {
-    const methods: HTTPMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'];
+    const methods: HTTPMethod[] = [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "HEAD",
+      "OPTIONS",
+      "TRACE",
+      "CONNECT",
+    ];
     const parts = line.split(/\s+/);
     return parts.length >= 2 && methods.includes(parts[0] as HTTPMethod);
   }
@@ -303,23 +351,27 @@ export class HTTPFileImporter {
    */
   private static isHeaderLine(line: string): boolean {
     // Must contain a colon and not start with http (URL)
-    if (!line.includes(':') || line.startsWith('http')) {
+    if (!line.includes(":") || line.startsWith("http")) {
       return false;
     }
 
     // Check if this looks like a valid HTTP header format
-    const colonIndex = line.indexOf(':');
+    const colonIndex = line.indexOf(":");
     if (colonIndex === 0) return false; // Can't start with colon
-    
+
     const headerName = line.substring(0, colonIndex).trim();
-    
+
     // Header names should only contain letters, numbers, hyphens, and underscores
     // and should not contain JSON-like characters
     const validHeaderPattern = /^[a-zA-Z0-9\-_]+$/;
-    
+
     // Reject if it looks like JSON or other structured data
-    if (line.trim().startsWith('{') || line.trim().startsWith('[') || 
-        line.trim().includes('":') || line.trim().includes('"}')) {
+    if (
+      line.trim().startsWith("{") ||
+      line.trim().startsWith("[") ||
+      line.trim().includes('":') ||
+      line.trim().includes('"}')
+    ) {
       return false;
     }
 
@@ -332,15 +384,15 @@ export class HTTPFileImporter {
   private static parseRequestLine(
     line: string,
     context: HTTPParseContext,
-    errors: HTTPParseError[]
+    errors: HTTPParseError[],
   ): { method: HTTPMethod; url: string } | null {
     const parts = line.split(/\s+/);
-    
+
     if (parts.length < 2) {
       errors.push({
         message: `Invalid request line: ${line}`,
         line: context.currentLine,
-        severity: 'error'
+        severity: "error",
       });
       return null;
     }
@@ -349,12 +401,22 @@ export class HTTPFileImporter {
     const url = parts[1];
 
     // Validate method
-    const validMethods: HTTPMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'];
+    const validMethods: HTTPMethod[] = [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "HEAD",
+      "OPTIONS",
+      "TRACE",
+      "CONNECT",
+    ];
     if (!validMethods.includes(method)) {
       errors.push({
         message: `Invalid HTTP method: ${method}`,
         line: context.currentLine,
-        severity: 'error'
+        severity: "error",
       });
       return null;
     }
@@ -368,15 +430,15 @@ export class HTTPFileImporter {
   private static parseHeaderLine(
     line: string,
     context: HTTPParseContext,
-    errors: HTTPParseError[]
+    errors: HTTPParseError[],
   ): HTTPHeader | null {
-    const colonIndex = line.indexOf(':');
-    
+    const colonIndex = line.indexOf(":");
+
     if (colonIndex === -1) {
       errors.push({
         message: `Invalid header line: ${line}`,
         line: context.currentLine,
-        severity: 'error'
+        severity: "error",
       });
       return null;
     }
@@ -388,7 +450,7 @@ export class HTTPFileImporter {
       errors.push({
         message: `Empty header name: ${line}`,
         line: context.currentLine,
-        severity: 'error'
+        severity: "error",
       });
       return null;
     }
@@ -396,7 +458,7 @@ export class HTTPFileImporter {
     return {
       name,
       value,
-      enabled: true
+      enabled: true,
     };
   }
 
@@ -406,11 +468,12 @@ export class HTTPFileImporter {
   private static parseVariableDefinition(
     line: string,
     context: HTTPParseContext,
-    warnings: HTTPParseWarning[]
+    warnings: HTTPParseWarning[],
   ): void {
     // Look for @variable = value patterns
-    const match = line.match(/@(\w+)\s*=\s*(.+)/) || line.match(/(\w+)\s*=\s*(.+)/);
-    
+    const match =
+      line.match(/@(\w+)\s*=\s*(.+)/) || line.match(/(\w+)\s*=\s*(.+)/);
+
     if (match) {
       const [, name, value] = match;
       context.variables[name] = value.trim();
@@ -422,11 +485,11 @@ export class HTTPFileImporter {
    */
   private static initializeNewRequest(
     separatorLine: string | null,
-    context: HTTPParseContext
+    context: HTTPParseContext,
   ): Partial<HTTPRequest> {
     const request: Partial<HTTPRequest> = {
       id: crypto.randomUUID(),
-      variables: {}
+      variables: {},
     };
 
     // Extract name from separator line
@@ -443,7 +506,9 @@ export class HTTPFileImporter {
   /**
    * Checks if request has required fields
    */
-  private static isValidRequest(request: Partial<HTTPRequest>): request is HTTPRequest {
+  private static isValidRequest(
+    request: Partial<HTTPRequest>,
+  ): request is HTTPRequest {
     return !!(request.method && request.url);
   }
 
@@ -455,25 +520,25 @@ export class HTTPFileImporter {
     bodyLines: string[],
     requests: HTTPRequest[],
     context: HTTPParseContext,
-    errors: HTTPParseError[]
+    errors: HTTPParseError[],
   ): void {
     if (!this.isValidRequest(request)) {
       errors.push({
-        message: 'Invalid request: missing method or URL',
+        message: "Invalid request: missing method or URL",
         line: context.currentLine,
-        severity: 'error'
+        severity: "error",
       });
       return;
     }
 
     // Process body
     if (bodyLines.length > 0) {
-      const bodyContent = bodyLines.join('\n').trim();
+      const bodyContent = bodyLines.join("\n").trim();
       if (bodyContent) {
         request.body = {
           type: this.detectBodyType(bodyContent, request.headers),
           content: bodyContent,
-          contentType: this.getContentTypeFromHeaders(request.headers)
+          contentType: this.getContentTypeFromHeaders(request.headers),
         };
       }
     }
@@ -489,40 +554,46 @@ export class HTTPFileImporter {
   /**
    * Detects body content type
    */
-  private static detectBodyType(content: string, headers?: HTTPHeader[]): HTTPRequestBody['type'] {
+  private static detectBodyType(
+    content: string,
+    headers?: HTTPHeader[],
+  ): HTTPRequestBody["type"] {
     // Check content-type header first
     const contentType = this.getContentTypeFromHeaders(headers);
-    
+
     if (contentType) {
-      if (contentType.includes('json')) return 'json';
-      if (contentType.includes('xml')) return 'xml';
-      if (contentType.includes('html')) return 'html';
-      if (contentType.includes('javascript')) return 'javascript';
-      if (contentType.includes('form-data')) return 'form-data';
-      if (contentType.includes('x-www-form-urlencoded')) return 'form-urlencoded';
-      if (contentType.includes('graphql')) return 'graphql';
+      if (contentType.includes("json")) return "json";
+      if (contentType.includes("xml")) return "xml";
+      if (contentType.includes("html")) return "html";
+      if (contentType.includes("javascript")) return "javascript";
+      if (contentType.includes("form-data")) return "form-data";
+      if (contentType.includes("x-www-form-urlencoded"))
+        return "form-urlencoded";
+      if (contentType.includes("graphql")) return "graphql";
     }
 
     // Try to detect from content
     const trimmed = content.trim();
-    
-    if (trimmed.startsWith('{') || trimmed.startsWith('[')) return 'json';
-    if (trimmed.startsWith('<')) return 'xml';
-    if (trimmed.includes('query') && trimmed.includes('{')) return 'graphql';
-    
-    return 'text';
+
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) return "json";
+    if (trimmed.startsWith("<")) return "xml";
+    if (trimmed.includes("query") && trimmed.includes("{")) return "graphql";
+
+    return "text";
   }
 
   /**
    * Gets content-type from headers
    */
-  private static getContentTypeFromHeaders(headers?: HTTPHeader[]): string | undefined {
+  private static getContentTypeFromHeaders(
+    headers?: HTTPHeader[],
+  ): string | undefined {
     if (!headers) return undefined;
-    
-    const contentTypeHeader = headers.find(h => 
-      h.name.toLowerCase() === 'content-type'
+
+    const contentTypeHeader = headers.find(
+      (h) => h.name.toLowerCase() === "content-type",
     );
-    
+
     return contentTypeHeader?.value;
   }
 
@@ -531,11 +602,11 @@ export class HTTPFileImporter {
    */
   private static extractPathFromUrl(url: string): string {
     try {
-      if (url.startsWith('http')) {
+      if (url.startsWith("http")) {
         return new URL(url).pathname;
       } else {
         // Relative URL
-        const queryIndex = url.indexOf('?');
+        const queryIndex = url.indexOf("?");
         return queryIndex > -1 ? url.substring(0, queryIndex) : url;
       }
     } catch {
@@ -549,10 +620,10 @@ export class HTTPFileImporter {
   private static extractVariables(text: string): string[] {
     const variables: string[] = [];
     const matches = text.match(/\{\{([^}]+)\}\}/g);
-    
+
     if (matches) {
-      matches.forEach(match => {
-        const variable = match.replace(/[{}]/g, '');
+      matches.forEach((match) => {
+        const variable = match.replace(/[{}]/g, "");
         if (!variables.includes(variable)) {
           variables.push(variable);
         }
@@ -567,14 +638,15 @@ export class HTTPFileImporter {
    */
   private static convertHTTPRequestToPostman(
     httpRequest: HTTPRequest,
-    globalVariables?: Record<string, string>
+    globalVariables?: Record<string, string>,
   ): RequestItem {
-    const headers = httpRequest.headers?.map(h => ({
-      key: h.name,
-      value: h.value,
-      disabled: !h.enabled,
-      description: h.description
-    })) || [];
+    const headers =
+      httpRequest.headers?.map((h) => ({
+        key: h.name,
+        value: h.value,
+        disabled: !h.enabled,
+        description: h.description,
+      })) || [];
 
     const request: RequestItem = {
       id: httpRequest.id || crypto.randomUUID(),
@@ -588,17 +660,17 @@ export class HTTPFileImporter {
           host: undefined,
           path: undefined,
           query: [],
-          variable: []
+          variable: [],
         },
-        description: httpRequest.description
-      }
+        description: httpRequest.description,
+      },
     };
 
     // Add body if present
     if (httpRequest.body && httpRequest.body.content.trim()) {
       request.request.body = {
-        mode: 'raw',
-        raw: httpRequest.body.content
+        mode: "raw",
+        raw: httpRequest.body.content,
       };
     }
 

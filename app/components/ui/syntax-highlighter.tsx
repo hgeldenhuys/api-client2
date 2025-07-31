@@ -1,11 +1,13 @@
-import React from 'react';
-import { Button } from '~/components/ui/button';
-import { Copy } from 'lucide-react';
-import { cn } from '~/utils/cn';
+import React from "react";
+import { Button } from "~/components/ui/button";
+import { Copy } from "lucide-react";
+import { cn } from "~/utils/cn";
 
 // Lazy load Monaco Editor
-const MonacoEditor = React.lazy(() => 
-  import('../MonacoEditor').then(module => ({ default: module.MonacoEditor }))
+const MonacoEditor = React.lazy(() =>
+  import("../MonacoEditor").then((module) => ({
+    default: module.MonacoEditor,
+  })),
 );
 
 interface CodeHighlighterProps {
@@ -15,103 +17,107 @@ interface CodeHighlighterProps {
   showCopyButton?: boolean;
   customStyle?: React.CSSProperties;
   showLineNumbers?: boolean;
-  theme?: 'light' | 'dark' | 'auto';
+  theme?: "light" | "dark" | "auto";
 }
 
 export function CodeHighlighter({
   children,
-  language = 'text',
+  language = "text",
   className,
   showCopyButton = true,
   customStyle,
   showLineNumbers = false,
-  theme = 'auto'
+  theme = "auto",
 }: CodeHighlighterProps) {
   const [copied, setCopied] = React.useState(false);
-  
+
   // Determine theme based on prop or system preference
   const resolvedTheme = React.useMemo(() => {
-    if (theme !== 'auto') return theme;
-    
+    if (theme !== "auto") return theme;
+
     // Check if we're in a browser environment
-    if (typeof window !== 'undefined') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    if (typeof window !== "undefined") {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
     }
-    
-    return 'dark'; // Default to dark
+
+    return "dark"; // Default to dark
   }, [theme]);
-  
+
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(children);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy code:', err);
+      console.error("Failed to copy code:", err);
     }
   };
-  
+
   // Map common language aliases to Monaco languages
   const normalizeLanguage = (lang: string) => {
     const languageMap: Record<string, string> = {
-      'http': 'http',
-      'js': 'javascript',
-      'javascript': 'javascript',
-      'ts': 'typescript',
-      'typescript': 'typescript',
-      'json': 'json',
-      'html': 'html',
-      'xml': 'xml',
-      'css': 'css',
-      'bash': 'shell',
-      'shell': 'shell',
-      'text': 'plaintext',
-      'plain': 'plaintext'
+      http: "http",
+      js: "javascript",
+      javascript: "javascript",
+      ts: "typescript",
+      typescript: "typescript",
+      json: "json",
+      html: "html",
+      xml: "xml",
+      css: "css",
+      bash: "shell",
+      shell: "shell",
+      text: "plaintext",
+      plain: "plaintext",
     };
-    
-    return languageMap[lang.toLowerCase()] || 'plaintext';
+
+    return languageMap[lang.toLowerCase()] || "plaintext";
   };
-  
+
   const normalizedLanguage = normalizeLanguage(language);
-  
+
   // Calculate height based on content
   const calculateHeight = () => {
-    const lines = children.split('\n').length;
+    const lines = children.split("\n").length;
     const lineHeight = 19; // Approximate line height in Monaco
     const padding = 20; // Padding for the editor
-    const maxHeight = customStyle?.maxHeight ? 
-      parseInt(customStyle.maxHeight.toString().replace('px', '')) : 
-      400;
-    
+    const maxHeight = customStyle?.maxHeight
+      ? parseInt(customStyle.maxHeight.toString().replace("px", ""))
+      : 400;
+
     const calculatedHeight = Math.min(lines * lineHeight + padding, maxHeight);
     return `${calculatedHeight}px`;
   };
-  
+
   return (
     <div className={cn("relative group", className)}>
-      <div 
+      <div
         className="rounded-md overflow-hidden border border-border"
         style={{
           height: calculateHeight(),
-          ...customStyle
+          ...customStyle,
         }}
       >
-        <React.Suspense fallback={
-          <div className="p-4 bg-muted text-muted-foreground font-mono text-sm">
-            <pre>{children}</pre>
-          </div>
-        }>
+        <React.Suspense
+          fallback={
+            <div className="p-4 bg-muted text-muted-foreground font-mono text-sm">
+              <pre>{children}</pre>
+            </div>
+          }
+        >
           <MonacoEditor
             value={children}
             language={normalizedLanguage}
-            theme={resolvedTheme === 'dark' ? 'vs-dark' : 'vs'}
+            theme={resolvedTheme === "dark" ? "vs-dark" : "vs"}
             readOnly={true}
             minimap={false}
             height={calculateHeight()}
           />
         </React.Suspense>
       </div>
-      
+
       {showCopyButton && (
         <Button
           size="sm"
@@ -135,11 +141,13 @@ interface InlineCodeProps {
 
 export function InlineCode({ children, className }: InlineCodeProps) {
   return (
-    <code className={cn(
-      "px-1.5 py-0.5 bg-muted rounded text-sm font-mono",
-      "border border-border/50",
-      className
-    )}>
+    <code
+      className={cn(
+        "px-1.5 py-0.5 bg-muted rounded text-sm font-mono",
+        "border border-border/50",
+        className,
+      )}
+    >
       {children}
     </code>
   );
@@ -152,7 +160,7 @@ interface HttpRequestHighlighterProps {
   headers?: Record<string, string>;
   body?: string;
   showCopyButton?: boolean;
-  theme?: 'light' | 'dark' | 'auto';
+  theme?: "light" | "dark" | "auto";
 }
 
 export function HttpRequestHighlighter({
@@ -161,24 +169,26 @@ export function HttpRequestHighlighter({
   headers,
   body,
   showCopyButton = true,
-  theme = 'auto'
+  theme = "auto",
 }: HttpRequestHighlighterProps) {
   const httpRequest = React.useMemo(() => {
     let request = `${method.toUpperCase()} ${url}`;
-    
+
     if (headers && Object.keys(headers).length > 0) {
-      request += '\n' + Object.entries(headers)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join('\n');
+      request +=
+        "\n" +
+        Object.entries(headers)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join("\n");
     }
-    
+
     if (body) {
-      request += '\n\n' + body;
+      request += "\n\n" + body;
     }
-    
+
     return request;
   }, [method, url, headers, body]);
-  
+
   return (
     <CodeHighlighter
       language="http"
@@ -195,25 +205,27 @@ interface JsonHighlighterProps {
   data: any;
   showCopyButton?: boolean;
   maxHeight?: string;
-  theme?: 'light' | 'dark' | 'auto';
+  theme?: "light" | "dark" | "auto";
 }
 
 export function JsonHighlighter({
   data,
   showCopyButton = true,
   maxHeight,
-  theme = 'auto'
+  theme = "auto",
 }: JsonHighlighterProps) {
   const jsonString = React.useMemo(() => {
     try {
-      return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      return typeof data === "string" ? data : JSON.stringify(data, null, 2);
     } catch (err) {
       return String(data);
     }
   }, [data]);
-  
-  const customStyle = maxHeight ? { maxHeight, overflowY: 'auto' as const } : undefined;
-  
+
+  const customStyle = maxHeight
+    ? { maxHeight, overflowY: "auto" as const }
+    : undefined;
+
   return (
     <CodeHighlighter
       language="json"

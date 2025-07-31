@@ -1,4 +1,4 @@
-import type { PostmanCollection } from '~/types/postman';
+import type { PostmanCollection } from "~/types/postman";
 
 export class PostmanImporter {
   /**
@@ -7,35 +7,37 @@ export class PostmanImporter {
   static validate(data: any): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    if (!data || typeof data !== 'object') {
-      errors.push('Invalid JSON structure');
+    if (!data || typeof data !== "object") {
+      errors.push("Invalid JSON structure");
       return { valid: false, errors };
     }
 
     // Check required fields
     if (!data.info) {
-      errors.push('Missing required field: info');
+      errors.push("Missing required field: info");
     } else {
       if (!data.info.name) {
-        errors.push('Missing required field: info.name');
+        errors.push("Missing required field: info.name");
       }
       if (!data.info.schema) {
-        errors.push('Missing required field: info.schema');
+        errors.push("Missing required field: info.schema");
       }
     }
 
     if (!data.item || !Array.isArray(data.item)) {
-      errors.push('Missing or invalid field: item (must be an array)');
+      errors.push("Missing or invalid field: item (must be an array)");
     }
 
     // Check schema version
-    if (data.info?.schema && !data.info.schema.includes('v2.1')) {
-      errors.push(`Unsupported schema version: ${data.info.schema}. Only v2.1.0 is supported.`);
+    if (data.info?.schema && !data.info.schema.includes("v2.1")) {
+      errors.push(
+        `Unsupported schema version: ${data.info.schema}. Only v2.1.0 is supported.`,
+      );
     }
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -60,7 +62,7 @@ export class PostmanImporter {
     if (!sanitized.variable) {
       sanitized.variable = [];
     }
-    
+
     // Sanitize collection-level auth if present
     if (sanitized.auth) {
       sanitized.auth = this.sanitizeAuth(sanitized.auth);
@@ -73,7 +75,7 @@ export class PostmanImporter {
    * Sanitizes items (requests and folders) recursively
    */
   private static sanitizeItems(items: any[]): any[] {
-    return items.map(item => {
+    return items.map((item) => {
       // Ensure item has an ID
       if (!item.id) {
         item.id = crypto.randomUUID();
@@ -88,7 +90,7 @@ export class PostmanImporter {
       if (item.request) {
         // Ensure method exists
         if (!item.request.method) {
-          item.request.method = 'GET';
+          item.request.method = "GET";
         }
 
         // Ensure headers is an array
@@ -97,23 +99,23 @@ export class PostmanImporter {
         }
 
         // Ensure URL is properly formatted
-        if (typeof item.request.url === 'string') {
+        if (typeof item.request.url === "string") {
           item.request.url = {
             raw: item.request.url,
             protocol: null,
             host: null,
             path: null,
             query: [],
-            variable: []
+            variable: [],
           };
         }
-        
+
         // Validate auth if present
         if (item.request.auth) {
           item.request.auth = this.sanitizeAuth(item.request.auth);
         }
       }
-      
+
       // If it's a folder with auth
       if (item.auth) {
         item.auth = this.sanitizeAuth(item.auth);
@@ -130,33 +132,43 @@ export class PostmanImporter {
     if (!auth || !auth.type) {
       return auth;
     }
-    
+
     // Ensure the auth type is valid
     const validAuthTypes = [
-      'apikey', 'awsv4', 'basic', 'bearer', 'digest', 
-      'edgegrid', 'hawk', 'noauth', 'oauth1', 'oauth2', 
-      'ntlm', 'jwt', 'custom'
+      "apikey",
+      "awsv4",
+      "basic",
+      "bearer",
+      "digest",
+      "edgegrid",
+      "hawk",
+      "noauth",
+      "oauth1",
+      "oauth2",
+      "ntlm",
+      "jwt",
+      "custom",
     ];
-    
+
     if (!validAuthTypes.includes(auth.type)) {
-      return { type: 'noauth' };
+      return { type: "noauth" };
     }
-    
+
     // Ensure auth params are arrays
     const authTypeKey = auth.type;
-    if (authTypeKey !== 'noauth' && auth[authTypeKey]) {
+    if (authTypeKey !== "noauth" && auth[authTypeKey]) {
       if (!Array.isArray(auth[authTypeKey])) {
         auth[authTypeKey] = [];
       }
-      
+
       // Ensure each param has required fields
       auth[authTypeKey] = auth[authTypeKey].map((param: any) => ({
-        key: param.key || '',
-        value: param.value || '',
-        type: param.type || 'string'
+        key: param.key || "",
+        value: param.value || "",
+        type: param.type || "string",
       }));
     }
-    
+
     return auth;
   }
 
@@ -170,14 +182,15 @@ export class PostmanImporter {
   }> {
     try {
       // Parse JSON if string
-      const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+      const data =
+        typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
 
       // Validate
       const validation = this.validate(data);
       if (!validation.valid) {
         return {
           success: false,
-          error: `Validation failed: ${validation.errors.join(', ')}`
+          error: `Validation failed: ${validation.errors.join(", ")}`,
         };
       }
 
@@ -186,12 +199,13 @@ export class PostmanImporter {
 
       return {
         success: true,
-        collection: sanitized
+        collection: sanitized,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       };
     }
   }
@@ -210,7 +224,7 @@ export class PostmanImporter {
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to read file'
+        error: "Failed to read file",
       };
     }
   }

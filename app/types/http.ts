@@ -33,16 +33,16 @@ export interface HTTPRequest {
   metadata?: HTTPRequestMetadata;
 }
 
-export type HTTPMethod = 
-  | 'GET' 
-  | 'POST' 
-  | 'PUT' 
-  | 'PATCH' 
-  | 'DELETE' 
-  | 'HEAD' 
-  | 'OPTIONS' 
-  | 'TRACE' 
-  | 'CONNECT';
+export type HTTPMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "PATCH"
+  | "DELETE"
+  | "HEAD"
+  | "OPTIONS"
+  | "TRACE"
+  | "CONNECT";
 
 export interface HTTPHeader {
   name: string;
@@ -58,16 +58,16 @@ export interface HTTPRequestBody {
   contentType?: string;
 }
 
-export type HTTPBodyType = 
-  | 'text'
-  | 'json'
-  | 'xml' 
-  | 'html'
-  | 'javascript'
-  | 'form-data'
-  | 'form-urlencoded'
-  | 'binary'
-  | 'graphql';
+export type HTTPBodyType =
+  | "text"
+  | "json"
+  | "xml"
+  | "html"
+  | "javascript"
+  | "form-data"
+  | "form-urlencoded"
+  | "binary"
+  | "graphql";
 
 export interface HTTPRequestMetadata {
   lineNumber?: number;
@@ -82,7 +82,7 @@ export interface HTTPRequestMetadata {
 export interface HTTPCertificate {
   path: string;
   password?: string;
-  type?: 'p12' | 'pem';
+  type?: "p12" | "pem";
 }
 
 // HTTP file parsing result
@@ -98,7 +98,7 @@ export interface HTTPParseError {
   line?: number;
   column?: number;
   code?: string;
-  severity: 'error' | 'warning' | 'info';
+  severity: "error" | "warning" | "info";
 }
 
 export interface HTTPParseWarning {
@@ -115,10 +115,10 @@ export interface HTTPFileExportOptions {
   includeMetadata?: boolean;
   formatBody?: boolean;
   indentSize?: number;
-  lineEnding?: 'lf' | 'crlf' | 'cr';
+  lineEnding?: "lf" | "crlf" | "cr";
   includeRequestNames?: boolean;
   groupByTags?: boolean;
-  variableFormat?: 'inline' | 'environment' | 'both';
+  variableFormat?: "inline" | "environment" | "both";
 }
 
 // Variable and environment support
@@ -134,7 +134,7 @@ export interface HTTPVariable {
   value: string;
   description?: string;
   sensitive?: boolean;
-  type?: 'string' | 'number' | 'boolean' | 'file';
+  type?: "string" | "number" | "boolean" | "file";
 }
 
 // HTTP file template definitions
@@ -150,9 +150,9 @@ export interface HTTPFileTemplate {
 // Built-in templates
 export const HTTP_FILE_TEMPLATES: HTTPFileTemplate[] = [
   {
-    name: 'REST API Collection',
-    description: 'Basic REST API requests (GET, POST, PUT, DELETE)',
-    category: 'REST',
+    name: "REST API Collection",
+    description: "Basic REST API requests (GET, POST, PUT, DELETE)",
+    category: "REST",
     content: `### Get all users
 GET {{baseUrl}}/users
 Accept: application/json
@@ -187,15 +187,18 @@ Authorization: Bearer {{token}}
 DELETE {{baseUrl}}/users/{{userId}}
 Authorization: Bearer {{token}}`,
     variables: {
-      baseUrl: { value: 'https://api.example.com', description: 'API base URL' },
-      token: { value: '', description: 'Bearer token', sensitive: true },
-      userId: { value: '1', description: 'User ID for operations' }
-    }
+      baseUrl: {
+        value: "https://api.example.com",
+        description: "API base URL",
+      },
+      token: { value: "", description: "Bearer token", sensitive: true },
+      userId: { value: "1", description: "User ID for operations" },
+    },
   },
   {
-    name: 'GraphQL API',
-    description: 'GraphQL query and mutation examples',
-    category: 'GraphQL',
+    name: "GraphQL API",
+    description: "GraphQL query and mutation examples",
+    category: "GraphQL",
     content: `### GraphQL Query
 POST {{graphqlUrl}}
 Content-Type: application/json
@@ -220,14 +223,17 @@ Authorization: Bearer {{token}}
   }
 }`,
     variables: {
-      graphqlUrl: { value: 'https://api.example.com/graphql', description: 'GraphQL endpoint' },
-      token: { value: '', description: 'Bearer token', sensitive: true }
-    }
+      graphqlUrl: {
+        value: "https://api.example.com/graphql",
+        description: "GraphQL endpoint",
+      },
+      token: { value: "", description: "Bearer token", sensitive: true },
+    },
   },
   {
-    name: 'File Upload',
-    description: 'File upload with multipart/form-data',
-    category: 'Upload',
+    name: "File Upload",
+    description: "File upload with multipart/form-data",
+    category: "Upload",
     content: `### Upload file
 POST {{baseUrl}}/upload
 Content-Type: multipart/form-data; boundary=boundary123
@@ -245,10 +251,13 @@ Content-Disposition: form-data; name="description"
 File upload example
 --boundary123--`,
     variables: {
-      baseUrl: { value: 'https://api.example.com', description: 'API base URL' },
-      token: { value: '', description: 'Bearer token', sensitive: true }
-    }
-  }
+      baseUrl: {
+        value: "https://api.example.com",
+        description: "API base URL",
+      },
+      token: { value: "", description: "Bearer token", sensitive: true },
+    },
+  },
 ];
 
 // HTTP file validation
@@ -271,7 +280,7 @@ export interface HTTPFileConversionOptions {
   baseUrl?: string;
   defaultHeaders?: Record<string, string>;
   variablePrefix?: string;
-  groupingStrategy?: 'none' | 'by-method' | 'by-path' | 'by-tag';
+  groupingStrategy?: "none" | "by-method" | "by-path" | "by-tag";
 }
 
 // HTTP file parsing context
@@ -295,7 +304,7 @@ export interface HTTPFileFormatOptions {
   normalizeHeaderNames?: boolean;
   preserveComments: boolean;
   addBlankLines?: boolean;
-  headerCase?: 'original' | 'lowercase' | 'titlecase' | 'uppercase';
+  headerCase?: "original" | "lowercase" | "titlecase" | "uppercase";
 }
 
 // HTTP file statistics
@@ -318,5 +327,5 @@ export interface HTTPFileProgress {
   currentRequest?: string;
   errors: HTTPParseError[];
   warnings: HTTPParseWarning[];
-  stage: 'parsing' | 'validating' | 'converting' | 'complete';
+  stage: "parsing" | "validating" | "converting" | "complete";
 }

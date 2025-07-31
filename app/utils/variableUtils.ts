@@ -22,7 +22,7 @@ export const containsVariables = (value: string): boolean => {
  */
 export const extractVariables = (value: string): string[] => {
   const matches = value.match(/\{\{([^}]+)\}\}/g);
-  return matches ? matches.map(match => match.slice(2, -2).trim()) : [];
+  return matches ? matches.map((match) => match.slice(2, -2).trim()) : [];
 };
 
 /**
@@ -34,7 +34,7 @@ export const shouldPreserveRaw = (value: string): boolean => {
   if (containsVariables(value)) {
     return true;
   }
-  
+
   // Could add other cases here like certain URL patterns, etc.
   return false;
 };
@@ -48,15 +48,15 @@ export const encodeParameterValue = (value: string): string => {
     // No variables, safe to encode normally
     return encodeURIComponent(value);
   }
-  
+
   // Contains variables, need to preserve them
   // Split by variable patterns and encode only the non-variable parts
   const parts: string[] = [];
   let lastIndex = 0;
-  
+
   const regex = /\{\{[^}]+\}\}/g;
   let match;
-  
+
   while ((match = regex.exec(value)) !== null) {
     // Add the part before the variable (encoded)
     if (match.index > lastIndex) {
@@ -65,13 +65,13 @@ export const encodeParameterValue = (value: string): string => {
         parts.push(encodeURIComponent(beforeVariable));
       }
     }
-    
+
     // Add the variable as-is (not encoded)
     parts.push(match[0]);
-    
+
     lastIndex = regex.lastIndex;
   }
-  
+
   // Add any remaining part after the last variable (encoded)
   if (lastIndex < value.length) {
     const afterLastVariable = value.slice(lastIndex);
@@ -79,8 +79,8 @@ export const encodeParameterValue = (value: string): string => {
       parts.push(encodeURIComponent(afterLastVariable));
     }
   }
-  
-  return parts.join('');
+
+  return parts.join("");
 };
 
 /**
@@ -94,18 +94,20 @@ export const encodeParameterKey = (key: string): string => {
 /**
  * Build a query string that preserves template variables
  */
-export const buildVariableAwareQueryString = (params: Array<{ key: string; value: string; enabled?: boolean }>): string => {
-  const enabledParams = params.filter(p => p.enabled !== false);
-  
+export const buildVariableAwareQueryString = (
+  params: Array<{ key: string; value: string; enabled?: boolean }>,
+): string => {
+  const enabledParams = params.filter((p) => p.enabled !== false);
+
   if (enabledParams.length === 0) {
-    return '';
+    return "";
   }
-  
-  const queryParts = enabledParams.map(param => {
+
+  const queryParts = enabledParams.map((param) => {
     const encodedKey = encodeParameterKey(param.key);
     const encodedValue = encodeParameterValue(param.value);
     return `${encodedKey}=${encodedValue}`;
   });
-  
-  return queryParts.join('&');
+
+  return queryParts.join("&");
 };

@@ -47,26 +47,32 @@ export function headers() {
       `base-uri 'self'`,
       `form-action 'self'`,
       `frame-ancestors 'none'`,
-      `upgrade-insecure-requests`
-    ].join('; '),
+      `upgrade-insecure-requests`,
+    ].join("; "),
     "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY", 
+    "X-Frame-Options": "DENY",
     "X-XSS-Protection": "1; mode=block",
     "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
   };
 }
 
-function getThemeClass(resolvedTheme?: 'light' | 'dark'): string {
-  return resolvedTheme === 'dark' ? 'dark' : '';
+function getThemeClass(resolvedTheme?: "light" | "dark"): string {
+  return resolvedTheme === "dark" ? "dark" : "";
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const data = useRouteLoaderData("root") as { theme: 'light' | 'dark' | 'system'; resolvedTheme: 'light' | 'dark' } | undefined;
-  
+  const data = useRouteLoaderData("root") as
+    | { theme: "light" | "dark" | "system"; resolvedTheme: "light" | "dark" }
+    | undefined;
+
   // Apply both theme attribute and resolved class for proper SSR
   return (
-    <html lang="en" data-theme={data?.theme ?? 'system'} className={getThemeClass(data?.resolvedTheme)}>
+    <html
+      lang="en"
+      data-theme={data?.theme ?? "system"}
+      className={getThemeClass(data?.resolvedTheme)}
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

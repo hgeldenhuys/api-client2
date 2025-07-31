@@ -21,7 +21,10 @@ import { demoCollection } from "~/utils/demo-collection";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "API Client" },
-    { name: "description", content: "Modern API Client built with React Router" },
+    {
+      name: "description",
+      content: "Modern API Client built with React Router",
+    },
   ];
 }
 
@@ -32,36 +35,38 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const data = loaderData as { theme?: ThemeMode } | undefined;
-  const { collections, addCollection, init: initCollections, isInitialized: collectionsInitialized } = useCollectionStore();
+  const {
+    collections,
+    addCollection,
+    init: initCollections,
+    isInitialized: collectionsInitialized,
+  } = useCollectionStore();
   const { init: initEnvironments } = useEnvironmentStore();
   const { initializeFromServer } = useTheme();
-  
+
   useEffect(() => {
     // Initialize stores
     const initStores = async () => {
-      await Promise.all([
-        initCollections(),
-        initEnvironments()
-      ]);
+      await Promise.all([initCollections(), initEnvironments()]);
     };
-    
+
     initStores();
   }, []);
-  
+
   // Initialize theme from server
   useEffect(() => {
     if (data?.theme) {
       initializeFromServer(data.theme);
     }
   }, [data?.theme, initializeFromServer]);
-  
+
   // Add demo collection after initialization
   useEffect(() => {
     if (collectionsInitialized && collections.size === 0) {
       addCollection(demoCollection);
     }
   }, [collectionsInitialized, collections.size, addCollection]);
-  
+
   // Example configuration for demonstration
   const exampleConfig = {
     branding: {
@@ -73,7 +78,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           <span className="font-semibold">API Client</span>
         </div>
       ),
-      logoLink: '/',
+      logoLink: "/",
     },
   };
 

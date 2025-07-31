@@ -1,31 +1,37 @@
-import React from 'react';
-import { ApiClientConfig, BugReport } from '~/types/config';
-import { Github, ExternalLink, Mail, MessageSquare, GitBranch } from 'lucide-react';
+import React from "react";
+import { ApiClientConfig, BugReport } from "~/types/config";
+import {
+  Github,
+  ExternalLink,
+  Mail,
+  MessageSquare,
+  GitBranch,
+} from "lucide-react";
 
 /**
  * Example configuration for the default API Client setup
  */
 export const defaultConfig: ApiClientConfig = {
   branding: {
-    logoLink: '/',
+    logoLink: "/",
   },
   repository: {
-    label: 'View on GitHub',
-    url: 'https://github.com/api-client/docs',
+    label: "View on GitHub",
+    url: "https://github.com/api-client/docs",
     icon: <Github className="h-4 w-4 mr-2" />,
   },
   support: {
-    label: 'Contact Support',
-    email: 'support@api-client.dev',
+    label: "Contact Support",
+    email: "support@api-client.dev",
   },
   community: {
-    label: 'Community Forum',
-    url: 'https://community.api-client.com',
+    label: "Community Forum",
+    url: "https://community.api-client.com",
   },
   bugReporting: {
     enabled: true,
     onSubmitBug: (bugReport: BugReport) => {
-      console.log('Feedback Submitted:', JSON.stringify(bugReport, null, 2));
+      console.log("Feedback Submitted:", JSON.stringify(bugReport, null, 2));
     },
   },
 };
@@ -43,31 +49,31 @@ export const customBrandedConfig: ApiClientConfig = {
         <span className="font-semibold text-lg">Acme API Client</span>
       </div>
     ),
-    logoLink: 'https://acme.com',
+    logoLink: "https://acme.com",
   },
   repository: {
-    label: 'View Source',
-    url: 'https://gitlab.acme.com/api-tools/client',
+    label: "View Source",
+    url: "https://gitlab.acme.com/api-tools/client",
     icon: <GitBranch className="h-4 w-4 mr-2" />,
   },
   support: {
-    label: 'Get Help',
-    url: 'https://support.acme.com/api-client',
+    label: "Get Help",
+    url: "https://support.acme.com/api-client",
   },
   community: {
-    label: 'Developer Community',
-    url: 'https://developers.acme.com/community',
+    label: "Developer Community",
+    url: "https://developers.acme.com/community",
   },
   bugReporting: {
     enabled: true,
     onSubmitBug: async (bugReport: BugReport) => {
       // Send to custom bug tracking system
       try {
-        const response = await fetch('https://api.acme.com/bugs', {
-          method: 'POST',
+        const response = await fetch("https://api.acme.com/bugs", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + process.env.ACME_API_TOKEN,
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + process.env.ACME_API_TOKEN,
           },
           body: JSON.stringify({
             title: bugReport.title,
@@ -76,18 +82,18 @@ export const customBrandedConfig: ApiClientConfig = {
             expected: bugReport.expectedResult,
             actual: bugReport.actualResult,
             environment: bugReport.systemInfo,
-            source: 'api-client',
+            source: "api-client",
           }),
         });
-        
+
         if (response.ok) {
           const result = await response.json();
-          console.log('Bug report created:', result.id);
+          console.log("Bug report created:", result.id);
         } else {
-          throw new Error('Failed to submit bug report');
+          throw new Error("Failed to submit bug report");
         }
       } catch (error) {
-        console.error('Bug report submission error:', error);
+        console.error("Bug report submission error:", error);
       }
     },
   },
@@ -106,20 +112,20 @@ export const openSourceConfig: ApiClientConfig = {
         <span className="font-medium">Open API</span>
       </div>
     ),
-    logoLink: 'https://openapi.example.com',
+    logoLink: "https://openapi.example.com",
   },
   repository: {
-    label: 'Contribute on GitHub',
-    url: 'https://github.com/openapi/client',
+    label: "Contribute on GitHub",
+    url: "https://github.com/openapi/client",
     icon: <Github className="h-4 w-4 mr-2" />,
   },
   support: {
-    label: 'Community Support',
-    url: 'https://github.com/openapi/client/discussions',
+    label: "Community Support",
+    url: "https://github.com/openapi/client/discussions",
   },
   community: {
-    label: 'Discord Chat',
-    url: 'https://discord.gg/openapi',
+    label: "Discord Chat",
+    url: "https://discord.gg/openapi",
   },
   bugReporting: {
     enabled: true,
@@ -144,9 +150,9 @@ ${bugReport.actualResult}
 - URL: ${bugReport.systemInfo.url}
 - Timestamp: ${bugReport.systemInfo.timestamp}
       `.trim();
-      
+
       const githubUrl = `https://github.com/openapi/client/issues/new?title=${encodeURIComponent(bugReport.title)}&body=${encodeURIComponent(issueBody)}`;
-      window.open(githubUrl, '_blank');
+      window.open(githubUrl, "_blank");
     },
   },
 };
@@ -157,17 +163,17 @@ ${bugReport.actualResult}
 export const minimalConfig: ApiClientConfig = {
   branding: {},
   repository: {
-    label: 'Documentation',
-    url: 'https://docs.example.com',
+    label: "Documentation",
+    url: "https://docs.example.com",
     icon: <ExternalLink className="h-4 w-4 mr-2" />,
   },
   support: {
-    label: 'Email Support',
-    email: 'help@example.com',
+    label: "Email Support",
+    email: "help@example.com",
   },
   community: {
-    label: 'Help Center',
-    url: 'https://help.example.com',
+    label: "Help Center",
+    url: "https://help.example.com",
   },
   bugReporting: {
     enabled: false,
@@ -187,49 +193,49 @@ export const enterpriseConfig: ApiClientConfig = {
         <span className="font-semibold">Enterprise API Hub</span>
       </div>
     ),
-    logoLink: 'https://enterprise.example.com/api-hub',
+    logoLink: "https://enterprise.example.com/api-hub",
   },
   repository: {
-    label: 'Internal Wiki',
-    url: 'https://wiki.enterprise.example.com/api-client',
+    label: "Internal Wiki",
+    url: "https://wiki.enterprise.example.com/api-client",
     icon: <ExternalLink className="h-4 w-4 mr-2" />,
   },
   support: {
-    label: 'IT Helpdesk',
-    url: 'https://helpdesk.enterprise.example.com',
+    label: "IT Helpdesk",
+    url: "https://helpdesk.enterprise.example.com",
   },
   community: {
-    label: 'Developer Portal',
-    url: 'https://developers.enterprise.example.com',
+    label: "Developer Portal",
+    url: "https://developers.enterprise.example.com",
   },
   bugReporting: {
     enabled: true,
     onSubmitBug: async (bugReport: BugReport) => {
       // Send to enterprise ticketing system
       try {
-        await fetch('/api/internal/tickets', {
-          method: 'POST',
+        await fetch("/api/internal/tickets", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': 'internal-api-key',
+            "Content-Type": "application/json",
+            "X-API-Key": "internal-api-key",
           },
           body: JSON.stringify({
-            type: 'bug_report',
-            severity: 'medium',
-            component: 'api-client',
+            type: "bug_report",
+            severity: "medium",
+            component: "api-client",
             title: bugReport.title,
             description: bugReport.description,
             reproduction_steps: bugReport.stepsToReproduce,
             expected_behavior: bugReport.expectedResult,
             actual_behavior: bugReport.actualResult,
             system_info: bugReport.systemInfo,
-            reporter: 'api-client-user',
+            reporter: "api-client-user",
           }),
         });
-        
-        console.log('Internal ticket created successfully');
+
+        console.log("Internal ticket created successfully");
       } catch (error) {
-        console.error('Failed to create internal ticket:', error);
+        console.error("Failed to create internal ticket:", error);
       }
     },
   },

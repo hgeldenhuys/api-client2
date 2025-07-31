@@ -1,5 +1,4 @@
-import React from 'react';
-import { Button } from '~/components/ui/button';
+import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,8 +6,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuLabel,
-} from '~/components/ui/dropdown-menu';
-import { ChevronDown, Lightbulb } from 'lucide-react';
+} from "~/components/ui/dropdown-menu";
+import { ChevronDown, Lightbulb } from "lucide-react";
 
 interface ScriptExample {
   name: string;
@@ -17,14 +16,14 @@ interface ScriptExample {
 }
 
 interface ScriptExamplesDropdownProps {
-  type: 'pre-request' | 'test';
+  type: "pre-request" | "test";
   onSelect: (code: string) => void;
 }
 
 const preRequestExamples: ScriptExample[] = [
   {
-    name: 'Modify Request Headers',
-    description: 'Add or update request headers dynamically',
+    name: "Modify Request Headers",
+    description: "Add or update request headers dynamically",
     code: `// Add authentication header using upsert (updates if exists, adds if not)
 const token = pm.environment.get('authToken') || 'your-api-token';
 pm.request.headers.upsert({
@@ -49,11 +48,11 @@ pm.request.headers.add({
 // Check if header exists
 if (pm.request.headers.has('Content-Type')) {
   console.log('Content-Type:', pm.request.headers.get('Content-Type'));
-}`
+}`,
   },
   {
-    name: 'Set Bearer Token',
-    description: 'Set bearer token authentication',
+    name: "Set Bearer Token",
+    description: "Set bearer token authentication",
     code: `// Set bearer token authentication
 const token = pm.environment.get('access_token');
 pm.request.setAuth({
@@ -61,11 +60,11 @@ pm.request.setAuth({
   bearer: [
     { key: 'token', value: token, type: 'string' }
   ]
-});`
+});`,
   },
   {
-    name: 'Set Basic Auth',
-    description: 'Set basic authentication',
+    name: "Set Basic Auth",
+    description: "Set basic authentication",
     code: `// Set basic authentication
 pm.request.setAuth({
   type: 'basic',
@@ -73,27 +72,27 @@ pm.request.setAuth({
     { key: 'username', value: pm.environment.get('username'), type: 'string' },
     { key: 'password', value: pm.environment.get('password'), type: 'string' }
   ]
-});`
+});`,
   },
   {
-    name: 'Update API Key',
-    description: 'Update API key authentication',
+    name: "Update API Key",
+    description: "Update API key authentication",
     code: `// Update API key authentication
 const apiKey = pm.environment.get('api_key');
 pm.request.updateAuth('apikey', 'value', apiKey);
 pm.request.updateAuth('apikey', 'key', 'X-API-Key');
-pm.request.updateAuth('apikey', 'in', 'header');`
+pm.request.updateAuth('apikey', 'in', 'header');`,
   },
   {
-    name: 'Remove Authentication',
-    description: 'Remove authentication from request',
+    name: "Remove Authentication",
+    description: "Remove authentication from request",
     code: `// Remove authentication from request
 pm.request.removeAuth();
-console.log('Authentication removed');`
+console.log('Authentication removed');`,
   },
   {
-    name: 'Dynamic Request URL',
-    description: 'Modify the request URL based on environment',
+    name: "Dynamic Request URL",
+    description: "Modify the request URL based on environment",
     code: `// Get base URL from environment
 const baseUrl = pm.environment.get('baseUrl') || 'https://api.example.com';
 const endpoint = '/users';
@@ -104,11 +103,11 @@ pm.request.setUrl(\`\${baseUrl}\${endpoint}\`);
 // Or modify just part of the URL
 const currentUrl = pm.request.url;
 const userId = pm.environment.get('userId') || '123';
-pm.request.setUrl(currentUrl.replace('{id}', userId));`
+pm.request.setUrl(currentUrl.replace('{id}', userId));`,
   },
   {
-    name: 'Dynamic Request Body',
-    description: 'Modify request body with dynamic data',
+    name: "Dynamic Request Body",
+    description: "Modify request body with dynamic data",
     code: `// Create dynamic request body
 const requestBody = {
   username: pm.environment.get('testUsername') || 'testuser',
@@ -124,11 +123,11 @@ pm.request.setBody(JSON.stringify(requestBody));
 pm.request.headers.upsert({
   key: 'Content-Type',
   value: 'application/json'
-});`
+});`,
   },
   {
-    name: 'Set Authentication Token',
-    description: 'Set a bearer token for authentication',
+    name: "Set Authentication Token",
+    description: "Set a bearer token for authentication",
     code: `// Set authentication token
 const token = 'your-api-token';
 pm.environment.set('authToken', token);
@@ -137,11 +136,11 @@ pm.environment.set('authToken', token);
 const timestamp = Date.now();
 const apiKey = pm.environment.get('apiKey');
 const signature = \`\${apiKey}-\${timestamp}\`;
-pm.environment.set('signature', signature);`
+pm.environment.set('signature', signature);`,
   },
   {
-    name: 'Generate Timestamp',
-    description: 'Create a timestamp for the request',
+    name: "Generate Timestamp",
+    description: "Create a timestamp for the request",
     code: `// Generate current timestamp
 const timestamp = Date.now();
 pm.environment.set('currentTimestamp', timestamp);
@@ -149,11 +148,11 @@ pm.environment.set('currentTimestamp', timestamp);
 // Generate formatted date
 const date = new Date();
 pm.environment.set('currentDate', date.toISOString());
-pm.environment.set('currentYear', date.getFullYear().toString());`
+pm.environment.set('currentYear', date.getFullYear().toString());`,
   },
   {
-    name: 'Generate Random Data',
-    description: 'Create random values for testing',
+    name: "Generate Random Data",
+    description: "Create random values for testing",
     code: `// Generate random values
 const randomId = Math.floor(Math.random() * 10000);
 const randomEmail = \`test\${randomId}@example.com\`;
@@ -169,11 +168,11 @@ const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c)
   const v = c === 'x' ? r : (r & 0x3 | 0x8);
   return v.toString(16);
 });
-pm.environment.set('uuid', uuid);`
+pm.environment.set('uuid', uuid);`,
   },
   {
-    name: 'Log Request Details',
-    description: 'Debug request information',
+    name: "Log Request Details",
+    description: "Debug request information",
     code: `// Log request details
 console.log('Request URL:', pm.request.url);
 console.log('Request Method:', pm.request.method);
@@ -184,14 +183,14 @@ console.log('Environment:', pm.environment.name);
 console.log('Auth Token:', pm.environment.get('authToken'));
 
 // Alert important information
-alert('Sending request to: ' + pm.request.url);`
-  }
+alert('Sending request to: ' + pm.request.url);`,
+  },
 ];
 
 const testExamples: ScriptExample[] = [
   {
-    name: 'Test Status Code',
-    description: 'Verify response status codes',
+    name: "Test Status Code",
+    description: "Verify response status codes",
     code: `// Test for successful response
 pm.test('Status code is 200', () => {
   pm.expect(pm.response).to.have.status(200);
@@ -205,11 +204,11 @@ pm.test('Status code is successful', () => {
 // Test for error status
 pm.test('Status code is not 404', () => {
   pm.expect(pm.response).to.not.have.status(404);
-});`
+});`,
   },
   {
-    name: 'Test Response Body',
-    description: 'Validate response body structure',
+    name: "Test Response Body",
+    description: "Validate response body structure",
     code: `// Test response is JSON
 pm.test('Response is JSON', () => {
   pm.expect(pm.response.headers['content-type']).to.include('application/json');
@@ -227,11 +226,11 @@ pm.test('Response has required fields', () => {
 pm.test('Response is an array with items', () => {
   pm.expect(pm.response.body).to.be.an('array');
   pm.expect(pm.response.body.length).to.be.above(0);
-});`
+});`,
   },
   {
-    name: 'Test Response Time',
-    description: 'Check API performance',
+    name: "Test Response Time",
+    description: "Check API performance",
     code: `// Test response time
 pm.test('Response time is less than 500ms', () => {
   pm.expect(pm.response.responseTime).to.be.below(500);
@@ -243,11 +242,11 @@ pm.test('Response time is acceptable', () => {
     console.warn('Response time is slow:', pm.response.responseTime + 'ms');
   }
   pm.expect(pm.response.responseTime).to.be.below(2000);
-});`
+});`,
   },
   {
-    name: 'Test Headers',
-    description: 'Validate response headers',
+    name: "Test Headers",
+    description: "Validate response headers",
     code: `// Test specific headers
 pm.test('Content-Type header is present', () => {
   pm.expect(pm.response.headers).to.have.property('content-type');
@@ -262,11 +261,11 @@ pm.test('CORS headers are properly set', () => {
 // Test custom headers
 pm.test('API version header is correct', () => {
   pm.expect(pm.response.headers['x-api-version']).to.equal('v1');
-});`
+});`,
   },
   {
-    name: 'Multiple Tests Example',
-    description: 'Comprehensive test suite',
+    name: "Multiple Tests Example",
+    description: "Comprehensive test suite",
     code: `// Test 1: Status Code
 pm.test('Status code is 200', () => {
   pm.expect(pm.response).to.have.status(200);
@@ -301,13 +300,16 @@ pm.test('Save first item ID', () => {
   const firstItem = pm.response.body.data[0];
   pm.environment.set('lastItemId', firstItem.id);
   console.log('Saved item ID:', firstItem.id);
-});`
-  }
+});`,
+  },
 ];
 
-export function ScriptExamplesDropdown({ type, onSelect }: ScriptExamplesDropdownProps) {
-  const examples = type === 'pre-request' ? preRequestExamples : testExamples;
-  
+export function ScriptExamplesDropdown({
+  type,
+  onSelect,
+}: ScriptExamplesDropdownProps) {
+  const examples = type === "pre-request" ? preRequestExamples : testExamples;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -319,7 +321,9 @@ export function ScriptExamplesDropdown({ type, onSelect }: ScriptExamplesDropdow
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel>
-          {type === 'pre-request' ? 'Pre-request Script Examples' : 'Test Script Examples'}
+          {type === "pre-request"
+            ? "Pre-request Script Examples"
+            : "Test Script Examples"}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {examples.map((example, index) => (
@@ -329,7 +333,9 @@ export function ScriptExamplesDropdown({ type, onSelect }: ScriptExamplesDropdow
             className="flex flex-col items-start py-3 cursor-pointer"
           >
             <div className="font-medium">{example.name}</div>
-            <div className="text-sm text-muted-foreground">{example.description}</div>
+            <div className="text-sm text-muted-foreground">
+              {example.description}
+            </div>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

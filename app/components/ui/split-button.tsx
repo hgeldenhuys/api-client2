@@ -1,14 +1,14 @@
-import * as React from "react"
-import { ChevronDown } from "lucide-react"
-import { cn } from "~/lib/utils"
-import { Button, buttonVariants } from "~/components/ui/button"
-import type { VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "~/lib/utils";
+import { Button, buttonVariants } from "~/components/ui/button";
+import type { VariantProps } from "class-variance-authority";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu"
+} from "~/components/ui/dropdown-menu";
 
 export interface SplitButtonOption {
   label: string;
@@ -16,25 +16,23 @@ export interface SplitButtonOption {
   icon?: React.ReactNode;
 }
 
-interface SplitButtonProps extends React.ComponentProps<"button">, VariantProps<typeof buttonVariants> {
+interface SplitButtonProps
+  extends React.ComponentProps<"button">,
+    VariantProps<typeof buttonVariants> {
   options: SplitButtonOption[];
   children: React.ReactNode;
 }
 
-export function SplitButton({ 
-  children, 
-  className, 
-  options, 
+export function SplitButton({
+  children,
+  className,
+  options,
   onClick,
-  ...props 
+  ...props
 }: SplitButtonProps) {
   return (
     <div className={cn("flex", className)}>
-      <Button
-        className="rounded-r-none"
-        onClick={onClick}
-        {...props}
-      >
+      <Button className="rounded-r-none" onClick={onClick} {...props}>
         {children}
       </Button>
       <DropdownMenu>

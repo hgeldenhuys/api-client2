@@ -30,7 +30,7 @@ export interface AuthParam {
 export interface FormDataParameter {
   key: string;
   value: string;
-  type: 'text' | 'file';
+  type: "text" | "file";
   src?: string; // For file type
   description?: string;
   disabled?: boolean;
@@ -54,14 +54,14 @@ export interface RequestUpdates {
 
 export interface WorkerMessage {
   id: string;
-  type: 'execute';
+  type: "execute";
   script: string;
   context: ScriptExecutionContext;
 }
 
 export interface WorkerResult {
   id: string;
-  type: 'result' | 'error';
+  type: "result" | "error";
   tests?: TestResult[];
   consoleOutput?: string[];
   error?: string;

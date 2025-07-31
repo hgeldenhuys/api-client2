@@ -1,4 +1,4 @@
-import { HttpMethod } from './postman';
+import { HttpMethod } from "./postman";
 
 export interface RequestExecution {
   id: string;
@@ -17,7 +17,7 @@ export interface RequestExecution {
 export interface EnvironmentVariable {
   key: string;
   value: string;
-  type: 'default' | 'secret';
+  type: "default" | "secret";
   enabled: boolean;
 }
 
@@ -37,8 +37,8 @@ export interface CollectionMetadata {
   // Per-collection app state
   activeRequestId?: string | null;
   activeEnvironmentId?: string | null;
-  openTabs?: string[];           // Array of request IDs
-  expandedFolders?: string[];    // Array of folder IDs that are expanded
+  openTabs?: string[]; // Array of request IDs
+  expandedFolders?: string[]; // Array of folder IDs that are expanded
 }
 
 export interface AppState {
@@ -51,7 +51,7 @@ export interface AppState {
 }
 
 export interface CollectionWithMetadata {
-  collection: import('./postman').PostmanCollection;
+  collection: import("./postman").PostmanCollection;
   metadata: CollectionMetadata;
 }
 

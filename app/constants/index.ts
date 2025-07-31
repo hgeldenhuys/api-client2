@@ -35,7 +35,7 @@ export const UI = {
     WIDTH: 600,
     HEIGHT: 700,
   },
-  EDITOR_DEFAULT_HEIGHT: '100%',
+  EDITOR_DEFAULT_HEIGHT: "100%",
   OPACITY: {
     HIDDEN: 0,
     VISIBLE: 100,
@@ -45,8 +45,8 @@ export const UI = {
 // Cryptography Constants
 export const CRYPTO = {
   AES_KEY_LENGTH: 256,
-  AES_ALGORITHM: 'AES-GCM',
-  HASH_ALGORITHM: 'SHA-256',
+  AES_ALGORITHM: "AES-GCM",
+  HASH_ALGORITHM: "SHA-256",
   SALT_LENGTH: 32, // bytes
   RANDOM_BYTES: {
     SMALL: 16,
@@ -116,17 +116,17 @@ export const PERCENTAGE = {
 
 // Method Colors (for UI)
 export const METHOD_COLORS = {
-  GET: { text: 'text-green-700', bg: 'bg-green-100' },
-  POST: { text: 'text-blue-700', bg: 'bg-blue-100' },
-  PUT: { text: 'text-orange-700', bg: 'bg-orange-100' },
-  DELETE: { text: 'text-red-700', bg: 'bg-red-100' },
-  PATCH: { text: 'text-purple-700', bg: 'bg-purple-100' },
+  GET: { text: "text-green-700", bg: "bg-green-100" },
+  POST: { text: "text-blue-700", bg: "bg-blue-100" },
+  PUT: { text: "text-orange-700", bg: "bg-orange-100" },
+  DELETE: { text: "text-red-700", bg: "bg-red-100" },
+  PATCH: { text: "text-purple-700", bg: "bg-purple-100" },
 } as const;
 
 // Response Status Colors
 export const STATUS_COLORS = {
-  SUCCESS: 'bg-green-500',
-  REDIRECT: 'bg-blue-500',
-  CLIENT_ERROR: 'bg-yellow-500',
-  SERVER_ERROR: 'bg-red-500',
+  SUCCESS: "bg-green-500",
+  REDIRECT: "bg-blue-500",
+  CLIENT_ERROR: "bg-yellow-500",
+  SERVER_ERROR: "bg-red-500",
 } as const;

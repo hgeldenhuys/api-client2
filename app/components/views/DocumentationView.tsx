@@ -1,35 +1,38 @@
-import React from 'react';
+import React from "react";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from '~/components/ui/resizable';
-import { cn } from '~/utils/cn';
-import { Input } from '~/components/ui/input';
-import { Badge } from '~/components/ui/badge';
-import { Button } from '~/components/ui/button';
-import { 
-  Search, 
-  BookOpen, 
-  Rocket, 
-  Code2, 
-  Variable, 
-  Package, 
-  Zap, 
+} from "~/components/ui/resizable";
+import { cn } from "~/utils/cn";
+import { Input } from "~/components/ui/input";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import {
+  Search,
+  BookOpen,
+  Rocket,
+  Code2,
+  Variable,
+  Package,
+  Zap,
   HelpCircle,
   ChevronRight,
   ChevronDown,
   Copy,
   PlayCircle,
-  ExternalLink
-} from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import { useRequestStore } from '~/stores/requestStore';
-import { KeyboardShortcuts } from '~/components/documentation/KeyboardShortcuts';
-import { MiniResponseViewer } from '~/components/documentation/MiniResponseViewer';
-import { RequestExecution } from '~/types/request';
-import { CodeHighlighter, InlineCode } from '~/components/ui/syntax-highlighter';
-import { useApiClientConfig } from '~/components/ConfigProvider';
+  ExternalLink,
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { useRequestStore } from "~/stores/requestStore";
+import { KeyboardShortcuts } from "~/components/documentation/KeyboardShortcuts";
+import { MiniResponseViewer } from "~/components/documentation/MiniResponseViewer";
+import { RequestExecution } from "~/types/request";
+import {
+  CodeHighlighter,
+  InlineCode,
+} from "~/components/ui/syntax-highlighter";
+import { useApiClientConfig } from "~/components/ConfigProvider";
 
 interface DocSection {
   id: string;
@@ -51,8 +54,8 @@ interface CodeExample {
 
 const documentationSections: DocSection[] = [
   {
-    id: 'getting-started',
-    title: 'Getting Started',
+    id: "getting-started",
+    title: "Getting Started",
     icon: <Rocket className="h-4 w-4" />,
     content: `# Getting Started
 
@@ -75,22 +78,23 @@ The API Client uses a three-pane layout:
 All panes are resizable - drag the dividers to customize your workspace!`,
     examples: [
       {
-        title: 'Your First Request',
-        description: 'Try this simple GET request to see the API Client in action',
-        code: 'GET https://api.github.com/users/github',
-        language: 'http',
+        title: "Your First Request",
+        description:
+          "Try this simple GET request to see the API Client in action",
+        code: "GET https://api.github.com/users/github",
+        language: "http",
         runnable: true,
         request: {
-          method: 'GET',
-          url: 'https://api.github.com/users/github',
-          headers: [{ key: 'Accept', value: 'application/json' }]
-        }
-      }
-    ]
+          method: "GET",
+          url: "https://api.github.com/users/github",
+          headers: [{ key: "Accept", value: "application/json" }],
+        },
+      },
+    ],
   },
   {
-    id: 'request-builder',
-    title: 'Request Builder',
+    id: "request-builder",
+    title: "Request Builder",
     icon: <Code2 className="h-4 w-4" />,
     content: `# Request Builder
 
@@ -128,8 +132,8 @@ For POST, PUT, and PATCH requests, you can send:
 - **Raw**: Plain text or XML`,
     examples: [
       {
-        title: 'POST Request with JSON',
-        description: 'Create a new resource with JSON data',
+        title: "POST Request with JSON",
+        description: "Create a new resource with JSON data",
         code: `POST https://jsonplaceholder.typicode.com/posts
 Content-Type: application/json
 
@@ -138,27 +142,31 @@ Content-Type: application/json
   "body": "This is the content",
   "userId": 1
 }`,
-        language: 'http',
+        language: "http",
         runnable: true,
         request: {
-          method: 'POST',
-          url: 'https://jsonplaceholder.typicode.com/posts',
-          headers: [{ key: 'Content-Type', value: 'application/json' }],
+          method: "POST",
+          url: "https://jsonplaceholder.typicode.com/posts",
+          headers: [{ key: "Content-Type", value: "application/json" }],
           body: {
-            mode: 'raw',
-            raw: JSON.stringify({
-              title: 'My New Post',
-              body: 'This is the content',
-              userId: 1
-            }, null, 2)
-          }
-        }
-      }
-    ]
+            mode: "raw",
+            raw: JSON.stringify(
+              {
+                title: "My New Post",
+                body: "This is the content",
+                userId: 1,
+              },
+              null,
+              2,
+            ),
+          },
+        },
+      },
+    ],
   },
   {
-    id: 'variables',
-    title: 'Variables & Environments',
+    id: "variables",
+    title: "Variables & Environments",
     icon: <Variable className="h-4 w-4" />,
     content: `# Variables & Environments
 
@@ -188,8 +196,8 @@ Create separate environments for:
 Switch environments with a single click to test across different setups!`,
     subsections: [
       {
-        id: 'variable-scope',
-        title: 'Variable Scope',
+        id: "variable-scope",
+        title: "Variable Scope",
         icon: <></>,
         content: `## Variable Resolution Order
 
@@ -199,13 +207,13 @@ Variables are resolved in this order (first wins):
 3. Collection variables
 4. Global variables
 
-This allows you to override broader variables with more specific ones.`
-      }
-    ]
+This allows you to override broader variables with more specific ones.`,
+      },
+    ],
   },
   {
-    id: 'collections',
-    title: 'Collections',
+    id: "collections",
+    title: "Collections",
     icon: <Package className="h-4 w-4" />,
     content: `# Collections
 
@@ -277,8 +285,8 @@ The API Client automatically detects file formats:
 - **Smart validation**: Ensures format compatibility before import`,
     examples: [
       {
-        title: 'Collection Structure',
-        description: 'Organize your APIs effectively',
+        title: "Collection Structure",
+        description: "Organize your APIs effectively",
         code: `📁 My API Collection
 ├── 📁 Authentication
 │   ├── 📄 Login
@@ -292,12 +300,12 @@ The API Client automatically detects file formats:
 └── 📁 Products
     ├── 📄 List Products
     └── 📄 Search Products`,
-        language: 'text',
-        runnable: false
+        language: "text",
+        runnable: false,
       },
       {
-        title: 'HTTP File Format',
-        description: 'Simple format for defining API requests',
+        title: "HTTP File Format",
+        description: "Simple format for defining API requests",
         code: `### Get all users
 GET https://api.example.com/users
 Authorization: Bearer {{token}}
@@ -320,12 +328,12 @@ Authorization: Bearer {{token}}
 {
   "name": "Jane Doe"
 }`,
-        language: 'http',
-        runnable: false
+        language: "http",
+        runnable: false,
       },
       {
-        title: 'OpenAPI Specification',
-        description: 'Industry standard for API documentation',
+        title: "OpenAPI Specification",
+        description: "Industry standard for API documentation",
         code: `{
   "openapi": "3.0.0",
   "info": {
@@ -400,14 +408,14 @@ Authorization: Bearer {{token}}
     }
   }
 }`,
-        language: 'json',
-        runnable: false
-      }
-    ]
+        language: "json",
+        runnable: false,
+      },
+    ],
   },
   {
-    id: 'import-export',
-    title: 'Import & Export',
+    id: "import-export",
+    title: "Import & Export",
     icon: <ExternalLink className="h-4 w-4" />,
     content: `# Import & Export
 
@@ -512,8 +520,8 @@ When exporting to OpenAPI:
 - **Document API changes** in commit messages`,
     examples: [
       {
-        title: 'Import from File',
-        description: 'Step-by-step file import process',
+        title: "Import from File",
+        description: "Step-by-step file import process",
         code: `1. Click "Import" button
 2. Select "File" tab
 3. Drag and drop your file or click "Choose File"
@@ -523,12 +531,12 @@ When exporting to OpenAPI:
    • .http/.rest (HTTP files)
 5. Review the import preview
 6. Click "Import Collection"`,
-        language: 'text',
-        runnable: false
+        language: "text",
+        runnable: false,
       },
       {
-        title: 'Export Workflow',
-        description: 'Export collections in different formats',
+        title: "Export Workflow",
+        description: "Export collections in different formats",
         code: `1. Select collection in sidebar
 2. Click "Export" button
 3. Choose export format:
@@ -537,12 +545,12 @@ When exporting to OpenAPI:
    • HTTP File (.http)
 4. Configure format-specific options
 5. Click "Export" to download`,
-        language: 'text',
-        runnable: false
+        language: "text",
+        runnable: false,
       },
       {
-        title: 'Format Conversion Examples',
-        description: 'How requests are converted between formats',
+        title: "Format Conversion Examples",
+        description: "How requests are converted between formats",
         code: `# HTTP File → Postman Collection
 ### Get User
 GET https://api.example.com/users/{{userId}}
@@ -570,14 +578,14 @@ Authorization: Bearer {{token}}
       - name: userId
         in: path
         required: true`,
-        language: 'yaml',
-        runnable: false
-      }
-    ]
+        language: "yaml",
+        runnable: false,
+      },
+    ],
   },
   {
-    id: 'scripting',
-    title: 'Scripting',
+    id: "scripting",
+    title: "Scripting",
     icon: <Zap className="h-4 w-4" />,
     content: `# Scripting
 
@@ -619,8 +627,8 @@ The PM object provides access to:
 - \`pm.test\`: Define test assertions`,
     examples: [
       {
-        title: 'Dynamic Authentication',
-        description: 'Automatically refresh tokens when needed',
+        title: "Dynamic Authentication",
+        description: "Automatically refresh tokens when needed",
         code: `// Pre-request script
 const tokenExpiry = pm.environment.get("token_expiry");
 const now = new Date().getTime();
@@ -641,14 +649,14 @@ if (!tokenExpiry || now > tokenExpiry) {
         }
     });
 }`,
-        language: 'javascript',
-        runnable: false
-      }
-    ]
+        language: "javascript",
+        runnable: false,
+      },
+    ],
   },
   {
-    id: 'troubleshooting',
-    title: 'Troubleshooting',
+    id: "troubleshooting",
+    title: "Troubleshooting",
     icon: <HelpCircle className="h-4 w-4" />,
     content: `# Troubleshooting
 
@@ -686,11 +694,11 @@ If you see \`{{variable}}\` instead of values:
 
 - Check the FAQ section below
 - Report issues on GitHub
-- Contact support@api-client.dev`
+- Contact support@api-client.dev`,
   },
   {
-    id: 'faq',
-    title: 'FAQ',
+    id: "faq",
+    title: "FAQ",
     icon: <HelpCircle className="h-4 w-4" />,
     content: `# Frequently Asked Questions
 
@@ -750,36 +758,47 @@ A: Manual OAuth is supported. Automated flow coming soon.
 
 ## Need More Help?
 
-Can't find your answer? Check our GitHub issues or contact support!`
-  }
+Can't find your answer? Check our GitHub issues or contact support!`,
+  },
 ];
 
 export function DocumentationView() {
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [selectedSection, setSelectedSection] = React.useState('getting-started');
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [selectedSection, setSelectedSection] =
+    React.useState("getting-started");
   const [expandedSections, setExpandedSections] = React.useState<Set<string>>(
-    new Set(['getting-started', 'request-builder', 'variables', 'collections', 'scripting'])
+    new Set([
+      "getting-started",
+      "request-builder",
+      "variables",
+      "collections",
+      "scripting",
+    ]),
   );
   const [showShortcuts, setShowShortcuts] = React.useState(false);
-  const [exampleResponses, setExampleResponses] = React.useState<Map<string, RequestExecution>>(new Map());
-  const [loadingExamples, setLoadingExamples] = React.useState<Set<string>>(new Set());
-  
+  const [exampleResponses, setExampleResponses] = React.useState<
+    Map<string, RequestExecution>
+  >(new Map());
+  const [loadingExamples, setLoadingExamples] = React.useState<Set<string>>(
+    new Set(),
+  );
+
   const { executeRequest, getResponseForRequest } = useRequestStore();
   const config = useApiClientConfig();
-  
+
   // Set up keyboard shortcut listener
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      if (e.key === "?" && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
         setShowShortcuts(true);
       }
     };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-  
+
   const toggleSection = (sectionId: string) => {
     const newExpanded = new Set(expandedSections);
     if (newExpanded.has(sectionId)) {
@@ -789,346 +808,375 @@ export function DocumentationView() {
     }
     setExpandedSections(newExpanded);
   };
-  
+
   const findSectionById = (id: string): DocSection | undefined => {
     for (const section of documentationSections) {
       if (section.id === id) return section;
       if (section.subsections) {
-        const subsection = section.subsections.find(sub => sub.id === id);
+        const subsection = section.subsections.find((sub) => sub.id === id);
         if (subsection) return subsection;
       }
     }
     return undefined;
   };
-  
-  const currentSection = findSectionById(selectedSection) || documentationSections[0];
-  
-  const handleRunExample = async (example: CodeExample, exampleIndex: number) => {
+
+  const currentSection =
+    findSectionById(selectedSection) || documentationSections[0];
+
+  const handleRunExample = async (
+    example: CodeExample,
+    exampleIndex: number,
+  ) => {
     if (!example.runnable || !example.request) return;
-    
+
     const exampleId = `${currentSection.id}-example-${exampleIndex}`;
-    
+
     // Set loading state
-    setLoadingExamples(prev => new Set([...prev, exampleId]));
-    
+    setLoadingExamples((prev) => new Set([...prev, exampleId]));
+
     try {
       // Execute the example request
       await executeRequest(example.request, exampleId, {});
-      
+
       // Get the response from the store
       const response = getResponseForRequest(exampleId);
       if (response) {
-        setExampleResponses(prev => new Map([...prev, [exampleId, response]]));
+        setExampleResponses(
+          (prev) => new Map([...prev, [exampleId, response]]),
+        );
       }
     } catch (error) {
-      console.error('Failed to execute example:', error);
+      console.error("Failed to execute example:", error);
     } finally {
       // Clear loading state
-      setLoadingExamples(prev => {
+      setLoadingExamples((prev) => {
         const newSet = new Set(prev);
         newSet.delete(exampleId);
         return newSet;
       });
     }
   };
-  
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
       // TODO: Show toast notification
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error("Failed to copy:", err);
     }
   };
-  
+
   // Filter sections based on search
   const filteredSections = React.useMemo(() => {
     if (!searchQuery) return documentationSections;
-    
+
     const query = searchQuery.toLowerCase();
-    return documentationSections.filter(section => {
+    return documentationSections.filter((section) => {
       const matchesTitle = section.title.toLowerCase().includes(query);
       const matchesContent = section.content.toLowerCase().includes(query);
-      const matchesSubsections = section.subsections?.some(sub => 
-        sub.title.toLowerCase().includes(query) || 
-        sub.content.toLowerCase().includes(query)
+      const matchesSubsections = section.subsections?.some(
+        (sub) =>
+          sub.title.toLowerCase().includes(query) ||
+          sub.content.toLowerCase().includes(query),
       );
       return matchesTitle || matchesContent || matchesSubsections;
     });
   }, [searchQuery]);
-  
+
   return (
     <>
-      <ResizablePanelGroup
-        direction="horizontal"
-        className="h-full"
-      >
-      {/* Left Panel - Navigation */}
-      <ResizablePanel 
-        defaultSize={25} 
-        minSize={20}
-        maxSize={35}
-        className="bg-sidebar"
-      >
-        <div className="h-full flex flex-col">
-          {/* Search */}
-          <div className="p-4 border-b">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search documentation..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
+      <ResizablePanelGroup direction="horizontal" className="h-full">
+        {/* Left Panel - Navigation */}
+        <ResizablePanel
+          defaultSize={25}
+          minSize={20}
+          maxSize={35}
+          className="bg-sidebar"
+        >
+          <div className="h-full flex flex-col">
+            {/* Search */}
+            <div className="p-4 border-b">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search documentation..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
             </div>
-          </div>
-          
-          {/* Navigation */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-1">
-              {filteredSections.map(section => (
-                <div key={section.id}>
-                  <button
-                    className={cn(
-                      "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
-                      selectedSection === section.id 
-                        ? "bg-accent text-accent-foreground" 
-                        : "hover:bg-accent/50"
-                    )}
-                    onClick={() => setSelectedSection(section.id)}
-                  >
-                    {section.icon}
-                    <span className="flex-1 text-left">{section.title}</span>
-                    {section.subsections && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleSection(section.id);
-                        }}
-                        className="p-1"
-                      >
-                        {expandedSections.has(section.id) ? 
-                          <ChevronDown className="h-3 w-3" /> : 
-                          <ChevronRight className="h-3 w-3" />
-                        }
-                      </button>
-                    )}
-                  </button>
-                  
-                  {/* Subsections */}
-                  {section.subsections && expandedSections.has(section.id) && (
-                    <div className="ml-6 mt-1 space-y-1">
-                      {section.subsections.map(subsection => (
+
+            {/* Navigation */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-1">
+                {filteredSections.map((section) => (
+                  <div key={section.id}>
+                    <button
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
+                        selectedSection === section.id
+                          ? "bg-accent text-accent-foreground"
+                          : "hover:bg-accent/50",
+                      )}
+                      onClick={() => setSelectedSection(section.id)}
+                    >
+                      {section.icon}
+                      <span className="flex-1 text-left">{section.title}</span>
+                      {section.subsections && (
                         <button
-                          key={subsection.id}
-                          className={cn(
-                            "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
-                            selectedSection === subsection.id 
-                              ? "bg-accent text-accent-foreground" 
-                              : "hover:bg-accent/50"
-                          )}
-                          onClick={() => setSelectedSection(subsection.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSection(section.id);
+                          }}
+                          className="p-1"
                         >
-                          <span className="text-left">{subsection.title}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Quick Actions */}
-          <div className="p-4 border-t space-y-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full justify-start"
-              onClick={() => window.open(config.repository.url, '_blank')}
-            >
-              {config.repository.icon || <ExternalLink className="h-4 w-4 mr-2" />}
-              {config.repository.label}
-            </Button>
-            <div 
-              className="text-xs text-muted-foreground text-center cursor-pointer hover:text-foreground transition-colors"
-              onClick={() => setShowShortcuts(true)}
-            >
-              Press <kbd className="px-1 py-0.5 bg-muted rounded text-xs">?</kbd> for keyboard shortcuts
-            </div>
-          </div>
-        </div>
-      </ResizablePanel>
-      
-      <ResizableHandle withHandle />
-      
-      {/* Right Panel - Content */}
-      <ResizablePanel defaultSize={75}>
-        <div className="h-full overflow-y-auto">
-          <div className="max-w-4xl mx-auto p-8">
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-              <BookOpen className="h-4 w-4" />
-              <span>Documentation</span>
-              <ChevronRight className="h-4 w-4" />
-              <span>{currentSection.title}</span>
-            </div>
-            
-            {/* Content */}
-            <div className="prose prose-slate dark:prose-invert max-w-none">
-              <ReactMarkdown
-                components={{
-                  code: ({ inline, className, children, ...props }: any) => {
-                    const match = /language-(\w+)/.exec(className || '');
-                    const language = match ? match[1] : 'text';
-                    
-                    if (inline) {
-                      return <InlineCode>{String(children)}</InlineCode>;
-                    }
-                    
-                    return (
-                      <CodeHighlighter
-                        language={language}
-                        showCopyButton={true}
-                        theme="auto"
-                      >
-                        {String(children)}
-                      </CodeHighlighter>
-                    );
-                  },
-                  h1: ({ children }) => (
-                    <h1 className="text-3xl font-bold mb-4">{children}</h1>
-                  ),
-                  h2: ({ children }) => (
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">{children}</h2>
-                  ),
-                  h3: ({ children }) => (
-                    <h3 className="text-xl font-semibold mt-6 mb-3">{children}</h3>
-                  ),
-                  ul: ({ children }) => (
-                    <ul className="list-disc pl-6 space-y-2">{children}</ul>
-                  ),
-                  ol: ({ children }) => (
-                    <ol className="list-decimal pl-6 space-y-2">{children}</ol>
-                  ),
-                  p: ({ children }) => (
-                    <p className="mb-4 leading-relaxed">{children}</p>
-                  ),
-                }}
-              >
-                {currentSection.content}
-              </ReactMarkdown>
-            </div>
-            
-            {/* Examples */}
-            {currentSection.examples && currentSection.examples.length > 0 && (
-              <div className="mt-12">
-                <h2 className="text-xl font-semibold mb-6">Examples</h2>
-                <div className="space-y-6">
-                  {currentSection.examples.map((example, index) => (
-                    <div key={index} className="border rounded-lg overflow-hidden">
-                      <div className="bg-muted px-4 py-3 flex items-center justify-between">
-                        <div>
-                          <h3 className="font-medium">{example.title}</h3>
-                          <p className="text-sm text-muted-foreground">{example.description}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {example.runnable && (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => handleRunExample(example, index)}
-                              disabled={loadingExamples.has(`${currentSection.id}-example-${index}`)}
-                            >
-                              <PlayCircle className="h-4 w-4 mr-2" />
-                              {loadingExamples.has(`${currentSection.id}-example-${index}`) ? 'Running...' : 'Try It'}
-                            </Button>
+                          {expandedSections.has(section.id) ? (
+                            <ChevronDown className="h-3 w-3" />
+                          ) : (
+                            <ChevronRight className="h-3 w-3" />
                           )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => copyToClipboard(example.code)}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
+                        </button>
+                      )}
+                    </button>
+
+                    {/* Subsections */}
+                    {section.subsections &&
+                      expandedSections.has(section.id) && (
+                        <div className="ml-6 mt-1 space-y-1">
+                          {section.subsections.map((subsection) => (
+                            <button
+                              key={subsection.id}
+                              className={cn(
+                                "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
+                                selectedSection === subsection.id
+                                  ? "bg-accent text-accent-foreground"
+                                  : "hover:bg-accent/50",
+                              )}
+                              onClick={() => setSelectedSection(subsection.id)}
+                            >
+                              <span className="text-left">
+                                {subsection.title}
+                              </span>
+                            </button>
+                          ))}
                         </div>
-                      </div>
-                      <div className="relative">
+                      )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="p-4 border-t space-y-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => window.open(config.repository.url, "_blank")}
+              >
+                {config.repository.icon || (
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                )}
+                {config.repository.label}
+              </Button>
+              <div
+                className="text-xs text-muted-foreground text-center cursor-pointer hover:text-foreground transition-colors"
+                onClick={() => setShowShortcuts(true)}
+              >
+                Press{" "}
+                <kbd className="px-1 py-0.5 bg-muted rounded text-xs">?</kbd>{" "}
+                for keyboard shortcuts
+              </div>
+            </div>
+          </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+
+        {/* Right Panel - Content */}
+        <ResizablePanel defaultSize={75}>
+          <div className="h-full overflow-y-auto">
+            <div className="max-w-4xl mx-auto p-8">
+              {/* Breadcrumb */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+                <BookOpen className="h-4 w-4" />
+                <span>Documentation</span>
+                <ChevronRight className="h-4 w-4" />
+                <span>{currentSection.title}</span>
+              </div>
+
+              {/* Content */}
+              <div className="prose prose-slate dark:prose-invert max-w-none">
+                <ReactMarkdown
+                  components={{
+                    code: ({ inline, className, children, ...props }: any) => {
+                      const match = /language-(\w+)/.exec(className || "");
+                      const language = match ? match[1] : "text";
+
+                      if (inline) {
+                        return <InlineCode>{String(children)}</InlineCode>;
+                      }
+
+                      return (
                         <CodeHighlighter
-                          language={example.language}
+                          language={language}
                           showCopyButton={true}
                           theme="auto"
                         >
-                          {example.code}
+                          {String(children)}
                         </CodeHighlighter>
-                      </div>
-                      
-                      {/* Response Display */}
-                      {(() => {
-                        const exampleId = `${currentSection.id}-example-${index}`;
-                        const response = exampleResponses.get(exampleId);
-                        const isLoading = loadingExamples.has(exampleId);
-                        
-                        if (isLoading || response) {
-                          return (
-                            <div className="px-4 pb-4">
-                              <MiniResponseViewer 
-                                response={response!} 
-                                isLoading={isLoading}
-                              />
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Help Section */}
-            <div className="mt-16 p-6 bg-muted rounded-lg">
-              <h3 className="font-semibold mb-2">Need more help?</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Can't find what you're looking for? We're here to help!
-              </p>
-              <div className="flex items-center gap-4">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    if (config.support.email) {
-                      window.location.href = `mailto:${config.support.email}`;
-                    } else if (config.support.url) {
-                      window.open(config.support.url, '_blank');
-                    }
+                      );
+                    },
+                    h1: ({ children }) => (
+                      <h1 className="text-3xl font-bold mb-4">{children}</h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2 className="text-2xl font-semibold mt-8 mb-4">
+                        {children}
+                      </h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className="text-xl font-semibold mt-6 mb-3">
+                        {children}
+                      </h3>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="list-disc pl-6 space-y-2">{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="list-decimal pl-6 space-y-2">
+                        {children}
+                      </ol>
+                    ),
+                    p: ({ children }) => (
+                      <p className="mb-4 leading-relaxed">{children}</p>
+                    ),
                   }}
                 >
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  {config.support.label}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.open(config.community.url, '_blank')}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  {config.community.label}
-                </Button>
+                  {currentSection.content}
+                </ReactMarkdown>
+              </div>
+
+              {/* Examples */}
+              {currentSection.examples &&
+                currentSection.examples.length > 0 && (
+                  <div className="mt-12">
+                    <h2 className="text-xl font-semibold mb-6">Examples</h2>
+                    <div className="space-y-6">
+                      {currentSection.examples.map((example, index) => (
+                        <div
+                          key={index}
+                          className="border rounded-lg overflow-hidden"
+                        >
+                          <div className="bg-muted px-4 py-3 flex items-center justify-between">
+                            <div>
+                              <h3 className="font-medium">{example.title}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {example.description}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {example.runnable && (
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  onClick={() =>
+                                    handleRunExample(example, index)
+                                  }
+                                  disabled={loadingExamples.has(
+                                    `${currentSection.id}-example-${index}`,
+                                  )}
+                                >
+                                  <PlayCircle className="h-4 w-4 mr-2" />
+                                  {loadingExamples.has(
+                                    `${currentSection.id}-example-${index}`,
+                                  )
+                                    ? "Running..."
+                                    : "Try It"}
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => copyToClipboard(example.code)}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="relative">
+                            <CodeHighlighter
+                              language={example.language}
+                              showCopyButton={true}
+                              theme="auto"
+                            >
+                              {example.code}
+                            </CodeHighlighter>
+                          </div>
+
+                          {/* Response Display */}
+                          {(() => {
+                            const exampleId = `${currentSection.id}-example-${index}`;
+                            const response = exampleResponses.get(exampleId);
+                            const isLoading = loadingExamples.has(exampleId);
+
+                            if (isLoading || response) {
+                              return (
+                                <div className="px-4 pb-4">
+                                  <MiniResponseViewer
+                                    response={response!}
+                                    isLoading={isLoading}
+                                  />
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* Help Section */}
+              <div className="mt-16 p-6 bg-muted rounded-lg">
+                <h3 className="font-semibold mb-2">Need more help?</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Can't find what you're looking for? We're here to help!
+                </p>
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (config.support.email) {
+                        window.location.href = `mailto:${config.support.email}`;
+                      } else if (config.support.url) {
+                        window.open(config.support.url, "_blank");
+                      }
+                    }}
+                  >
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    {config.support.label}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(config.community.url, "_blank")}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    {config.community.label}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </ResizablePanel>
-    </ResizablePanelGroup>
-    
+        </ResizablePanel>
+      </ResizablePanelGroup>
+
       {/* Keyboard Shortcuts Dialog */}
-      <KeyboardShortcuts 
-        open={showShortcuts} 
-        onOpenChange={setShowShortcuts} 
-      />
+      <KeyboardShortcuts open={showShortcuts} onOpenChange={setShowShortcuts} />
     </>
   );
 }

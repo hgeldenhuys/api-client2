@@ -1,12 +1,16 @@
-import type { PostmanCollection, RequestItem, FolderItem } from '~/types/postman';
-import type { 
-  HTTPFile, 
-  HTTPRequest, 
+import type {
+  PostmanCollection,
+  RequestItem,
+  FolderItem,
+} from "~/types/postman";
+import type {
+  HTTPFile,
+  HTTPRequest,
   HTTPFileExportOptions,
   HTTPFileFormatOptions,
   HTTPVariable,
-  HTTPEnvironment
-} from '~/types/http';
+  HTTPEnvironment,
+} from "~/types/http";
 
 export class HTTPFileExporter {
   /**
@@ -14,7 +18,7 @@ export class HTTPFileExporter {
    */
   static export(
     collection: PostmanCollection,
-    options: HTTPFileExportOptions = {}
+    options: HTTPFileExportOptions = {},
   ): string {
     const {
       includeComments = true,
@@ -22,64 +26,69 @@ export class HTTPFileExporter {
       includeMetadata = true,
       formatBody = true,
       indentSize = 2,
-      lineEnding = 'lf',
+      lineEnding = "lf",
       includeRequestNames = true,
       groupByTags = false,
-      variableFormat = 'inline'
+      variableFormat = "inline",
     } = options;
 
     const lines: string[] = [];
-    const lineEnd = lineEnding === 'crlf' ? '\r\n' : lineEnding === 'cr' ? '\r' : '\n';
+    const lineEnd =
+      lineEnding === "crlf" ? "\r\n" : lineEnding === "cr" ? "\r" : "\n";
 
     // Add file header comment
     if (includeComments && includeMetadata) {
-      lines.push('###');
+      lines.push("###");
       lines.push(`# ${collection.info.name}`);
       if (collection.info.description) {
         lines.push(`# ${collection.info.description}`);
       }
       lines.push(`# Generated from Postman Collection`);
       lines.push(`# Export Date: ${new Date().toISOString()}`);
-      lines.push('###');
-      lines.push('');
+      lines.push("###");
+      lines.push("");
     }
 
     // Add variables section
-    if (includeVariables && collection.variable && collection.variable.length > 0) {
+    if (
+      includeVariables &&
+      collection.variable &&
+      collection.variable.length > 0
+    ) {
       if (includeComments) {
-        lines.push('# Variables');
+        lines.push("# Variables");
       }
-      
-      collection.variable.forEach(variable => {
-        if (variableFormat === 'inline' || variableFormat === 'both') {
+
+      collection.variable.forEach((variable) => {
+        if (variableFormat === "inline" || variableFormat === "both") {
           lines.push(`# @${variable.key} = ${variable.value}`);
         }
       });
-      
-      lines.push('');
+
+      lines.push("");
     }
 
     // Convert requests
     const requests = this.flattenRequests(collection.item);
-    
+
     if (groupByTags) {
       const grouped = this.groupRequestsByTag(requests);
       Object.entries(grouped).forEach(([tag, tagRequests], groupIndex) => {
-        if (groupIndex > 0) lines.push('');
-        
+        if (groupIndex > 0) lines.push("");
+
         if (includeComments) {
           lines.push(`### ${tag} ###`);
-          lines.push('');
+          lines.push("");
         }
 
         tagRequests.forEach((request, index) => {
-          if (index > 0) lines.push('');
+          if (index > 0) lines.push("");
           this.exportRequest(request, lines, options);
         });
       });
     } else {
       requests.forEach((request, index) => {
-        if (index > 0) lines.push('');
+        if (index > 0) lines.push("");
         this.exportRequest(request, lines, options);
       });
     }
@@ -92,14 +101,14 @@ export class HTTPFileExporter {
    */
   static async exportToFile(
     collection: PostmanCollection,
-    options: HTTPFileExportOptions = {}
+    options: HTTPFileExportOptions = {},
   ): Promise<void> {
     const content = this.export(collection, options);
-    const filename = `${collection.info.name.replace(/[^a-z0-9]/gi, '_')}.http`;
-    
-    const blob = new Blob([content], { type: 'text/plain' });
+    const filename = `${collection.info.name.replace(/[^a-z0-9]/gi, "_")}.http`;
+
+    const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
@@ -113,7 +122,7 @@ export class HTTPFileExporter {
    */
   static async exportMultipleToFiles(
     collections: PostmanCollection[],
-    options: HTTPFileExportOptions = {}
+    options: HTTPFileExportOptions = {},
   ): Promise<void> {
     // Create a zip-like download with multiple files
     // For now, we'll export them sequentially
@@ -126,13 +135,13 @@ export class HTTPFileExporter {
    * Converts Postman collection to HTTP file format
    */
   static convertToHTTPFile(collection: PostmanCollection): HTTPFile {
-    const requests = this.flattenRequests(collection.item).map(item => 
-      this.convertPostmanRequestToHTTP(item)
+    const requests = this.flattenRequests(collection.item).map((item) =>
+      this.convertPostmanRequestToHTTP(item),
     );
 
     const variables: Record<string, string> = {};
     if (collection.variable) {
-      collection.variable.forEach(variable => {
+      collection.variable.forEach((variable) => {
         variables[variable.key] = variable.value;
       });
     }
@@ -143,23 +152,25 @@ export class HTTPFileExporter {
       metadata: {
         filename: `${collection.info.name}.http`,
         description: collection.info.description,
-        created: new Date().toISOString()
-      }
+        created: new Date().toISOString(),
+      },
     };
   }
 
   /**
    * Flattens nested request structure
    */
-  private static flattenRequests(items: (RequestItem | FolderItem)[]): RequestItem[] {
+  private static flattenRequests(
+    items: (RequestItem | FolderItem)[],
+  ): RequestItem[] {
     const requests: RequestItem[] = [];
 
     const processItems = (items: (RequestItem | FolderItem)[]) => {
-      items.forEach(item => {
-        if ('item' in item && Array.isArray(item.item)) {
+      items.forEach((item) => {
+        if ("item" in item && Array.isArray(item.item)) {
           // It's a folder, process recursively
           processItems(item.item);
-        } else if ('request' in item) {
+        } else if ("request" in item) {
           // It's a request
           requests.push(item);
         }
@@ -173,12 +184,14 @@ export class HTTPFileExporter {
   /**
    * Groups requests by tags (extracted from names or folders)
    */
-  private static groupRequestsByTag(requests: RequestItem[]): Record<string, RequestItem[]> {
+  private static groupRequestsByTag(
+    requests: RequestItem[],
+  ): Record<string, RequestItem[]> {
     const groups: Record<string, RequestItem[]> = {};
 
-    requests.forEach(request => {
+    requests.forEach((request) => {
       const tag = this.extractTag(request);
-      
+
       if (!groups[tag]) {
         groups[tag] = [];
       }
@@ -193,10 +206,11 @@ export class HTTPFileExporter {
    */
   private static extractTag(request: RequestItem): string {
     // Try to extract from URL path
-    const url = typeof request.request.url === 'string' 
-      ? request.request.url 
-      : request.request.url?.raw || '';
-    
+    const url =
+      typeof request.request.url === "string"
+        ? request.request.url
+        : request.request.url?.raw || "";
+
     const pathMatch = url.match(/\/([^\/\?\{]+)/);
     if (pathMatch) {
       return pathMatch[1].charAt(0).toUpperCase() + pathMatch[1].slice(1);
@@ -212,38 +226,39 @@ export class HTTPFileExporter {
   private static exportRequest(
     request: RequestItem,
     lines: string[],
-    options: HTTPFileExportOptions
+    options: HTTPFileExportOptions,
   ): void {
     const {
       includeComments = true,
       includeRequestNames = true,
       formatBody = true,
-      indentSize = 2
+      indentSize = 2,
     } = options;
 
     // Add request separator and name
     if (includeRequestNames && request.name) {
       lines.push(`### ${request.name}`);
     } else {
-      lines.push('###');
+      lines.push("###");
     }
 
     // Add request description as comment
     if (includeComments && request.request.description) {
       lines.push(`# ${request.request.description}`);
-      lines.push('');
+      lines.push("");
     }
 
     // Build request line
-    const url = typeof request.request.url === 'string' 
-      ? request.request.url 
-      : request.request.url?.raw || '';
-    
+    const url =
+      typeof request.request.url === "string"
+        ? request.request.url
+        : request.request.url?.raw || "";
+
     lines.push(`${request.request.method} ${url}`);
 
     // Add headers
     if (request.request.header && request.request.header.length > 0) {
-      request.request.header.forEach(header => {
+      request.request.header.forEach((header) => {
         if (!header.disabled) {
           lines.push(`${header.key}: ${header.value}`);
         }
@@ -252,10 +267,10 @@ export class HTTPFileExporter {
 
     // Add body
     if (request.request.body && request.request.body.raw) {
-      lines.push(''); // Empty line before body
-      
+      lines.push(""); // Empty line before body
+
       const body = request.request.body.raw;
-      
+
       if (formatBody && this.isJSON(body)) {
         // Format JSON body
         try {
@@ -275,10 +290,13 @@ export class HTTPFileExporter {
   /**
    * Converts Postman request to HTTP request format
    */
-  private static convertPostmanRequestToHTTP(request: RequestItem): HTTPRequest {
-    const url = typeof request.request.url === 'string' 
-      ? request.request.url 
-      : request.request.url?.raw || '';
+  private static convertPostmanRequestToHTTP(
+    request: RequestItem,
+  ): HTTPRequest {
+    const url =
+      typeof request.request.url === "string"
+        ? request.request.url
+        : request.request.url?.raw || "";
 
     const httpRequest: HTTPRequest = {
       id: request.id,
@@ -286,20 +304,23 @@ export class HTTPFileExporter {
       description: request.request.description,
       method: request.request.method,
       url,
-      headers: request.request.header?.map(header => ({
+      headers: request.request.header?.map((header) => ({
         name: header.key,
         value: header.value,
         enabled: !header.disabled,
-        description: header.description
-      }))
+        description: header.description,
+      })),
     };
 
     // Add body
     if (request.request.body && request.request.body.raw) {
       httpRequest.body = {
-        type: this.detectBodyType(request.request.body.raw, request.request.header),
+        type: this.detectBodyType(
+          request.request.body.raw,
+          request.request.header,
+        ),
         content: request.request.body.raw,
-        contentType: this.getContentType(request.request.header)
+        contentType: this.getContentType(request.request.header),
       };
     }
 
@@ -309,40 +330,46 @@ export class HTTPFileExporter {
   /**
    * Detects body content type
    */
-  private static detectBodyType(content: string, headers?: Array<{ key: string; value: string }>): NonNullable<HTTPRequest['body']>['type'] {
+  private static detectBodyType(
+    content: string,
+    headers?: Array<{ key: string; value: string }>,
+  ): NonNullable<HTTPRequest["body"]>["type"] {
     // Check content-type header first
     const contentType = this.getContentType(headers);
-    
+
     if (contentType) {
-      if (contentType.includes('json')) return 'json';
-      if (contentType.includes('xml')) return 'xml';
-      if (contentType.includes('html')) return 'html';
-      if (contentType.includes('javascript')) return 'javascript';
-      if (contentType.includes('form-data')) return 'form-data';
-      if (contentType.includes('x-www-form-urlencoded')) return 'form-urlencoded';
-      if (contentType.includes('graphql')) return 'graphql';
+      if (contentType.includes("json")) return "json";
+      if (contentType.includes("xml")) return "xml";
+      if (contentType.includes("html")) return "html";
+      if (contentType.includes("javascript")) return "javascript";
+      if (contentType.includes("form-data")) return "form-data";
+      if (contentType.includes("x-www-form-urlencoded"))
+        return "form-urlencoded";
+      if (contentType.includes("graphql")) return "graphql";
     }
 
     // Try to detect from content
     const trimmed = content.trim();
-    
-    if (this.isJSON(trimmed)) return 'json';
-    if (trimmed.startsWith('<')) return 'xml';
-    if (trimmed.includes('query') && trimmed.includes('{')) return 'graphql';
-    
-    return 'text';
+
+    if (this.isJSON(trimmed)) return "json";
+    if (trimmed.startsWith("<")) return "xml";
+    if (trimmed.includes("query") && trimmed.includes("{")) return "graphql";
+
+    return "text";
   }
 
   /**
    * Gets content-type from headers
    */
-  private static getContentType(headers?: Array<{ key: string; value: string }>): string | undefined {
+  private static getContentType(
+    headers?: Array<{ key: string; value: string }>,
+  ): string | undefined {
     if (!headers) return undefined;
-    
-    const contentTypeHeader = headers.find(h => 
-      h.key.toLowerCase() === 'content-type'
+
+    const contentTypeHeader = headers.find(
+      (h) => h.key.toLowerCase() === "content-type",
     );
-    
+
     return contentTypeHeader?.value;
   }
 
@@ -361,7 +388,10 @@ export class HTTPFileExporter {
   /**
    * Formats HTTP file with specific formatting options
    */
-  static formatHTTPFile(content: string, options: HTTPFileFormatOptions): string {
+  static formatHTTPFile(
+    content: string,
+    options: HTTPFileFormatOptions,
+  ): string {
     const {
       indentSize = 2,
       useSpaces = true,
@@ -370,7 +400,7 @@ export class HTTPFileExporter {
       normalizeHeaderNames = false,
       preserveComments = true,
       addBlankLines = true,
-      headerCase = 'original'
+      headerCase = "original",
     } = options;
 
     const lines = content.split(/\r?\n/);
@@ -385,13 +415,13 @@ export class HTTPFileExporter {
       // Skip empty lines in certain contexts
       if (!trimmed) {
         if (addBlankLines || inBody) {
-          formattedLines.push('');
+          formattedLines.push("");
         }
         continue;
       }
 
       // Handle comments
-      if (trimmed.startsWith('#') || trimmed.startsWith('//')) {
+      if (trimmed.startsWith("#") || trimmed.startsWith("//")) {
         if (preserveComments) {
           formattedLines.push(line);
         }
@@ -399,9 +429,9 @@ export class HTTPFileExporter {
       }
 
       // Handle request separators
-      if (trimmed.startsWith('###')) {
+      if (trimmed.startsWith("###")) {
         if (i > 0 && addBlankLines) {
-          formattedLines.push('');
+          formattedLines.push("");
         }
         formattedLines.push(line);
         inBody = false;
@@ -418,18 +448,21 @@ export class HTTPFileExporter {
       }
 
       // Handle headers
-      if (!inBody && line.includes(':') && !line.startsWith('http')) {
+      if (!inBody && line.includes(":") && !line.startsWith("http")) {
         let headerLine = line;
-        
+
         if (normalizeHeaderNames) {
-          const colonIndex = line.indexOf(':');
+          const colonIndex = line.indexOf(":");
           const headerName = line.substring(0, colonIndex).trim();
           const headerValue = line.substring(colonIndex + 1).trim();
-          
-          const normalizedName = this.normalizeHeaderName(headerName, headerCase);
+
+          const normalizedName = this.normalizeHeaderName(
+            headerName,
+            headerCase,
+          );
           headerLine = `${normalizedName}: ${headerValue}`;
         }
-        
+
         currentHeaders.push(headerLine);
         continue;
       }
@@ -439,18 +472,18 @@ export class HTTPFileExporter {
         // Sort headers if requested
         if (sortHeaders) {
           currentHeaders.sort((a, b) => {
-            const aName = a.substring(0, a.indexOf(':')).toLowerCase();
-            const bName = b.substring(0, b.indexOf(':')).toLowerCase();
+            const aName = a.substring(0, a.indexOf(":")).toLowerCase();
+            const bName = b.substring(0, b.indexOf(":")).toLowerCase();
             return aName.localeCompare(bName);
           });
         }
-        
+
         formattedLines.push(...currentHeaders);
-        
+
         if (addBlankLines) {
-          formattedLines.push('');
+          formattedLines.push("");
         }
-        
+
         currentHeaders = [];
         inBody = true;
       }
@@ -461,7 +494,7 @@ export class HTTPFileExporter {
         if (this.isJSON(trimmed)) {
           try {
             const parsed = JSON.parse(trimmed);
-            const indent = useSpaces ? ' '.repeat(indentSize) : '\t';
+            const indent = useSpaces ? " ".repeat(indentSize) : "\t";
             const formatted = JSON.stringify(parsed, null, indent);
             formattedLines.push(formatted);
           } catch {
@@ -483,22 +516,29 @@ export class HTTPFileExporter {
       formattedLines.push(...currentHeaders);
     }
 
-    return formattedLines.join('\n');
+    return formattedLines.join("\n");
   }
 
   /**
    * Normalizes header name case
    */
-  private static normalizeHeaderName(name: string, caseStyle: HTTPFileFormatOptions['headerCase']): string {
+  private static normalizeHeaderName(
+    name: string,
+    caseStyle: HTTPFileFormatOptions["headerCase"],
+  ): string {
     switch (caseStyle) {
-      case 'lowercase':
+      case "lowercase":
         return name.toLowerCase();
-      case 'uppercase':
+      case "uppercase":
         return name.toUpperCase();
-      case 'titlecase':
-        return name.split('-').map(part => 
-          part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
-        ).join('-');
+      case "titlecase":
+        return name
+          .split("-")
+          .map(
+            (part) =>
+              part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
+          )
+          .join("-");
       default:
         return name;
     }
@@ -508,7 +548,17 @@ export class HTTPFileExporter {
    * Checks if line is an HTTP request line
    */
   private static isHTTPRequestLine(line: string): boolean {
-    const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'];
+    const methods = [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "HEAD",
+      "OPTIONS",
+      "TRACE",
+      "CONNECT",
+    ];
     const parts = line.split(/\s+/);
     return parts.length >= 2 && methods.includes(parts[0]);
   }
@@ -518,28 +568,28 @@ export class HTTPFileExporter {
    */
   static createEnvironmentFile(
     variables: Record<string, HTTPVariable>,
-    environmentName: string = 'default'
+    environmentName: string = "default",
   ): string {
     const lines: string[] = [];
-    
+
     lines.push(`# Environment: ${environmentName}`);
     lines.push(`# Generated: ${new Date().toISOString()}`);
-    lines.push('');
+    lines.push("");
 
     Object.entries(variables).forEach(([key, variable]) => {
       if (variable.description) {
         lines.push(`# ${variable.description}`);
       }
-      
+
       if (variable.sensitive) {
         lines.push(`# ${key} = <sensitive-value>`);
       } else {
         lines.push(`${key} = ${variable.value}`);
       }
-      
-      lines.push('');
+
+      lines.push("");
     });
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 }

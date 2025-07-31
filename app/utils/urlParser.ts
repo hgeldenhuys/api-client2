@@ -1,6 +1,9 @@
-import { UniversalParameter } from '~/types/postman';
-import { generateParameterId } from './parameterLocations';
-import { buildVariableAwareQueryString, encodeParameterValue } from './variableUtils';
+import { UniversalParameter } from "~/types/postman";
+import { generateParameterId } from "./parameterLocations";
+import {
+  buildVariableAwareQueryString,
+  encodeParameterValue,
+} from "./variableUtils";
 
 export interface ParsedUrl {
   baseUrl: string;
@@ -16,24 +19,24 @@ export interface ParsedUrl {
 export function parseUrl(urlString: string): ParsedUrl {
   if (!urlString.trim()) {
     return {
-      baseUrl: '',
+      baseUrl: "",
       queryParams: [],
       pathVariables: [],
-      isValid: true
+      isValid: true,
     };
   }
 
   try {
     // Handle URLs without protocol
-    const normalizedUrl = urlString.startsWith('http') 
-      ? urlString 
+    const normalizedUrl = urlString.startsWith("http")
+      ? urlString
       : `https://${urlString}`;
-    
+
     const url = new URL(normalizedUrl);
-    
+
     // Extract base URL (without query parameters)
-    const baseUrl = `${url.protocol}//${url.hostname}${url.port ? `:${url.port}` : ''}${url.pathname}`;
-    
+    const baseUrl = `${url.protocol}//${url.hostname}${url.port ? `:${url.port}` : ""}${url.pathname}`;
+
     // Extract query parameters
     const queryParams: UniversalParameter[] = [];
     url.searchParams.forEach((value, key) => {
@@ -41,9 +44,9 @@ export function parseUrl(urlString: string): ParsedUrl {
         id: generateParameterId(),
         key,
         value,
-        location: 'query',
+        location: "query",
         enabled: true,
-        type: 'text'
+        type: "text",
       });
     });
 
@@ -51,10 +54,12 @@ export function parseUrl(urlString: string): ParsedUrl {
     const pathVariables = extractPathVariables(url.pathname);
 
     return {
-      baseUrl: urlString.startsWith('http') ? baseUrl : baseUrl.replace('https://', ''),
+      baseUrl: urlString.startsWith("http")
+        ? baseUrl
+        : baseUrl.replace("https://", ""),
       queryParams,
       pathVariables,
-      isValid: true
+      isValid: true,
     };
   } catch (error) {
     return {
@@ -62,7 +67,7 @@ export function parseUrl(urlString: string): ParsedUrl {
       queryParams: [],
       pathVariables: [],
       isValid: false,
-      error: error instanceof Error ? error.message : 'Invalid URL format'
+      error: error instanceof Error ? error.message : "Invalid URL format",
     };
   }
 }
@@ -71,22 +76,22 @@ export function parseUrl(urlString: string): ParsedUrl {
  * Build URL from base URL and parameters
  */
 export function buildUrl(
-  baseUrl: string, 
-  parameters: UniversalParameter[]
+  baseUrl: string,
+  parameters: UniversalParameter[],
 ): string {
   if (!baseUrl.trim()) {
-    return '';
+    return "";
   }
 
   try {
     // Filter enabled query parameters
     const queryParams = parameters.filter(
-      p => p.location === 'query' && p.enabled && p.key.trim()
+      (p) => p.location === "query" && p.enabled && p.key.trim(),
     );
 
     // Filter enabled path parameters
     const pathParams = parameters.filter(
-      p => p.location === 'path' && p.enabled && p.key.trim()
+      (p) => p.location === "path" && p.enabled && p.key.trim(),
     );
 
     let processedUrl = baseUrl;
@@ -98,11 +103,15 @@ export function buildUrl(
     // Add query parameters using variable-aware building
     if (queryParams.length > 0) {
       const queryString = buildVariableAwareQueryString(
-        queryParams.map(p => ({ key: p.key, value: p.value, enabled: p.enabled }))
+        queryParams.map((p) => ({
+          key: p.key,
+          value: p.value,
+          enabled: p.enabled,
+        })),
       );
-      
+
       if (queryString) {
-        const separator = processedUrl.includes('?') ? '&' : '?';
+        const separator = processedUrl.includes("?") ? "&" : "?";
         return `${processedUrl}${separator}${queryString}`;
       }
     }
@@ -115,7 +124,7 @@ export function buildUrl(
 }
 
 /**
- * Extract path variables from URL path 
+ * Extract path variables from URL path
  * Supports both {variable} and {{variable}} syntax
  * e.g., /users/{id}/posts/{postId} or /users/{{userId}}/posts/{{postId}}
  */
@@ -123,12 +132,12 @@ export function extractPathVariables(path: string): string[] {
   // Match both {variable} and {{variable}} patterns
   const matches = path.match(/\{\{?([^}]+)\}?\}/g);
   if (!matches) return [];
-  
-  return matches.map(match => {
+
+  return matches.map((match) => {
     // Remove outer braces - handle both {var} and {{var}}
-    if (match.startsWith('{{') && match.endsWith('}}')) {
+    if (match.startsWith("{{") && match.endsWith("}}")) {
       return match.slice(2, -2);
-    } else if (match.startsWith('{') && match.endsWith('}')) {
+    } else if (match.startsWith("{") && match.endsWith("}")) {
       return match.slice(1, -1);
     }
     return match;
@@ -141,32 +150,32 @@ export function extractPathVariables(path: string): string[] {
  */
 export function buildUrlWithReplacedVariables(
   baseUrl: string,
-  parameters: UniversalParameter[]
+  parameters: UniversalParameter[],
 ): string {
   if (!baseUrl.trim()) {
-    return '';
+    return "";
   }
 
   try {
     // Filter enabled query parameters
     const queryParams = parameters.filter(
-      p => p.location === 'query' && p.enabled && p.key.trim()
+      (p) => p.location === "query" && p.enabled && p.key.trim(),
     );
 
     // Filter enabled path parameters
     const pathParams = parameters.filter(
-      p => p.location === 'path' && p.enabled && p.key.trim()
+      (p) => p.location === "path" && p.enabled && p.key.trim(),
     );
 
     let processedUrl = baseUrl;
 
     // Replace path variables - handle both {var} and {{var}} syntax
-    pathParams.forEach(param => {
+    pathParams.forEach((param) => {
       // Try to replace both {variable} and {{variable}} patterns
-      const singleBracePattern = new RegExp(`\\{${param.key}\\}`, 'g');
-      const doubleBracePattern = new RegExp(`\\{\\{${param.key}\\}\\}`, 'g');
+      const singleBracePattern = new RegExp(`\\{${param.key}\\}`, "g");
+      const doubleBracePattern = new RegExp(`\\{\\{${param.key}\\}\\}`, "g");
       const encodedValue = encodeParameterValue(param.value);
-      
+
       processedUrl = processedUrl.replace(doubleBracePattern, encodedValue);
       processedUrl = processedUrl.replace(singleBracePattern, encodedValue);
     });
@@ -174,11 +183,15 @@ export function buildUrlWithReplacedVariables(
     // Add query parameters using variable-aware building
     if (queryParams.length > 0) {
       const queryString = buildVariableAwareQueryString(
-        queryParams.map(p => ({ key: p.key, value: p.value, enabled: p.enabled }))
+        queryParams.map((p) => ({
+          key: p.key,
+          value: p.value,
+          enabled: p.enabled,
+        })),
       );
-      
+
       if (queryString) {
-        const separator = processedUrl.includes('?') ? '&' : '?';
+        const separator = processedUrl.includes("?") ? "&" : "?";
         return `${processedUrl}${separator}${queryString}`;
       }
     }
@@ -195,11 +208,15 @@ export function buildUrlWithReplacedVariables(
  */
 export function buildQueryString(parameters: UniversalParameter[]): string {
   const queryParams = parameters.filter(
-    p => p.location === 'query' && p.enabled && p.key.trim()
+    (p) => p.location === "query" && p.enabled && p.key.trim(),
   );
 
   return buildVariableAwareQueryString(
-    queryParams.map(p => ({ key: p.key, value: p.value, enabled: p.enabled }))
+    queryParams.map((p) => ({
+      key: p.key,
+      value: p.value,
+      enabled: p.enabled,
+    })),
   );
 }
 
@@ -211,7 +228,9 @@ export function parseQueryString(queryString: string): UniversalParameter[] {
     return [];
   }
 
-  const searchParams = new URLSearchParams(queryString.startsWith('?') ? queryString.slice(1) : queryString);
+  const searchParams = new URLSearchParams(
+    queryString.startsWith("?") ? queryString.slice(1) : queryString,
+  );
   const parameters: UniversalParameter[] = [];
 
   searchParams.forEach((value, key) => {
@@ -219,9 +238,9 @@ export function parseQueryString(queryString: string): UniversalParameter[] {
       id: generateParameterId(),
       key,
       value,
-      location: 'query',
+      location: "query",
       enabled: true,
-      type: 'text'
+      type: "text",
     });
   });
 
@@ -233,22 +252,26 @@ export function parseQueryString(queryString: string): UniversalParameter[] {
  */
 export function getBaseUrl(urlString: string): string {
   if (!urlString.trim()) {
-    return '';
+    return "";
   }
 
   try {
-    const normalizedUrl = urlString.startsWith('http') 
-      ? urlString 
+    const normalizedUrl = urlString.startsWith("http")
+      ? urlString
       : `https://${urlString}`;
-    
+
     const url = new URL(normalizedUrl);
-    const baseUrl = `${url.protocol}//${url.hostname}${url.port ? `:${url.port}` : ''}${url.pathname}`;
-    
-    return urlString.startsWith('http') ? baseUrl : baseUrl.replace('https://', '');
+    const baseUrl = `${url.protocol}//${url.hostname}${url.port ? `:${url.port}` : ""}${url.pathname}`;
+
+    return urlString.startsWith("http")
+      ? baseUrl
+      : baseUrl.replace("https://", "");
   } catch {
     // If parsing fails, try to remove query string manually
-    const questionMarkIndex = urlString.indexOf('?');
-    return questionMarkIndex !== -1 ? urlString.substring(0, questionMarkIndex) : urlString;
+    const questionMarkIndex = urlString.indexOf("?");
+    return questionMarkIndex !== -1
+      ? urlString.substring(0, questionMarkIndex)
+      : urlString;
   }
 }
 
@@ -261,10 +284,10 @@ export function isValidUrl(urlString: string): boolean {
   }
 
   try {
-    const normalizedUrl = urlString.startsWith('http') 
-      ? urlString 
+    const normalizedUrl = urlString.startsWith("http")
+      ? urlString
       : `https://${urlString}`;
-    
+
     new URL(normalizedUrl);
     return true;
   } catch {
@@ -277,18 +300,20 @@ export function isValidUrl(urlString: string): boolean {
  */
 export function normalizeUrl(urlString: string): string {
   if (!urlString.trim()) {
-    return '';
+    return "";
   }
 
   try {
-    const normalizedUrl = urlString.startsWith('http') 
-      ? urlString 
+    const normalizedUrl = urlString.startsWith("http")
+      ? urlString
       : `https://${urlString}`;
-    
+
     const url = new URL(normalizedUrl);
-    const result = `${url.protocol}//${url.hostname}${url.port ? `:${url.port}` : ''}${url.pathname}${url.search}${url.hash}`;
-    
-    return urlString.startsWith('http') ? result : result.replace('https://', '');
+    const result = `${url.protocol}//${url.hostname}${url.port ? `:${url.port}` : ""}${url.pathname}${url.search}${url.hash}`;
+
+    return urlString.startsWith("http")
+      ? result
+      : result.replace("https://", "");
   } catch {
     return urlString;
   }

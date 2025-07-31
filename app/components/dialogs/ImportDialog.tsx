@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,18 +6,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog';
-import { Button } from '~/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
-import { Label } from '~/components/ui/label';
-import { Textarea } from '~/components/ui/textarea';
-import { Upload, FileText, Terminal, Globe, Code2 } from 'lucide-react';
-import { PostmanImporter } from '~/services/import-export/postmanImporter';
-import { CurlParser } from '~/services/import-export/curlParser';
-import { OpenAPIImporter } from '~/services/import-export/openApiImporter';
-import { HTTPFileImporter } from '~/services/import-export/httpFileImporter';
-import { useCollectionStore } from '~/stores/collectionStore';
-import type { PostmanCollection } from '~/types/postman';
+} from "~/components/ui/dialog";
+import { Button } from "~/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
+import { Upload, FileText, Terminal, Globe, Code2 } from "lucide-react";
+import { PostmanImporter } from "~/services/import-export/postmanImporter";
+import { CurlParser } from "~/services/import-export/curlParser";
+import { OpenAPIImporter } from "~/services/import-export/openApiImporter";
+import { HTTPFileImporter } from "~/services/import-export/httpFileImporter";
+import { useCollectionStore } from "~/stores/collectionStore";
+import type { PostmanCollection } from "~/types/postman";
 
 interface ImportDialogProps {
   open: boolean;
@@ -39,15 +39,17 @@ Content-Type: application/json
 export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
   const [importing, setImporting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [jsonInput, setJsonInput] = React.useState('');
-  const [curlInput, setCurlInput] = React.useState('');
-  const [openApiInput, setOpenApiInput] = React.useState('');
-  const [httpFileInput, setHttpFileInput] = React.useState('');
+  const [jsonInput, setJsonInput] = React.useState("");
+  const [curlInput, setCurlInput] = React.useState("");
+  const [openApiInput, setOpenApiInput] = React.useState("");
+  const [httpFileInput, setHttpFileInput] = React.useState("");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  
+
   const { addCollection, addRequest, collections } = useCollectionStore();
 
-  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileImport = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -55,40 +57,58 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
     setError(null);
 
     try {
-      let result: { success: boolean; collection?: PostmanCollection; error?: string; warnings?: string[] };
+      let result: {
+        success: boolean;
+        collection?: PostmanCollection;
+        error?: string;
+        warnings?: string[];
+      };
 
       // Detect file type and use appropriate importer
-      if (file.name.endsWith('.http') || file.name.endsWith('.rest')) {
+      if (file.name.endsWith(".http") || file.name.endsWith(".rest")) {
         // HTTP file
         const httpResult = await HTTPFileImporter.importFromFile(file);
         if (httpResult.success && httpResult.file) {
-          const collection = HTTPFileImporter.convertToPostmanCollection(httpResult.file);
-          result = { success: true, collection, warnings: httpResult.warnings?.map(w => w.message) };
+          const collection = HTTPFileImporter.convertToPostmanCollection(
+            httpResult.file,
+          );
+          result = {
+            success: true,
+            collection,
+            warnings: httpResult.warnings?.map((w) => w.message),
+          };
         } else {
-          result = { success: false, error: httpResult.errors?.[0]?.message || 'Failed to import HTTP file' };
+          result = {
+            success: false,
+            error:
+              httpResult.errors?.[0]?.message || "Failed to import HTTP file",
+          };
         }
-      } else if (file.name.endsWith('.yaml') || file.name.endsWith('.yml') || 
-                 (file.name.endsWith('.json') && await detectOpenAPIFile(file))) {
+      } else if (
+        file.name.endsWith(".yaml") ||
+        file.name.endsWith(".yml") ||
+        (file.name.endsWith(".json") && (await detectOpenAPIFile(file)))
+      ) {
         // OpenAPI/Swagger file
         result = await OpenAPIImporter.importFromFile(file);
       } else {
         // Default to Postman format
         result = await PostmanImporter.importFromFile(file);
       }
-      
+
       if (result.success && result.collection) {
         await addCollection(result.collection);
         onOpenChange(false);
-        
+
         // Show warnings if any
         if (result.warnings && result.warnings.length > 0) {
-          console.warn('Import warnings:', result.warnings);
+          console.warn("Import warnings:", result.warnings);
         }
       } else {
-        setError(result.error || 'Failed to import file');
+        setError(result.error || "Failed to import file");
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError("An unexpected error occurred");
     } finally {
       setImporting(false);
     }
@@ -107,7 +127,7 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
 
   const handleJsonImport = async () => {
     if (!jsonInput.trim()) {
-      setError('Please paste a valid JSON');
+      setError("Please paste a valid JSON");
       return;
     }
 
@@ -117,7 +137,12 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
     try {
       // Try to detect format from JSON content
       const data = JSON.parse(jsonInput);
-      let result: { success: boolean; collection?: PostmanCollection; error?: string; warnings?: string[] };
+      let result: {
+        success: boolean;
+        collection?: PostmanCollection;
+        error?: string;
+        warnings?: string[];
+      };
 
       if (data.openapi || data.swagger || data.paths) {
         // OpenAPI/Swagger format
@@ -126,20 +151,20 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
         // Default to Postman format
         result = await PostmanImporter.import(jsonInput);
       }
-      
+
       if (result.success && result.collection) {
         await addCollection(result.collection);
         onOpenChange(false);
-        setJsonInput('');
-        
+        setJsonInput("");
+
         if (result.warnings && result.warnings.length > 0) {
-          console.warn('Import warnings:', result.warnings);
+          console.warn("Import warnings:", result.warnings);
         }
       } else {
-        setError(result.error || 'Failed to import');
+        setError(result.error || "Failed to import");
       }
     } catch (err) {
-      setError('Invalid JSON format');
+      setError("Invalid JSON format");
     } finally {
       setImporting(false);
     }
@@ -147,7 +172,7 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
 
   const handleOpenApiImport = async () => {
     if (!openApiInput.trim()) {
-      setError('Please paste a valid OpenAPI/Swagger specification');
+      setError("Please paste a valid OpenAPI/Swagger specification");
       return;
     }
 
@@ -156,20 +181,20 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
 
     try {
       const result = await OpenAPIImporter.import(openApiInput);
-      
+
       if (result.success && result.collection) {
         await addCollection(result.collection);
         onOpenChange(false);
-        setOpenApiInput('');
-        
+        setOpenApiInput("");
+
         if (result.warnings && result.warnings.length > 0) {
-          console.warn('Import warnings:', result.warnings);
+          console.warn("Import warnings:", result.warnings);
         }
       } else {
-        setError(result.error || 'Failed to import OpenAPI specification');
+        setError(result.error || "Failed to import OpenAPI specification");
       }
     } catch (err) {
-      setError('Invalid OpenAPI format');
+      setError("Invalid OpenAPI format");
     } finally {
       setImporting(false);
     }
@@ -177,7 +202,7 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
 
   const handleHttpFileImport = async () => {
     if (!httpFileInput.trim()) {
-      setError('Please paste valid HTTP file content');
+      setError("Please paste valid HTTP file content");
       return;
     }
 
@@ -186,21 +211,26 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
 
     try {
       const result = HTTPFileImporter.parse(httpFileInput);
-      
+
       if (result.success && result.file) {
-        const collection = HTTPFileImporter.convertToPostmanCollection(result.file);
+        const collection = HTTPFileImporter.convertToPostmanCollection(
+          result.file,
+        );
         await addCollection(collection);
         onOpenChange(false);
-        setHttpFileInput('');
-        
+        setHttpFileInput("");
+
         if (result.warnings && result.warnings.length > 0) {
-          console.warn('Import warnings:', result.warnings.map(w => w.message));
+          console.warn(
+            "Import warnings:",
+            result.warnings.map((w) => w.message),
+          );
         }
       } else {
-        setError(result.errors?.[0]?.message || 'Failed to import HTTP file');
+        setError(result.errors?.[0]?.message || "Failed to import HTTP file");
       }
     } catch (err) {
-      setError('Invalid HTTP file format');
+      setError("Invalid HTTP file format");
     } finally {
       setImporting(false);
     }
@@ -208,7 +238,7 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
 
   const handleCurlImport = async () => {
     if (!curlInput.trim()) {
-      setError('Please paste a valid cURL command');
+      setError("Please paste a valid cURL command");
       return;
     }
 
@@ -217,35 +247,36 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
 
     try {
       const result = CurlParser.parse(curlInput);
-      
+
       if (result.success && result.request) {
         // Add to the first collection or create a new one
         const firstCollection = Array.from(collections.values())[0];
-        
+
         if (firstCollection) {
           addRequest(firstCollection.metadata.id, null, result.request);
         } else {
           // Create a new collection for the imported request
           const newCollection: PostmanCollection = {
             info: {
-              name: 'Imported Requests',
+              name: "Imported Requests",
               _postman_id: crypto.randomUUID(),
-              schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
-              description: 'Collection for imported cURL commands'
+              schema:
+                "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+              description: "Collection for imported cURL commands",
             },
-            item: [result.request]
+            item: [result.request],
           };
-          
+
           await addCollection(newCollection);
         }
-        
+
         onOpenChange(false);
-        setCurlInput('');
+        setCurlInput("");
       } else {
-        setError(result.error || 'Failed to parse cURL command');
+        setError(result.error || "Failed to parse cURL command");
       }
     } catch (err) {
-      setError('Invalid cURL command');
+      setError("Invalid cURL command");
     } finally {
       setImporting(false);
     }
@@ -259,12 +290,12 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
     if (file) {
       // Simulate file input change event
       const fakeEvent = {
-        target: { files: [file] }
+        target: { files: [file] },
       } as unknown as React.ChangeEvent<HTMLInputElement>;
-      
+
       await handleFileImport(fakeEvent);
     } else {
-      setError('Please drop a valid file');
+      setError("Please drop a valid file");
     }
   };
 
@@ -279,11 +310,15 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
         <DialogHeader>
           <DialogTitle>Import Collection</DialogTitle>
           <DialogDescription>
-            Import from Postman collections, OpenAPI/Swagger specs, HTTP files, or cURL commands.
+            Import from Postman collections, OpenAPI/Swagger specs, HTTP files,
+            or cURL commands.
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="file" className="mt-4 flex-1 flex flex-col overflow-hidden">
+        <Tabs
+          defaultValue="file"
+          className="mt-4 flex-1 flex flex-col overflow-hidden"
+        >
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="file">
               <Upload className="mr-1 h-3 w-3" />
@@ -319,7 +354,8 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
                 Click to upload or drag and drop
               </p>
               <p className="text-xs text-gray-500">
-                Supports Postman Collections, OpenAPI/Swagger (JSON/YAML), and HTTP files
+                Supports Postman Collections, OpenAPI/Swagger (JSON/YAML), and
+                HTTP files
               </p>
               <input
                 ref={fileInputRef}
@@ -331,10 +367,15 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="json" className="mt-4 flex-1 flex flex-col overflow-hidden">
+          <TabsContent
+            value="json"
+            className="mt-4 flex-1 flex flex-col overflow-hidden"
+          >
             <div className="space-y-4 flex-1 flex flex-col">
               <div className="flex-1 flex flex-col">
-                <Label htmlFor="json-input">Paste JSON (Postman Collection or OpenAPI)</Label>
+                <Label htmlFor="json-input">
+                  Paste JSON (Postman Collection or OpenAPI)
+                </Label>
                 <Textarea
                   id="json-input"
                   value={jsonInput}
@@ -343,8 +384,8 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
                   className="flex-1 min-h-[200px] max-h-[300px] font-mono text-sm resize-none"
                 />
               </div>
-              <Button 
-                onClick={handleJsonImport} 
+              <Button
+                onClick={handleJsonImport}
                 disabled={importing || !jsonInput.trim()}
                 className="w-full"
               >
@@ -353,10 +394,15 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="openapi" className="mt-4 flex-1 flex flex-col overflow-hidden">
+          <TabsContent
+            value="openapi"
+            className="mt-4 flex-1 flex flex-col overflow-hidden"
+          >
             <div className="space-y-4 flex-1 flex flex-col">
               <div className="flex-1 flex flex-col">
-                <Label htmlFor="openapi-input">Paste OpenAPI/Swagger Specification</Label>
+                <Label htmlFor="openapi-input">
+                  Paste OpenAPI/Swagger Specification
+                </Label>
                 <Textarea
                   id="openapi-input"
                   value={openApiInput}
@@ -365,8 +411,8 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
                   className="flex-1 min-h-[200px] max-h-[300px] font-mono text-sm resize-none"
                 />
               </div>
-              <Button 
-                onClick={handleOpenApiImport} 
+              <Button
+                onClick={handleOpenApiImport}
                 disabled={importing || !openApiInput.trim()}
                 className="w-full"
               >
@@ -375,7 +421,10 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="http" className="mt-4 flex-1 flex flex-col overflow-hidden">
+          <TabsContent
+            value="http"
+            className="mt-4 flex-1 flex flex-col overflow-hidden"
+          >
             <div className="space-y-4 flex-1 flex flex-col">
               <div className="flex-1 flex flex-col">
                 <Label htmlFor="http-input">Paste HTTP File Content</Label>
@@ -387,8 +436,8 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
                   className="flex-1 min-h-[200px] max-h-[300px] font-mono text-sm resize-none"
                 />
               </div>
-              <Button 
-                onClick={handleHttpFileImport} 
+              <Button
+                onClick={handleHttpFileImport}
                 disabled={importing || !httpFileInput.trim()}
                 className="w-full"
               >
@@ -397,7 +446,10 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="curl" className="mt-4 flex-1 flex flex-col overflow-hidden">
+          <TabsContent
+            value="curl"
+            className="mt-4 flex-1 flex flex-col overflow-hidden"
+          >
             <div className="space-y-4 flex-1 flex flex-col">
               <div className="flex-1 flex flex-col">
                 <Label htmlFor="curl-input">Paste cURL Command</Label>
@@ -409,8 +461,8 @@ export function ImportDialog({ open, onOpenChange }: ImportDialogProps) {
                   className="flex-1 min-h-[200px] max-h-[300px] font-mono text-sm resize-none"
                 />
               </div>
-              <Button 
-                onClick={handleCurlImport} 
+              <Button
+                onClick={handleCurlImport}
                 disabled={importing || !curlInput.trim()}
                 className="w-full"
               >

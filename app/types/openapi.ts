@@ -90,7 +90,7 @@ export interface OpenAPIOperation {
 
 export interface OpenAPIParameter {
   name: string;
-  in: 'query' | 'header' | 'path' | 'cookie';
+  in: "query" | "header" | "path" | "cookie";
   description?: string;
   required?: boolean;
   deprecated?: boolean;
@@ -125,7 +125,10 @@ export interface OpenAPIEncoding {
   allowReserved?: boolean;
 }
 
-export type OpenAPIResponses = Record<string, OpenAPIResponse | OpenAPIReference>;
+export type OpenAPIResponses = Record<
+  string,
+  OpenAPIResponse | OpenAPIReference
+>;
 
 export interface OpenAPIResponse {
   description: string;
@@ -182,10 +185,10 @@ export interface OpenAPIComponents {
 }
 
 export interface OpenAPISecurityScheme {
-  type: 'apiKey' | 'http' | 'mutualTLS' | 'oauth2' | 'openIdConnect';
+  type: "apiKey" | "http" | "mutualTLS" | "oauth2" | "openIdConnect";
   description?: string;
   name?: string; // apiKey only
-  in?: 'query' | 'header' | 'cookie'; // apiKey only
+  in?: "query" | "header" | "cookie"; // apiKey only
   scheme?: string; // http only
   bearerFormat?: string; // http only
   flows?: OpenAPIOAuthFlows; // oauth2 only
@@ -236,7 +239,14 @@ export interface OpenAPISchema {
   const?: any; // OpenAPI 3.1
 
   // Type definition
-  type?: 'null' | 'boolean' | 'object' | 'array' | 'number' | 'string' | 'integer';
+  type?:
+    | "null"
+    | "boolean"
+    | "object"
+    | "array"
+    | "number"
+    | "string"
+    | "integer";
   allOf?: (OpenAPISchema | OpenAPIReference)[];
   oneOf?: (OpenAPISchema | OpenAPIReference)[];
   anyOf?: (OpenAPISchema | OpenAPIReference)[];
@@ -281,11 +291,11 @@ export interface OpenAPIXML {
 
 // Swagger 2.0 Types
 export interface Swagger20 {
-  swagger: '2.0';
+  swagger: "2.0";
   info: SwaggerInfo;
   host?: string;
   basePath?: string;
-  schemes?: ('http' | 'https' | 'ws' | 'wss')[];
+  schemes?: ("http" | "https" | "ws" | "wss")[];
   consumes?: string[];
   produces?: string[];
   paths: SwaggerPaths;
@@ -326,23 +336,23 @@ export interface SwaggerOperation {
   produces?: string[];
   parameters?: (SwaggerParameter | SwaggerReference)[];
   responses: SwaggerResponses;
-  schemes?: ('http' | 'https' | 'ws' | 'wss')[];
+  schemes?: ("http" | "https" | "ws" | "wss")[];
   deprecated?: boolean;
   security?: SwaggerSecurityRequirement[];
 }
 
 export interface SwaggerParameter {
   name: string;
-  in: 'query' | 'header' | 'path' | 'formData' | 'body';
+  in: "query" | "header" | "path" | "formData" | "body";
   description?: string;
   required?: boolean;
-  
+
   // For non-body parameters
-  type?: 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'file';
+  type?: "string" | "number" | "integer" | "boolean" | "array" | "file";
   format?: string;
   allowEmptyValue?: boolean;
   items?: SwaggerItems;
-  collectionFormat?: 'csv' | 'ssv' | 'tsv' | 'pipes' | 'multi';
+  collectionFormat?: "csv" | "ssv" | "tsv" | "pipes" | "multi";
   default?: any;
   maximum?: number;
   exclusiveMaximum?: boolean;
@@ -356,16 +366,16 @@ export interface SwaggerParameter {
   uniqueItems?: boolean;
   enum?: any[];
   multipleOf?: number;
-  
+
   // For body parameters
   schema?: SwaggerSchema | SwaggerReference;
 }
 
 export interface SwaggerItems {
-  type: 'string' | 'number' | 'integer' | 'boolean' | 'array';
+  type: "string" | "number" | "integer" | "boolean" | "array";
   format?: string;
   items?: SwaggerItems;
-  collectionFormat?: 'csv' | 'ssv' | 'tsv' | 'pipes' | 'multi';
+  collectionFormat?: "csv" | "ssv" | "tsv" | "pipes" | "multi";
   default?: any;
   maximum?: number;
   exclusiveMaximum?: boolean;
@@ -381,7 +391,10 @@ export interface SwaggerItems {
   multipleOf?: number;
 }
 
-export type SwaggerResponses = Record<string, SwaggerResponse | SwaggerReference>;
+export type SwaggerResponses = Record<
+  string,
+  SwaggerResponse | SwaggerReference
+>;
 
 export interface SwaggerResponse {
   description: string;
@@ -392,10 +405,10 @@ export interface SwaggerResponse {
 
 export interface SwaggerHeader {
   description?: string;
-  type: 'string' | 'number' | 'integer' | 'boolean' | 'array';
+  type: "string" | "number" | "integer" | "boolean" | "array";
   format?: string;
   items?: SwaggerItems;
-  collectionFormat?: 'csv' | 'ssv' | 'tsv' | 'pipes' | 'multi';
+  collectionFormat?: "csv" | "ssv" | "tsv" | "pipes" | "multi";
   default?: any;
   maximum?: number;
   exclusiveMaximum?: boolean;
@@ -432,7 +445,14 @@ export interface SwaggerSchema {
   minProperties?: number;
   required?: string[];
   enum?: any[];
-  type?: 'null' | 'boolean' | 'object' | 'array' | 'number' | 'string' | 'integer';
+  type?:
+    | "null"
+    | "boolean"
+    | "object"
+    | "array"
+    | "number"
+    | "string"
+    | "integer";
   items?: SwaggerSchema | SwaggerReference;
   allOf?: (SwaggerSchema | SwaggerReference)[];
   properties?: Record<string, SwaggerSchema | SwaggerReference>;
@@ -445,11 +465,11 @@ export interface SwaggerSchema {
 }
 
 export interface SwaggerSecurityScheme {
-  type: 'basic' | 'apiKey' | 'oauth2';
+  type: "basic" | "apiKey" | "oauth2";
   description?: string;
   name?: string; // apiKey only
-  in?: 'query' | 'header'; // apiKey only
-  flow?: 'implicit' | 'password' | 'application' | 'accessCode'; // oauth2 only
+  in?: "query" | "header"; // apiKey only
+  flow?: "implicit" | "password" | "application" | "accessCode"; // oauth2 only
   authorizationUrl?: string; // oauth2 only
   tokenUrl?: string; // oauth2 only
   scopes?: Record<string, string>; // oauth2 only
@@ -471,14 +491,14 @@ export type OpenAPIReference_Any = OpenAPIReference | SwaggerReference;
 // Utility types for format detection
 export interface OpenAPIDetectionResult {
   isOpenAPI: boolean;
-  version: '2.0' | '3.0' | '3.1' | null;
+  version: "2.0" | "3.0" | "3.1" | null;
   document?: OpenAPIDocument;
   errors?: string[];
 }
 
 // Types for conversion between formats
 export interface OpenAPIConversionOptions {
-  targetVersion?: '2.0' | '3.0' | '3.1';
+  targetVersion?: "2.0" | "3.0" | "3.1";
   preserveExamples?: boolean;
   generateExamples?: boolean;
   includeDeprecated?: boolean;

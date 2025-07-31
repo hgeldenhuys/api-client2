@@ -69,7 +69,12 @@ export interface QueryParam {
 }
 
 // Universal Parameters System
-export type ParameterLocation = 'query' | 'header' | 'form-data' | 'urlencoded' | 'path';
+export type ParameterLocation =
+  | "query"
+  | "header"
+  | "form-data"
+  | "urlencoded"
+  | "path";
 
 export interface UniversalParameter {
   id: string;
@@ -78,7 +83,7 @@ export interface UniversalParameter {
   location: ParameterLocation;
   enabled: boolean;
   description?: string;
-  type?: 'text' | 'file'; // for form-data
+  type?: "text" | "file"; // for form-data
   src?: string; // file path for file type
 }
 
@@ -106,12 +111,12 @@ export interface Body {
   options?: BodyOptions;
 }
 
-export type BodyMode = 'raw' | 'urlencoded' | 'formdata' | 'file' | 'graphql';
+export type BodyMode = "raw" | "urlencoded" | "formdata" | "file" | "graphql";
 
 export interface FormParam {
   key: string;
   value: string;
-  type?: 'text' | 'file';
+  type?: "text" | "file";
   src?: string;
   disabled?: boolean;
   description?: string;
@@ -128,7 +133,7 @@ export interface GraphQLBody {
 
 export interface BodyOptions {
   raw?: {
-    language?: 'json' | 'javascript' | 'xml' | 'html' | 'text';
+    language?: "json" | "javascript" | "xml" | "html" | "text";
   };
 }
 
@@ -149,20 +154,20 @@ export interface Auth {
   custom?: AuthParam[];
 }
 
-export type AuthType = 
-  | 'apikey' 
-  | 'awsv4' 
-  | 'basic' 
-  | 'bearer' 
-  | 'digest' 
-  | 'edgegrid' 
-  | 'hawk' 
-  | 'noauth' 
-  | 'oauth1' 
-  | 'oauth2' 
-  | 'ntlm'
-  | 'jwt'
-  | 'custom';
+export type AuthType =
+  | "apikey"
+  | "awsv4"
+  | "basic"
+  | "bearer"
+  | "digest"
+  | "edgegrid"
+  | "hawk"
+  | "noauth"
+  | "oauth1"
+  | "oauth2"
+  | "ntlm"
+  | "jwt"
+  | "custom";
 
 export interface AuthParam {
   key: string;
@@ -174,13 +179,13 @@ export interface Variable {
   id?: string;
   key: string;
   value: string;
-  type?: 'string' | 'boolean' | 'number' | 'any';
+  type?: "string" | "boolean" | "number" | "any";
   disabled?: boolean;
   description?: string;
 }
 
 export interface Event {
-  listen: 'prerequest' | 'test';
+  listen: "prerequest" | "test";
   script: Script;
 }
 
@@ -201,23 +206,27 @@ export interface Response {
   _postman_previewlanguage?: string;
 }
 
-export type HttpMethod = 
-  | 'GET' 
-  | 'POST' 
-  | 'PUT' 
-  | 'PATCH' 
-  | 'DELETE' 
-  | 'HEAD' 
-  | 'OPTIONS' 
-  | 'CONNECT' 
-  | 'TRACE';
+export type HttpMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "PATCH"
+  | "DELETE"
+  | "HEAD"
+  | "OPTIONS"
+  | "CONNECT"
+  | "TRACE";
 
-export function isRequestItem(item: RequestItem | FolderItem): item is RequestItem {
-  return 'request' in item;
+export function isRequestItem(
+  item: RequestItem | FolderItem,
+): item is RequestItem {
+  return "request" in item;
 }
 
-export function isFolderItem(item: RequestItem | FolderItem): item is FolderItem {
-  return 'item' in item;
+export function isFolderItem(
+  item: RequestItem | FolderItem,
+): item is FolderItem {
+  return "item" in item;
 }
 
 // Re-export Auth as RequestAuth for compatibility

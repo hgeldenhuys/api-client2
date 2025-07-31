@@ -1,9 +1,9 @@
-import React from 'react';
-import { useSortable } from '@dnd-kit/sortable';
-import { useDroppable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
-import { Button } from '~/components/ui/button';
-import { 
+import React from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
+import { Button } from "~/components/ui/button";
+import {
   MoreVertical,
   Folder,
   FileText,
@@ -14,17 +14,22 @@ import {
   Edit2,
   Trash2,
   Copy,
-  Scissors
-} from 'lucide-react';
+  Scissors,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu';
-import { RequestItem, FolderItem, isRequestItem, isFolderItem } from '~/types/postman';
-import { UI, METHOD_COLORS } from '~/constants';
+} from "~/components/ui/dropdown-menu";
+import {
+  RequestItem,
+  FolderItem,
+  isRequestItem,
+  isFolderItem,
+} from "~/types/postman";
+import { UI, METHOD_COLORS } from "~/constants";
 
 interface DraggableTreeItemProps {
   item: RequestItem | FolderItem;
@@ -46,7 +51,7 @@ interface DraggableTreeItemProps {
 
 function getMethodColorClasses(method: string): string {
   const colors = METHOD_COLORS[method as keyof typeof METHOD_COLORS];
-  return colors ? `${colors.text} ${colors.bg}` : '';
+  return colors ? `${colors.text} ${colors.bg}` : "";
 }
 
 export function DraggableTreeItem({
@@ -64,11 +69,11 @@ export function DraggableTreeItem({
   onDuplicate,
   onCopy,
   onCut,
-  children
+  children,
 }: DraggableTreeItemProps) {
-  const itemId = item.id || '';
+  const itemId = item.id || "";
   const dragId = `${collectionId}:${itemId}`;
-  
+
   const {
     attributes,
     listeners,
@@ -86,11 +91,11 @@ export function DraggableTreeItem({
   const { setNodeRef: setBeforeDropRef, isOver: isOverBefore } = useDroppable({
     id: beforeDropId,
   });
-  
+
   const { setNodeRef: setAfterDropRef, isOver: isOverAfter } = useDroppable({
     id: afterDropId,
   });
-  
+
   const { setNodeRef: setInsideDropRef, isOver: isOverInside } = useDroppable({
     id: insideDropId,
     disabled: isRequestItem(item), // Requests can't have items dropped inside them
@@ -110,19 +115,19 @@ export function DraggableTreeItem({
           ref={setBeforeDropRef}
           className={`
             h-1 -mb-1 transition-colors
-            ${isOverBefore ? 'bg-primary' : 'transparent'}
+            ${isOverBefore ? "bg-primary" : "transparent"}
           `}
         />
-        
+
         <div
           className={`
             flex items-center gap-2 px-2 py-1.5 cursor-pointer
             hover:bg-accent rounded-sm group relative
-            ${isActive ? 'bg-accent' : ''}
-            ${isDragging ? 'shadow-lg' : ''}
-            ${isOverAfter ? 'border-b-2 border-primary' : ''}
+            ${isActive ? "bg-accent" : ""}
+            ${isDragging ? "shadow-lg" : ""}
+            ${isOverAfter ? "border-b-2 border-primary" : ""}
           `}
-          style={{ paddingLeft: `${(depth * UI.INDENT_SIZE) + 8}px` }}
+          style={{ paddingLeft: `${depth * UI.INDENT_SIZE + 8}px` }}
           onClick={onItemClick}
         >
           <div
@@ -131,10 +136,12 @@ export function DraggableTreeItem({
           >
             <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-sm flex-1 truncate">{item.name}</span>
-            <span className={`
+            <span
+              className={`
               text-xs font-medium px-1.5 py-0.5 rounded flex-shrink-0
               ${getMethodColorClasses(item.request.method)}
-            `}>
+            `}
+            >
               {item.request.method}
             </span>
           </div>
@@ -175,13 +182,13 @@ export function DraggableTreeItem({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        
+
         {/* After drop zone */}
         <div
           ref={setAfterDropRef}
           className={`
             h-1 -mt-1 transition-colors
-            ${isOverAfter ? 'bg-primary' : 'transparent'}
+            ${isOverAfter ? "bg-primary" : "transparent"}
           `}
         />
       </div>
@@ -197,19 +204,19 @@ export function DraggableTreeItem({
             ref={setBeforeDropRef}
             className={`
               h-1 -mb-1 transition-colors
-              ${isOverBefore ? 'bg-primary' : 'transparent'}
+              ${isOverBefore ? "bg-primary" : "transparent"}
             `}
           />
-          
+
           <div
             className={`
               flex items-center gap-2 px-2 py-1.5 cursor-pointer 
               hover:bg-accent rounded-sm group relative
-              ${isDragging ? 'shadow-lg' : ''}
-              ${isOverInside ? 'bg-primary/10 border border-primary/50' : ''}
-              ${isOverAfter ? 'border-b-2 border-primary' : ''}
+              ${isDragging ? "shadow-lg" : ""}
+              ${isOverInside ? "bg-primary/10 border border-primary/50" : ""}
+              ${isOverAfter ? "border-b-2 border-primary" : ""}
             `}
-            style={{ paddingLeft: `${(depth * UI.INDENT_SIZE) + 8}px` }}
+            style={{ paddingLeft: `${depth * UI.INDENT_SIZE + 8}px` }}
             onClick={onToggle}
           >
             {/* Inside drop zone for folders */}
@@ -217,7 +224,7 @@ export function DraggableTreeItem({
               ref={setInsideDropRef}
               className="absolute inset-0 pointer-events-none"
             />
-            
+
             <div
               {...listeners}
               className="flex items-center gap-2 flex-1 min-w-0"
@@ -269,28 +276,27 @@ export function DraggableTreeItem({
                   Cut
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive" onClick={onDelete}>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={onDelete}
+                >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete Folder
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          
+
           {/* After drop zone */}
           <div
             ref={setAfterDropRef}
             className={`
               h-1 -mt-1 transition-colors
-              ${isOverAfter ? 'bg-primary' : 'transparent'}
+              ${isOverAfter ? "bg-primary" : "transparent"}
             `}
           />
-          
-          {isExpanded && children && (
-            <div className="relative">
-              {children}
-            </div>
-          )}
+
+          {isExpanded && children && <div className="relative">{children}</div>}
         </div>
       </div>
     );

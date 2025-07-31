@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,10 +6,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
+} from "~/components/ui/dialog";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 
 interface RenameDialogProps {
   open: boolean;
@@ -17,7 +17,7 @@ interface RenameDialogProps {
   onConfirm: (newName: string) => void;
   title: string;
   currentName: string;
-  type: 'collection' | 'folder' | 'request';
+  type: "collection" | "folder" | "request";
 }
 
 export function RenameDialog({
@@ -26,7 +26,7 @@ export function RenameDialog({
   onConfirm,
   title,
   currentName,
-  type
+  type,
 }: RenameDialogProps) {
   const [name, setName] = React.useState(currentName);
 
@@ -65,10 +65,17 @@ export function RenameDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim() || name.trim() === currentName}>
+            <Button
+              type="submit"
+              disabled={!name.trim() || name.trim() === currentName}
+            >
               Rename
             </Button>
           </DialogFooter>

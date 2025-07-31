@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,18 +6,24 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog';
-import { Button } from '~/components/ui/button';
-import { Label } from '~/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
-import { Download, Shield, FileJson, Globe, Code2 } from 'lucide-react';
-import { PostmanExporter } from '~/services/import-export/postmanExporter';
-import { OpenAPIExporter } from '~/services/import-export/openApiExporter';
-import { HTTPFileExporter } from '~/services/import-export/httpFileExporter';
-import { useCollectionStore } from '~/stores/collectionStore';
-import type { PostmanCollection } from '~/types/postman';
-import {Checkbox} from "~/components/ui/checkbox";
+} from "~/components/ui/dialog";
+import { Button } from "~/components/ui/button";
+import { Label } from "~/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { Download, Shield, FileJson, Globe, Code2 } from "lucide-react";
+import { PostmanExporter } from "~/services/import-export/postmanExporter";
+import { OpenAPIExporter } from "~/services/import-export/openApiExporter";
+import { HTTPFileExporter } from "~/services/import-export/httpFileExporter";
+import { useCollectionStore } from "~/stores/collectionStore";
+import type { PostmanCollection } from "~/types/postman";
+import { Checkbox } from "~/components/ui/checkbox";
 
 interface ExportDialogProps {
   open: boolean;
@@ -25,19 +31,29 @@ interface ExportDialogProps {
   collectionId?: string;
 }
 
-export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogProps) {
+export function ExportDialog({
+  open,
+  onOpenChange,
+  collectionId,
+}: ExportDialogProps) {
   const [exporting, setExporting] = React.useState(false);
-  const [exportType, setExportType] = React.useState<'single' | 'all' | 'backup'>('single');
-  const [exportFormat, setExportFormat] = React.useState<'postman' | 'openapi' | 'http'>('postman');
-  const [openApiVersion, setOpenApiVersion] = React.useState<'2.0' | '3.0' | '3.1'>('3.0');
+  const [exportType, setExportType] = React.useState<
+    "single" | "all" | "backup"
+  >("single");
+  const [exportFormat, setExportFormat] = React.useState<
+    "postman" | "openapi" | "http"
+  >("postman");
+  const [openApiVersion, setOpenApiVersion] = React.useState<
+    "2.0" | "3.0" | "3.1"
+  >("3.0");
   const [includeSensitive, setIncludeSensitive] = React.useState(false);
-  
+
   const { collections } = useCollectionStore();
 
   // Reset export type when format changes and backup is no longer available
   React.useEffect(() => {
-    if (exportFormat !== 'postman' && exportType === 'backup') {
-      setExportType('single');
+    if (exportFormat !== "postman" && exportType === "backup") {
+      setExportType("single");
     }
   }, [exportFormat, exportType]);
 
@@ -46,7 +62,7 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
 
     try {
       switch (exportType) {
-        case 'single':
+        case "single":
           if (collectionId) {
             const collectionData = collections.get(collectionId);
             if (collectionData) {
@@ -55,18 +71,18 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
           }
           break;
 
-        case 'all':
+        case "all":
           await exportAllCollections();
           break;
 
-        case 'backup':
+        case "backup":
           await PostmanExporter.exportBackup(includeSensitive);
           break;
       }
 
       onOpenChange(false);
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error("Export failed:", error);
     } finally {
       setExporting(false);
     }
@@ -74,48 +90,52 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
 
   const exportSingleCollection = async (collection: PostmanCollection) => {
     switch (exportFormat) {
-      case 'postman':
+      case "postman":
         await PostmanExporter.exportToFile(collection, {
           includeSensitiveData: includeSensitive,
-          prettyPrint: true
+          prettyPrint: true,
         });
         break;
 
-      case 'openapi':
-        await OpenAPIExporter.exportToFile(collection, {
-          version: openApiVersion,
-          includeSensitiveData: includeSensitive,
-          includeExamples: true,
-          generateSchemas: true
-        }, 'json');
+      case "openapi":
+        await OpenAPIExporter.exportToFile(
+          collection,
+          {
+            version: openApiVersion,
+            includeSensitiveData: includeSensitive,
+            includeExamples: true,
+            generateSchemas: true,
+          },
+          "json",
+        );
         break;
 
-      case 'http':
+      case "http":
         await HTTPFileExporter.exportToFile(collection, {
           includeComments: true,
           includeVariables: true,
           includeMetadata: true,
           formatBody: true,
-          includeRequestNames: true
+          includeRequestNames: true,
         });
         break;
     }
   };
 
   const exportAllCollections = async () => {
-    if (exportFormat === 'postman') {
+    if (exportFormat === "postman") {
       const allCollections = await PostmanExporter.exportAll({
         includeSensitiveData: includeSensitive,
-        prettyPrint: true
+        prettyPrint: true,
       });
-      
-      const blob = new Blob([JSON.stringify(allCollections, null, 2)], { 
-        type: 'application/json' 
+
+      const blob = new Blob([JSON.stringify(allCollections, null, 2)], {
+        type: "application/json",
       });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `all-collections-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `all-collections-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -129,7 +149,9 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
     }
   };
 
-  const selectedCollection = collectionId ? collections.get(collectionId) : null;
+  const selectedCollection = collectionId
+    ? collections.get(collectionId)
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -144,8 +166,15 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
         <div className="py-4">
           {/* Format Selection */}
           <div className="mb-6">
-            <Label className="text-sm font-medium mb-3 block">Export Format</Label>
-            <Select value={exportFormat} onValueChange={(value) => setExportFormat(value as 'postman' | 'openapi' | 'http')}>
+            <Label className="text-sm font-medium mb-3 block">
+              Export Format
+            </Label>
+            <Select
+              value={exportFormat}
+              onValueChange={(value) =>
+                setExportFormat(value as "postman" | "openapi" | "http")
+              }
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select export format" />
               </SelectTrigger>
@@ -173,10 +202,17 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
           </div>
 
           {/* OpenAPI Version Selection */}
-          {exportFormat === 'openapi' && (
+          {exportFormat === "openapi" && (
             <div className="mb-6">
-              <Label className="text-sm font-medium mb-3 block">OpenAPI Version</Label>
-              <Select value={openApiVersion} onValueChange={(value) => setOpenApiVersion(value as '2.0' | '3.0' | '3.1')}>
+              <Label className="text-sm font-medium mb-3 block">
+                OpenAPI Version
+              </Label>
+              <Select
+                value={openApiVersion}
+                onValueChange={(value) =>
+                  setOpenApiVersion(value as "2.0" | "3.0" | "3.1")
+                }
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select OpenAPI version" />
                 </SelectTrigger>
@@ -191,11 +227,15 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
 
           {/* Export Type Selection */}
           <div className="mb-4">
-            <Label className="text-sm font-medium mb-3 block">Export Scope</Label>
+            <Label className="text-sm font-medium mb-3 block">
+              Export Scope
+            </Label>
           </div>
-          <RadioGroup 
-            value={exportType} 
-            onValueChange={(value) => setExportType(value as 'single' | 'all' | 'backup')}
+          <RadioGroup
+            value={exportType}
+            onValueChange={(value) =>
+              setExportType(value as "single" | "all" | "backup")
+            }
           >
             <div className="space-y-4">
               {selectedCollection && (
@@ -204,10 +244,18 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
                   <Label htmlFor="single" className="flex-1 cursor-pointer">
                     <div className="flex items-center gap-2 mb-1">
                       <FileJson className="h-4 w-4" />
-                      <span className="font-medium">Export Current Collection</span>
+                      <span className="font-medium">
+                        Export Current Collection
+                      </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Export "{selectedCollection.collection.info.name}" in {exportFormat === 'postman' ? 'Postman Collection v2.1' : exportFormat === 'openapi' ? `OpenAPI ${openApiVersion}` : 'HTTP file'} format
+                      Export "{selectedCollection.collection.info.name}" in{" "}
+                      {exportFormat === "postman"
+                        ? "Postman Collection v2.1"
+                        : exportFormat === "openapi"
+                          ? `OpenAPI ${openApiVersion}`
+                          : "HTTP file"}{" "}
+                      format
                     </p>
                   </Label>
                 </div>
@@ -221,12 +269,15 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
                     <span className="font-medium">Export All Collections</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Export all {collections.size} collections {exportFormat === 'postman' ? 'in a single file' : 'as separate files'}
+                    Export all {collections.size} collections{" "}
+                    {exportFormat === "postman"
+                      ? "in a single file"
+                      : "as separate files"}
                   </p>
                 </Label>
               </div>
 
-              {exportFormat === 'postman' && (
+              {exportFormat === "postman" && (
                 <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-accent/50 cursor-pointer">
                   <RadioGroupItem value="backup" id="backup" />
                   <Label htmlFor="backup" className="flex-1 cursor-pointer">
@@ -254,18 +305,21 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
                   <Checkbox
                     id="include-sensitive"
                     checked={includeSensitive}
-                    onChange={(e) => setIncludeSensitive(e.target.checked)}
+                    onCheckedChange={(checked) =>
+                      setIncludeSensitive(checked as boolean)
+                    }
                     className="rounded border-gray-300"
                   />
-                  <Label 
-                    htmlFor="include-sensitive" 
+                  <Label
+                    htmlFor="include-sensitive"
                     className="text-sm text-amber-800 cursor-pointer"
                   >
                     Include sensitive data (API keys, tokens, passwords)
                   </Label>
                 </div>
                 <p className="text-xs text-amber-700 mt-1">
-                  When unchecked, sensitive values will be replaced with [REDACTED]
+                  When unchecked, sensitive values will be replaced with
+                  [REDACTED]
                 </p>
               </div>
             </div>
@@ -276,11 +330,8 @@ export function ExportDialog({ open, onOpenChange, collectionId }: ExportDialogP
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleExport} 
-            disabled={exporting}
-          >
-            {exporting ? 'Exporting...' : 'Export'}
+          <Button onClick={handleExport} disabled={exporting}>
+            {exporting ? "Exporting..." : "Export"}
           </Button>
         </DialogFooter>
       </DialogContent>

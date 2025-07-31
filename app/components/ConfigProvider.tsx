@@ -1,5 +1,5 @@
-import React from 'react';
-import { ApiClientConfig, DEFAULT_CONFIG } from '~/types/config';
+import React from "react";
+import { ApiClientConfig, DEFAULT_CONFIG } from "~/types/config";
 
 const ConfigContext = React.createContext<ApiClientConfig>(DEFAULT_CONFIG);
 
@@ -12,7 +12,7 @@ export function ConfigProvider({ config, children }: ConfigProviderProps) {
   // Deep merge the provided config with defaults
   const mergedConfig: ApiClientConfig = React.useMemo(() => {
     if (!config) return DEFAULT_CONFIG;
-    
+
     return {
       branding: {
         ...DEFAULT_CONFIG.branding,
@@ -47,7 +47,7 @@ export function ConfigProvider({ config, children }: ConfigProviderProps) {
 export function useApiClientConfig(): ApiClientConfig {
   const context = React.useContext(ConfigContext);
   if (!context) {
-    throw new Error('useApiClientConfig must be used within a ConfigProvider');
+    throw new Error("useApiClientConfig must be used within a ConfigProvider");
   }
   return context;
 }

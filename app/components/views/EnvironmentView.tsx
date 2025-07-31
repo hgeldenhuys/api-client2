@@ -1,9 +1,9 @@
-import React from 'react';
-import {useEnvironmentStore} from '~/stores/environmentStore';
-import {useCollectionStore} from '~/stores/collectionStore';
-import {Button} from '~/components/ui/button';
-import {Input} from '~/components/ui/input';
-import {Badge} from '~/components/ui/badge';
+import React from "react";
+import { useEnvironmentStore } from "~/stores/environmentStore";
+import { useCollectionStore } from "~/stores/collectionStore";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Badge } from "~/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -11,30 +11,40 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '~/components/ui/table';
-import {Plus, Trash2, Eye, EyeOff, Lock, Globe, Search, Settings, BarChart3} from 'lucide-react';
-import {PasswordInput} from '~/components/ui/password-input';
+} from "~/components/ui/table";
+import {
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+  Lock,
+  Globe,
+  Search,
+  Settings,
+  BarChart3,
+} from "lucide-react";
+import { PasswordInput } from "~/components/ui/password-input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select';
+} from "~/components/ui/select";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from '~/components/ui/resizable';
-import {cn} from '~/utils/cn';
-import {Checkbox} from "~/components/ui/checkbox";
+} from "~/components/ui/resizable";
+import { cn } from "~/utils/cn";
+import { Checkbox } from "~/components/ui/checkbox";
 
-type TTabs = 'summary' | 'environments' | 'globals';
+type TTabs = "summary" | "environments" | "globals";
 
 interface VariableWithScope {
   key: string;
   value: string;
-  scope: 'collection' | 'environment' | 'secrets' | 'globals';
+  scope: "collection" | "environment" | "secrets" | "globals";
   scopeName: string;
   priority: number;
   isSecret: boolean;
@@ -57,98 +67,109 @@ export function EnvironmentView() {
     deleteGlobalVariable,
   } = useEnvironmentStore();
 
-  const {activeCollectionId, collections} = useCollectionStore();
+  const { activeCollectionId, collections } = useCollectionStore();
 
-  const [selectedEnvId, setSelectedEnvId] = React.useState<string | null>(activeEnvironmentId);
+  const [selectedEnvId, setSelectedEnvId] = React.useState<string | null>(
+    activeEnvironmentId,
+  );
   const [showSecrets, setShowSecrets] = React.useState(false);
   const [hideTimer, setHideTimer] = React.useState<NodeJS.Timeout | null>(null);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [viewMode, setViewMode] = React.useState<TTabs>('summary' as TTabs);
-  const [newEnvName, setNewEnvName] = React.useState('');
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [viewMode, setViewMode] = React.useState<TTabs>("summary" as TTabs);
+  const [newEnvName, setNewEnvName] = React.useState("");
 
   // Get selected environment - handle Map access issues
-  const selectedEnv = selectedEnvId ? (
-    environments && typeof environments.get === 'function'
+  const selectedEnv = selectedEnvId
+    ? environments && typeof environments.get === "function"
       ? environments.get(selectedEnvId)
-      : Array.from(environments.values()).find(env => env.id === selectedEnvId)
-  ) : null;
+      : Array.from(environments.values()).find(
+          (env) => env.id === selectedEnvId,
+        )
+    : null;
 
   // State for adding variables
-  const [newVarKey, setNewVarKey] = React.useState('');
-  const [newVarValue, setNewVarValue] = React.useState('');
+  const [newVarKey, setNewVarKey] = React.useState("");
+  const [newVarValue, setNewVarValue] = React.useState("");
   const [newVarIsSecret, setNewVarIsSecret] = React.useState(false);
 
   // Variable aggregation for summary view
-  const getAllVariablesWithScope = React.useCallback((): VariableWithScope[] => {
-    const allVariables: VariableWithScope[] = [];
+  const getAllVariablesWithScope =
+    React.useCallback((): VariableWithScope[] => {
+      const allVariables: VariableWithScope[] = [];
 
-    // 1. Collection variables (highest priority)
-    if (activeCollectionId) {
-      const collection = collections.get(activeCollectionId);
-      if (collection?.collection.variable) {
-        for (const variable of collection.collection.variable) {
-          if (!variable.disabled) {
-            allVariables.push({
-              key: variable.key,
-              value: variable.value,
-              scope: 'collection',
-              scopeName: collection.collection.info.name,
-              priority: 1,
-              isSecret: false,
-              enabled: true,
-            });
+      // 1. Collection variables (highest priority)
+      if (activeCollectionId) {
+        const collection = collections.get(activeCollectionId);
+        if (collection?.collection.variable) {
+          for (const variable of collection.collection.variable) {
+            if (!variable.disabled) {
+              allVariables.push({
+                key: variable.key,
+                value: variable.value,
+                scope: "collection",
+                scopeName: collection.collection.info.name,
+                priority: 1,
+                isSecret: false,
+                enabled: true,
+              });
+            }
           }
         }
       }
-    }
 
-    // 2. Environment variables from ALL environments
-    for (const env of Array.from(environments.values())) {
-      // Regular environment variables
-      for (const [key, value] of Object.entries(env.values || {})) {
+      // 2. Environment variables from ALL environments
+      for (const env of Array.from(environments.values())) {
+        // Regular environment variables
+        for (const [key, value] of Object.entries(env.values || {})) {
+          allVariables.push({
+            key,
+            value,
+            scope: "environment",
+            scopeName: env.name,
+            priority: env.id === activeEnvironmentId ? 2 : 5, // Active env gets higher priority
+            isSecret: false,
+            enabled: true,
+            environmentId: env.id,
+          });
+        }
+
+        // Secrets
+        for (const [key, value] of Object.entries(env.secrets || {})) {
+          allVariables.push({
+            key,
+            value,
+            scope: "secrets",
+            scopeName: env.name,
+            priority: env.id === activeEnvironmentId ? 3 : 6, // Active env gets higher priority
+            isSecret: true,
+            enabled: true,
+            environmentId: env.id,
+          });
+        }
+      }
+
+      // 3. Global variables (lowest priority)
+      for (const [index, variable] of globalVariables.entries()) {
         allVariables.push({
-          key,
-          value,
-          scope: 'environment',
-          scopeName: env.name,
-          priority: env.id === activeEnvironmentId ? 2 : 5, // Active env gets higher priority
-          isSecret: false,
-          enabled: true,
-          environmentId: env.id,
+          key: variable.key,
+          value: variable.value,
+          scope: "globals",
+          scopeName: "Global",
+          priority: 7, // Lowest priority after all environments
+          isSecret: variable.type === "secret",
+          enabled: variable.enabled,
+          index,
         });
       }
 
-      // Secrets
-      for (const [key, value] of Object.entries(env.secrets || {})) {
-        allVariables.push({
-          key,
-          value,
-          scope: 'secrets',
-          scopeName: env.name,
-          priority: env.id === activeEnvironmentId ? 3 : 6, // Active env gets higher priority
-          isSecret: true,
-          enabled: true,
-          environmentId: env.id,
-        });
-      }
-    }
-
-    // 3. Global variables (lowest priority)
-    for (const [index, variable] of globalVariables.entries()) {
-      allVariables.push({
-        key: variable.key,
-        value: variable.value,
-        scope: 'globals',
-        scopeName: 'Global',
-        priority: 7, // Lowest priority after all environments
-        isSecret: variable.type === 'secret',
-        enabled: variable.enabled,
-        index,
-      });
-    }
-
-    return allVariables;
-  }, [activeCollectionId, collections, activeEnvironmentId, environments, globalVariables]);
+      return allVariables;
+    }, [
+      activeCollectionId,
+      collections,
+      activeEnvironmentId,
+      environments,
+      globalVariables,
+    ]);
 
   // Get variables for summary view with conflict detection
   const summaryVariables = React.useMemo(() => {
@@ -164,7 +185,10 @@ export function EnvironmentView() {
     }
 
     // Sort each group by priority and mark conflicts
-    const result: (VariableWithScope & { hasConflict?: boolean; isWinner?: boolean })[] = [];
+    const result: (VariableWithScope & {
+      hasConflict?: boolean;
+      isWinner?: boolean;
+    })[] = [];
     for (const [, vars] of varGroups) {
       const sortedVars = vars.sort((a, b) => a.priority - b.priority);
       const hasConflict = sortedVars.length > 1;
@@ -196,7 +220,7 @@ export function EnvironmentView() {
     });
 
     setSelectedEnvId(envId);
-    setNewEnvName('');
+    setNewEnvName("");
   };
 
   // Auto-hide secrets after 10 seconds for security
@@ -233,21 +257,21 @@ export function EnvironmentView() {
     if (!newVarKey.trim() || !selectedEnv) return;
 
     if (newVarIsSecret) {
-      const newSecrets = {...selectedEnv.secrets, [newVarKey]: newVarValue};
+      const newSecrets = { ...selectedEnv.secrets, [newVarKey]: newVarValue };
       const newSecretKeys = [...selectedEnv.secretKeys, newVarKey];
       updateEnvironment(selectedEnv.id, {
         secrets: newSecrets,
         secretKeys: newSecretKeys,
       }).catch(console.error);
     } else {
-      const newVars = {...selectedEnv.values, [newVarKey]: newVarValue};
+      const newVars = { ...selectedEnv.values, [newVarKey]: newVarValue };
       updateEnvironment(selectedEnv.id, {
         values: newVars,
-      }).catch(console.error);;
+      }).catch(console.error);
     }
 
-    setNewVarKey('');
-    setNewVarValue('');
+    setNewVarKey("");
+    setNewVarValue("");
     setNewVarIsSecret(false);
   };
 
@@ -255,15 +279,15 @@ export function EnvironmentView() {
     if (!selectedEnv) return;
 
     if (isSecret) {
-      const newSecrets = {...selectedEnv.secrets};
+      const newSecrets = { ...selectedEnv.secrets };
       delete newSecrets[key];
-      const newSecretKeys = selectedEnv.secretKeys.filter(k => k !== key);
+      const newSecretKeys = selectedEnv.secretKeys.filter((k) => k !== key);
       updateEnvironment(selectedEnv.id, {
         secrets: newSecrets,
         secretKeys: newSecretKeys,
       });
     } else {
-      const newVars = {...selectedEnv.values};
+      const newVars = { ...selectedEnv.values };
       delete newVars[key];
       updateEnvironment(selectedEnv.id, {
         values: newVars,
@@ -271,15 +295,19 @@ export function EnvironmentView() {
     }
   };
 
-  const handleUpdateVariable = (key: string, value: string, isSecret: boolean) => {
+  const handleUpdateVariable = (
+    key: string,
+    value: string,
+    isSecret: boolean,
+  ) => {
     if (!selectedEnv) return;
 
     if (isSecret) {
-      const newSecrets = {...selectedEnv.secrets, [key]: value};
-      updateEnvironment(selectedEnv.id, {secrets: newSecrets});
+      const newSecrets = { ...selectedEnv.secrets, [key]: value };
+      updateEnvironment(selectedEnv.id, { secrets: newSecrets });
     } else {
-      const newVars = {...selectedEnv.values, [key]: value};
-      updateEnvironment(selectedEnv.id, {values: newVars});
+      const newVars = { ...selectedEnv.values, [key]: value };
+      updateEnvironment(selectedEnv.id, { values: newVars });
     }
   };
 
@@ -289,28 +317,26 @@ export function EnvironmentView() {
     addGlobalVariable({
       key: newVarKey,
       value: newVarValue,
-      type: newVarIsSecret ? 'secret' : 'default'
+      type: newVarIsSecret ? "secret" : "default",
     });
 
-    setNewVarKey('');
-    setNewVarValue('');
+    setNewVarKey("");
+    setNewVarValue("");
     setNewVarIsSecret(false);
   };
 
   // Filter variables based on search
   const filterVariables = (vars: Record<string, string>) => {
     if (!searchQuery) return Object.entries(vars);
-    return Object.entries(vars).filter(([key, value]) =>
-      key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      value.toLowerCase().includes(searchQuery.toLowerCase())
+    return Object.entries(vars).filter(
+      ([key, value]) =>
+        key.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        value.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   };
 
   return (
-    <ResizablePanelGroup
-      direction="horizontal"
-      className="h-full"
-    >
+    <ResizablePanelGroup direction="horizontal" className="h-full">
       {/* Left Panel - Environment/Mode Selector */}
       <ResizablePanel
         defaultSize={20}
@@ -327,13 +353,13 @@ export function EnvironmentView() {
                 <button
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
-                    viewMode === 'summary'
+                    viewMode === "summary"
                       ? "bg-accent text-accent-foreground"
-                      : "hover:bg-accent/50"
+                      : "hover:bg-accent/50",
                   )}
-                  onClick={() => setViewMode('summary')}
+                  onClick={() => setViewMode("summary")}
                 >
-                  <BarChart3 className="h-4 w-4"/>
+                  <BarChart3 className="h-4 w-4" />
                   Summary
                   {summaryVariables.length > 0 && (
                     <Badge variant="secondary" className="ml-auto">
@@ -346,13 +372,13 @@ export function EnvironmentView() {
                 <button
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
-                    viewMode === 'globals'
+                    viewMode === "globals"
                       ? "bg-accent text-accent-foreground"
-                      : "hover:bg-accent/50"
+                      : "hover:bg-accent/50",
                   )}
-                  onClick={() => setViewMode('globals')}
+                  onClick={() => setViewMode("globals")}
                 >
-                  <Globe className="h-4 w-4"/>
+                  <Globe className="h-4 w-4" />
                   Global Variables
                   {globalVariables.length > 0 && (
                     <Badge variant="secondary" className="ml-auto">
@@ -365,20 +391,23 @@ export function EnvironmentView() {
                 <button
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
-                    viewMode === 'environments'
+                    viewMode === "environments"
                       ? "bg-accent text-accent-foreground"
-                      : "hover:bg-accent/50"
+                      : "hover:bg-accent/50",
                   )}
                   onClick={() => {
-                    setViewMode('environments');
+                    setViewMode("environments");
                     // Auto-select first environment if none selected
-                    if (!selectedEnvId && Array.from(environments.values()).length > 0) {
+                    if (
+                      !selectedEnvId &&
+                      Array.from(environments.values()).length > 0
+                    ) {
                       const firstEnv = Array.from(environments.values())[0];
                       setSelectedEnvId(firstEnv.id);
                     }
                   }}
                 >
-                  <Settings className="h-4 w-4"/>
+                  <Settings className="h-4 w-4" />
                   Environments
                   {Array.from(environments.values()).length > 0 && (
                     <Badge variant="secondary" className="ml-auto">
@@ -390,7 +419,7 @@ export function EnvironmentView() {
             </div>
           </div>
 
-          {viewMode === 'environments' && (
+          {viewMode === "environments" && (
             <div className="flex-1 overflow-y-auto p-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between mb-2">
@@ -398,9 +427,9 @@ export function EnvironmentView() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => setNewEnvName('New Environment')}
+                    onClick={() => setNewEnvName("New Environment")}
                   >
-                    <Plus className="h-4 w-4"/>
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </div>
 
@@ -410,28 +439,36 @@ export function EnvironmentView() {
                     <Input
                       value={newEnvName}
                       onChange={(e) => setNewEnvName(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleCreateEnvironment()}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleCreateEnvironment()
+                      }
                       className="flex-1"
                       autoFocus
                     />
-                    <Button size="sm" onClick={handleCreateEnvironment}>Add</Button>
+                    <Button size="sm" onClick={handleCreateEnvironment}>
+                      Add
+                    </Button>
                   </div>
                 )}
 
                 {/* Environment List */}
                 <div className="space-y-1">
-                  {Array.from(environments.values()).map(env => (
+                  {Array.from(environments.values()).map((env) => (
                     <div
                       key={env.id}
                       className={cn(
                         "flex items-center justify-between px-3 py-2 rounded cursor-pointer",
-                        selectedEnvId === env.id ? "bg-accent" : "hover:bg-accent/50"
+                        selectedEnvId === env.id
+                          ? "bg-accent"
+                          : "hover:bg-accent/50",
                       )}
                       onClick={() => setSelectedEnvId(env.id)}
                     >
                       <span className="text-sm">{env.name}</span>
                       {activeEnvironmentId === env.id && (
-                        <Badge variant="secondary" className="text-xs">Active</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          Active
+                        </Badge>
                       )}
                     </div>
                   ))}
@@ -442,7 +479,7 @@ export function EnvironmentView() {
         </div>
       </ResizablePanel>
 
-      <ResizableHandle withHandle/>
+      <ResizableHandle withHandle />
 
       {/* Center Panel - Variable Editor */}
       <ResizablePanel defaultSize={80}>
@@ -452,26 +489,27 @@ export function EnvironmentView() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <h2 className="text-lg font-semibold">
-                  {viewMode === 'summary'
-                    ? 'Variable Summary - All Scopes'
-                    : viewMode === 'environments' && selectedEnv
+                  {viewMode === "summary"
+                    ? "Variable Summary - All Scopes"
+                    : viewMode === "environments" && selectedEnv
                       ? `${selectedEnv.name} Variables`
-                      : viewMode === 'globals'
-                        ? 'Global Variables'
-                        : 'Select an environment'
-                  }
+                      : viewMode === "globals"
+                        ? "Global Variables"
+                        : "Select an environment"}
                 </h2>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={toggleSecrets}
-                >
-                  {showSecrets ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                  <span className="ml-2">{showSecrets ? 'Hide' : 'Show'} Secrets</span>
+                <Button size="sm" variant="ghost" onClick={toggleSecrets}>
+                  {showSecrets ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                  <span className="ml-2">
+                    {showSecrets ? "Hide" : "Show"} Secrets
+                  </span>
                 </Button>
               </div>
 
-              {viewMode === 'environments' && selectedEnv && (
+              {viewMode === "environments" && selectedEnv && (
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
@@ -497,7 +535,7 @@ export function EnvironmentView() {
 
             {/* Search */}
             <div className="mt-4 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search variables..."
                 value={searchQuery}
@@ -508,10 +546,12 @@ export function EnvironmentView() {
           </div>
 
           {/* Content */}
-          {viewMode === 'summary' || (viewMode === 'environments' && selectedEnv) || viewMode === 'globals' ? (
+          {viewMode === "summary" ||
+          (viewMode === "environments" && selectedEnv) ||
+          viewMode === "globals" ? (
             <div className="flex-1 overflow-hidden flex flex-col">
               {/* Add Variable Form - Only show for non-summary views */}
-              {viewMode !== 'summary' && (
+              {viewMode !== "summary" && (
                 <div className="p-4 border-b">
                   <div className="flex items-center gap-2">
                     <Input
@@ -524,10 +564,15 @@ export function EnvironmentView() {
                       <PasswordInput
                         placeholder="Value"
                         value={newVarValue}
-                        onChange={(e: { target: { value: string } }) => setNewVarValue(e.target.value)}
-                        onKeyDown={(e: {
-                           key: string
-                        }) => e.key === 'Enter' && (viewMode === 'environments' ? handleAddVariable() : handleAddGlobalVariable())}
+                        onChange={(e: { target: { value: string } }) =>
+                          setNewVarValue(e.target.value)
+                        }
+                        onKeyDown={(e: { key: string }) =>
+                          e.key === "Enter" &&
+                          (viewMode === "environments"
+                            ? handleAddVariable()
+                            : handleAddGlobalVariable())
+                        }
                         className="flex-1"
                         defaultVisible={showSecrets}
                       />
@@ -536,23 +581,34 @@ export function EnvironmentView() {
                         placeholder="Value"
                         value={newVarValue}
                         onChange={(e) => setNewVarValue(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && (viewMode === 'environments' ? handleAddVariable() : handleAddGlobalVariable())}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" &&
+                          (viewMode === "environments"
+                            ? handleAddVariable()
+                            : handleAddGlobalVariable())
+                        }
                         className="flex-1"
                       />
                     )}
                     <Select
-                      value={newVarIsSecret ? 'secret' : 'variable'}
-                      onValueChange={(v) => setNewVarIsSecret(v === 'secret')}
+                      value={newVarIsSecret ? "secret" : "variable"}
+                      onValueChange={(v) => setNewVarIsSecret(v === "secret")}
                     >
                       <SelectTrigger className="w-[120px]">
-                        <SelectValue/>
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="variable">Variable</SelectItem>
                         <SelectItem value="secret">Secret</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button onClick={viewMode === 'environments' ? handleAddVariable : handleAddGlobalVariable}>
+                    <Button
+                      onClick={
+                        viewMode === "environments"
+                          ? handleAddVariable
+                          : handleAddGlobalVariable
+                      }
+                    >
                       Add
                     </Button>
                   </div>
@@ -566,132 +622,197 @@ export function EnvironmentView() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Value</TableHead>
-                      {viewMode === 'summary' && <TableHead className="w-[120px]">Scope</TableHead>}
+                      {viewMode === "summary" && (
+                        <TableHead className="w-[120px]">Scope</TableHead>
+                      )}
                       <TableHead className="w-[100px]">Type</TableHead>
-                      {viewMode !== 'summary' && <TableHead className="w-[50px]"></TableHead>}
+                      {viewMode !== "summary" && (
+                        <TableHead className="w-[50px]"></TableHead>
+                      )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {/* Summary View */}
-                    {viewMode === 'summary' && summaryVariables
-                      .filter(variable => {
-                        if (!searchQuery) return true;
-                        return variable.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          variable.value.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          variable.scopeName.toLowerCase().includes(searchQuery.toLowerCase());
-                      })
-                      .map((variable, index) => (
-                        <TableRow
-                          key={`${variable.scope}-${variable.key}-${index}`}
-                          className={cn(
-                            variable.hasConflict && !variable.isWinner && "opacity-60",
-                            activeEnvironmentId && variable.environmentId === activeEnvironmentId && "bg-accent/20",
-                            variable.scope === 'collection' && "bg-blue-50 dark:bg-blue-950/20"
-                          )}
-                        >
-                          <TableCell className={cn(
-                            "font-mono text-sm",
-                            variable.hasConflict && variable.isWinner && "font-bold"
-                          )}>
-                            {variable.key}
-                            {variable.hasConflict && variable.isWinner && (
-                              <Badge variant="outline" className="ml-2 text-xs">
-                                Active
-                              </Badge>
+                    {viewMode === "summary" &&
+                      summaryVariables
+                        .filter((variable) => {
+                          if (!searchQuery) return true;
+                          return (
+                            variable.key
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase()) ||
+                            variable.value
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase()) ||
+                            variable.scopeName
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase())
+                          );
+                        })
+                        .map((variable, index) => (
+                          <TableRow
+                            key={`${variable.scope}-${variable.key}-${index}`}
+                            className={cn(
+                              variable.hasConflict &&
+                                !variable.isWinner &&
+                                "opacity-60",
+                              activeEnvironmentId &&
+                                variable.environmentId ===
+                                  activeEnvironmentId &&
+                                "bg-accent/20",
+                              variable.scope === "collection" &&
+                                "bg-blue-50 dark:bg-blue-950/20",
                             )}
-                          </TableCell>
-                          <TableCell>
-                            {variable.isSecret ? (
-                              <div className="font-mono text-sm text-muted-foreground">
-                                {showSecrets ? variable.value : '••••••••'}
-                              </div>
-                            ) : (
-                              <div className="font-mono text-sm">{variable.value}</div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                variable.scope === 'collection' ? 'default' :
-                                  activeEnvironmentId && variable.environmentId === activeEnvironmentId ? 'default' :
-                                    'outline'
-                              }
-                              className="text-xs"
+                          >
+                            <TableCell
+                              className={cn(
+                                "font-mono text-sm",
+                                variable.hasConflict &&
+                                  variable.isWinner &&
+                                  "font-bold",
+                              )}
                             >
-                              {variable.scopeName}
-                              {activeEnvironmentId && variable.environmentId === activeEnvironmentId &&
-                                variable.scope !== 'globals' && ' (Active)'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {variable.isSecret ? (
-                              <Badge variant="outline" className="gap-1">
-                                <Lock className="h-3 w-3"/>
-                                Secret
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline">Variable</Badge>
-                            )}
-                            {!variable.enabled && (
-                              <Badge variant="destructive" className="ml-1 text-xs">
-                                Disabled
-                              </Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-
-                    {viewMode === 'environments' && selectedEnv && (
-                      <>
-                        {/* Regular Variables */}
-                        {filterVariables(selectedEnv.values).map(([key, value]) => (
-                          <TableRow key={key}>
-                            <TableCell className="font-mono text-sm">{key}</TableCell>
-                            <TableCell>
-                              <Input
-                                value={value}
-                                onChange={(e) => handleUpdateVariable(key, e.target.value, false)}
-                                className="h-8"
-                              />
+                              {variable.key}
+                              {variable.hasConflict && variable.isWinner && (
+                                <Badge
+                                  variant="outline"
+                                  className="ml-2 text-xs"
+                                >
+                                  Active
+                                </Badge>
+                              )}
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline">Variable</Badge>
+                              {variable.isSecret ? (
+                                <div className="font-mono text-sm text-muted-foreground">
+                                  {showSecrets ? variable.value : "••••••••"}
+                                </div>
+                              ) : (
+                                <div className="font-mono text-sm">
+                                  {variable.value}
+                                </div>
+                              )}
                             </TableCell>
                             <TableCell>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => handleDeleteVariable(key, false)}
+                              <Badge
+                                variant={
+                                  variable.scope === "collection"
+                                    ? "default"
+                                    : activeEnvironmentId &&
+                                        variable.environmentId ===
+                                          activeEnvironmentId
+                                      ? "default"
+                                      : "outline"
+                                }
+                                className="text-xs"
                               >
-                                <Trash2 className="h-4 w-4"/>
-                              </Button>
+                                {variable.scopeName}
+                                {activeEnvironmentId &&
+                                  variable.environmentId ===
+                                    activeEnvironmentId &&
+                                  variable.scope !== "globals" &&
+                                  " (Active)"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {variable.isSecret ? (
+                                <Badge variant="outline" className="gap-1">
+                                  <Lock className="h-3 w-3" />
+                                  Secret
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline">Variable</Badge>
+                              )}
+                              {!variable.enabled && (
+                                <Badge
+                                  variant="destructive"
+                                  className="ml-1 text-xs"
+                                >
+                                  Disabled
+                                </Badge>
+                              )}
                             </TableCell>
                           </TableRow>
                         ))}
 
+                    {viewMode === "environments" && selectedEnv && (
+                      <>
+                        {/* Regular Variables */}
+                        {filterVariables(selectedEnv.values).map(
+                          ([key, value]) => (
+                            <TableRow key={key}>
+                              <TableCell className="font-mono text-sm">
+                                {key}
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  value={value}
+                                  onChange={(e) =>
+                                    handleUpdateVariable(
+                                      key,
+                                      e.target.value,
+                                      false,
+                                    )
+                                  }
+                                  className="h-8"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">Variable</Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleDeleteVariable(key, false)
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ),
+                        )}
+
                         {/* Secrets */}
-                        {selectedEnv.secretKeys.map(key => {
-                          const value = selectedEnv.secrets[key] || '';
-                          if (searchQuery && !key.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                            !value.toLowerCase().includes(searchQuery.toLowerCase())) {
+                        {selectedEnv.secretKeys.map((key) => {
+                          const value = selectedEnv.secrets[key] || "";
+                          if (
+                            searchQuery &&
+                            !key
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase()) &&
+                            !value
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase())
+                          ) {
                             return null;
                           }
                           return (
                             <TableRow key={`secret-${key}`}>
-                              <TableCell className="font-mono text-sm">{key}</TableCell>
+                              <TableCell className="font-mono text-sm">
+                                {key}
+                              </TableCell>
                               <TableCell>
                                 <PasswordInput
                                   value={value}
                                   onChange={(e: {
-                                    target: { value: string }
-                                  }) => handleUpdateVariable(key, e.target.value, true)}
+                                    target: { value: string };
+                                  }) =>
+                                    handleUpdateVariable(
+                                      key,
+                                      e.target.value,
+                                      true,
+                                    )
+                                  }
                                   className="h-8"
                                   defaultVisible={showSecrets}
                                 />
                               </TableCell>
                               <TableCell>
                                 <Badge variant="outline" className="gap-1">
-                                  <Lock className="h-3 w-3"/>
+                                  <Lock className="h-3 w-3" />
                                   Secret
                                 </Badge>
                               </TableCell>
@@ -699,9 +820,11 @@ export function EnvironmentView() {
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  onClick={() => handleDeleteVariable(key, true)}
+                                  onClick={() =>
+                                    handleDeleteVariable(key, true)
+                                  }
                                 >
-                                  <Trash2 className="h-4 w-4"/>
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </TableCell>
                             </TableRow>
@@ -711,77 +834,98 @@ export function EnvironmentView() {
                     )}
 
                     {/* Global Variables */}
-                    {viewMode === 'globals' && globalVariables.map((variable, index) => {
-                      if (searchQuery && !variable.key.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                        !variable.value.toLowerCase().includes(searchQuery.toLowerCase())) {
-                        return null;
-                      }
-                      const isSecret = variable.type === 'secret';
-                      return (
-                        <TableRow key={index}>
-                          <TableCell className="font-mono text-sm">{variable.key}</TableCell>
-                          <TableCell>
-                            {isSecret ? (
-                              <PasswordInput
-                                value={variable.value}
-                                onChange={(e: {
-                                  target: { value: string }
-                                }) => updateGlobalVariable(index, {value: e.target.value})}
-                                className="h-8"
-                                defaultVisible={showSecrets}
-                              />
-                            ) : (
-                              <Input
-                                value={variable.value}
-                                onChange={(e) => updateGlobalVariable(index, {value: e.target.value})}
-                                className="h-8"
-                              />
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
+                    {viewMode === "globals" &&
+                      globalVariables.map((variable, index) => {
+                        if (
+                          searchQuery &&
+                          !variable.key
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()) &&
+                          !variable.value
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase())
+                        ) {
+                          return null;
+                        }
+                        const isSecret = variable.type === "secret";
+                        return (
+                          <TableRow key={index}>
+                            <TableCell className="font-mono text-sm">
+                              {variable.key}
+                            </TableCell>
+                            <TableCell>
                               {isSecret ? (
-                                <Badge variant="outline" className="gap-1">
-                                  <Lock className="h-3 w-3"/>
-                                  Secret
-                                </Badge>
+                                <PasswordInput
+                                  value={variable.value}
+                                  onChange={(e: {
+                                    target: { value: string };
+                                  }) =>
+                                    updateGlobalVariable(index, {
+                                      value: e.target.value,
+                                    })
+                                  }
+                                  className="h-8"
+                                  defaultVisible={showSecrets}
+                                />
                               ) : (
-                                <Badge variant="outline">Variable</Badge>
+                                <Input
+                                  value={variable.value}
+                                  onChange={(e) =>
+                                    updateGlobalVariable(index, {
+                                      value: e.target.value,
+                                    })
+                                  }
+                                  className="h-8"
+                                />
                               )}
-                              <Checkbox
-                                checked={variable.enabled}
-                                onChange={(e) => updateGlobalVariable(index, {enabled: e.target.checked})}
-                                className="rounded"
-                              />
-                              <span className="text-sm">Enabled</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => deleteGlobalVariable(index)}
-                            >
-                              <Trash2 className="h-4 w-4"/>
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {isSecret ? (
+                                  <Badge variant="outline" className="gap-1">
+                                    <Lock className="h-3 w-3" />
+                                    Secret
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline">Variable</Badge>
+                                )}
+                                <Checkbox
+                                  checked={variable.enabled}
+                                  onCheckedChange={(checked) =>
+                                    updateGlobalVariable(index, {
+                                      enabled: checked as boolean,
+                                    })
+                                  }
+                                  className="rounded"
+                                />
+                                <span className="text-sm">Enabled</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => deleteGlobalVariable(index)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                   </TableBody>
                 </Table>
               </div>
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              {viewMode as TTabs === 'summary'
-                ? 'No variables found across any scope'
-                : viewMode === 'environments'
-                  ? 'Select an environment or create a new one'
-                  : viewMode === 'globals'
-                    ? 'No global variables defined'
-                    : 'No content available'
-              }
+              {(viewMode as TTabs) === "summary"
+                ? "No variables found across any scope"
+                : viewMode === "environments"
+                  ? "Select an environment or create a new one"
+                  : viewMode === "globals"
+                    ? "No global variables defined"
+                    : "No content available"}
             </div>
           )}
         </div>

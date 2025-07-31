@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,19 +6,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
+} from "~/components/ui/dialog";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select';
-import { useCollectionStore } from '~/stores/collectionStore';
-import { RequestItem, HttpMethod } from '~/types/postman';
+} from "~/components/ui/select";
+import { useCollectionStore } from "~/stores/collectionStore";
+import { RequestItem, HttpMethod } from "~/types/postman";
 
 interface AddRequestDialogProps {
   open: boolean;
@@ -27,12 +27,25 @@ interface AddRequestDialogProps {
   parentId: string | null;
 }
 
-const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+const HTTP_METHODS: HttpMethod[] = [
+  "GET",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+  "HEAD",
+  "OPTIONS",
+];
 
-export function AddRequestDialog({ open, onOpenChange, collectionId, parentId }: AddRequestDialogProps) {
-  const [name, setName] = React.useState('');
-  const [method, setMethod] = React.useState<HttpMethod>('GET');
-  const [url, setUrl] = React.useState('');
+export function AddRequestDialog({
+  open,
+  onOpenChange,
+  collectionId,
+  parentId,
+}: AddRequestDialogProps) {
+  const [name, setName] = React.useState("");
+  const [method, setMethod] = React.useState<HttpMethod>("GET");
+  const [url, setUrl] = React.useState("");
   const { addRequest, openTab } = useCollectionStore();
 
   const handleCreate = () => {
@@ -43,20 +56,20 @@ export function AddRequestDialog({ open, onOpenChange, collectionId, parentId }:
       name: name.trim(),
       request: {
         method,
-        url: url.trim() || 'https://api.example.com/endpoint',
-        header: []
-      }
+        url: url.trim() || "https://api.example.com/endpoint",
+        header: [],
+      },
     };
 
     addRequest(collectionId, parentId, newRequest);
-    
+
     // Open the new request in a tab
     openTab(`${collectionId}:${newRequest.id}`);
-    
+
     // Reset form and close dialog
-    setName('');
-    setMethod('GET');
-    setUrl('');
+    setName("");
+    setMethod("GET");
+    setUrl("");
     onOpenChange(false);
   };
 
@@ -65,9 +78,7 @@ export function AddRequestDialog({ open, onOpenChange, collectionId, parentId }:
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Request</DialogTitle>
-          <DialogDescription>
-            Create a new API request
-          </DialogDescription>
+          <DialogDescription>Create a new API request</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -82,7 +93,10 @@ export function AddRequestDialog({ open, onOpenChange, collectionId, parentId }:
           </div>
           <div className="grid gap-2">
             <Label htmlFor="method">Method</Label>
-            <Select value={method} onValueChange={(value) => setMethod(value as HttpMethod)}>
+            <Select
+              value={method}
+              onValueChange={(value) => setMethod(value as HttpMethod)}
+            >
               <SelectTrigger id="method">
                 <SelectValue />
               </SelectTrigger>

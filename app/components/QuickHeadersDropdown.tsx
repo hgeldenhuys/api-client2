@@ -1,6 +1,6 @@
-import React from 'react';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
+import React from "react";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,46 +8,55 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu';
-import { Zap, Search } from 'lucide-react';
-import { QUICK_HEADERS, searchQuickHeaders, type QuickHeaderOption } from '~/utils/quickHeaders';
-import { createUniversalParameter } from '~/utils/parameterLocations';
-import type { UniversalParameter } from '~/types/postman';
+} from "~/components/ui/dropdown-menu";
+import { Zap, Search } from "lucide-react";
+import {
+  QUICK_HEADERS,
+  searchQuickHeaders,
+  type QuickHeaderOption,
+} from "~/utils/quickHeaders";
+import { createUniversalParameter } from "~/utils/parameterLocations";
+import type { UniversalParameter } from "~/types/postman";
 
 interface QuickHeadersDropdownProps {
   readonly onAddHeader: (header: UniversalParameter) => void;
   readonly className?: string;
 }
 
-export function QuickHeadersDropdown({ onAddHeader, className }: QuickHeadersDropdownProps) {
-  const [searchQuery, setSearchQuery] = React.useState('');
+export function QuickHeadersDropdown({
+  onAddHeader,
+  className,
+}: QuickHeadersDropdownProps) {
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [isOpen, setIsOpen] = React.useState(false);
-  
+
   const filteredHeaders = React.useMemo(() => {
     if (!searchQuery.trim()) {
       // Return all headers grouped by category
       return QUICK_HEADERS;
     }
-    
+
     // Return filtered headers as a single ungrouped list
     const results = searchQuickHeaders(searchQuery);
-    return [{
-      name: 'Search Results',
-      description: `${results.length} headers found`,
-      headers: results
-    }];
+    return [
+      {
+        name: "Search Results",
+        description: `${results.length} headers found`,
+        headers: results,
+      },
+    ];
   }, [searchQuery]);
 
   const handleSelectHeader = (headerOption: QuickHeaderOption) => {
     const universalParam = createUniversalParameter(
       headerOption.key,
       headerOption.value,
-      'header'
+      "header",
     );
-    
+
     onAddHeader(universalParam);
     setIsOpen(false);
-    setSearchQuery(''); // Clear search after selection
+    setSearchQuery(""); // Clear search after selection
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,9 +66,9 @@ export function QuickHeadersDropdown({ onAddHeader, className }: QuickHeadersDro
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           className={className}
           title="Add quick header"
         >
@@ -67,8 +76,8 @@ export function QuickHeadersDropdown({ onAddHeader, className }: QuickHeadersDro
           Quick Add
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        className="w-80 max-h-96 overflow-y-auto" 
+      <DropdownMenuContent
+        className="w-80 max-h-96 overflow-y-auto"
         align="start"
         side="bottom"
       >
@@ -95,11 +104,12 @@ export function QuickHeadersDropdown({ onAddHeader, className }: QuickHeadersDro
                 <div className="flex items-center justify-between">
                   <span>{category.name}</span>
                   <span className="text-xs opacity-60">
-                    {category.headers.length} {category.headers.length === 1 ? 'header' : 'headers'}
+                    {category.headers.length}{" "}
+                    {category.headers.length === 1 ? "header" : "headers"}
                   </span>
                 </div>
               </DropdownMenuLabel>
-              
+
               {/* Category headers */}
               {category.headers.map((header, headerIndex) => (
                 <DropdownMenuItem
@@ -115,7 +125,9 @@ export function QuickHeadersDropdown({ onAddHeader, className }: QuickHeadersDro
                   </div>
                   <div className="text-xs text-muted-foreground truncate w-full">
                     <span className="font-mono bg-muted px-1 py-0.5 rounded mr-2">
-                      {header.value.length > 30 ? `${header.value.substring(0, 30)}...` : header.value}
+                      {header.value.length > 30
+                        ? `${header.value.substring(0, 30)}...`
+                        : header.value}
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground">
@@ -123,26 +135,29 @@ export function QuickHeadersDropdown({ onAddHeader, className }: QuickHeadersDro
                   </div>
                 </DropdownMenuItem>
               ))}
-              
+
               {/* Separator between categories (except last) */}
               {categoryIndex < filteredHeaders.length - 1 && (
                 <DropdownMenuSeparator className="my-1" />
               )}
             </div>
           ))}
-          
+
           {/* No results message */}
-          {filteredHeaders.length === 0 || filteredHeaders.every(cat => cat.headers.length === 0) && (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              No headers found for "{searchQuery}"
-            </div>
-          )}
+          {filteredHeaders.length === 0 ||
+            (filteredHeaders.every((cat) => cat.headers.length === 0) && (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                No headers found for "{searchQuery}"
+              </div>
+            ))}
         </div>
 
         {/* Footer info */}
         <DropdownMenuSeparator />
         <div className="p-2 text-xs text-muted-foreground">
-          💡 Tip: Use <code className="bg-muted px-1 rounded">{'{{variable}}'}</code> syntax for dynamic values
+          💡 Tip: Use{" "}
+          <code className="bg-muted px-1 rounded">{"{{variable}}"}</code> syntax
+          for dynamic values
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

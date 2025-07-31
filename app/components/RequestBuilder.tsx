@@ -366,6 +366,7 @@ export function RequestBuilder() {
   };
   
   const exportOptions = [
+    { label: 'Copy as HTTP', onClick: () => copyAsCode('http'), icon: <Copy className="h-4 w-4" /> },
     { label: 'Copy as cURL', onClick: () => copyAsCode('curl'), icon: <Copy className="h-4 w-4" /> },
     { label: 'Copy as JavaScript', onClick: () => copyAsCode('javascript'), icon: <Code className="h-4 w-4" /> },
     { label: 'Copy as Python', onClick: () => copyAsCode('python'), icon: <Code className="h-4 w-4" /> },
@@ -605,6 +606,7 @@ export function RequestBuilder() {
                 }
               }}
               collectionAuth={collection?.collection.auth}
+              variables={variables}
             />
           </TabsContent>
           

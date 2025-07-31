@@ -14,6 +14,7 @@ interface UrlVariableInputProps {
   readonly showPreviewButton?: boolean;
   readonly id?: string;
   readonly type?: string;
+  readonly isPasswordField?: boolean; // Indicates this is a password field (can be toggled)
 }
 
 export const UrlVariableInput: React.FC<UrlVariableInputProps> = ({
@@ -25,13 +26,18 @@ export const UrlVariableInput: React.FC<UrlVariableInputProps> = ({
                                                                     className = '',
                                                                     showPreviewButton = true,
                                                                     id,
-                                                                    type
+                                                                    type,
+                                                                    isPasswordField = false
                                                                   }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const displayRef = useRef<HTMLDivElement>(null);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // Determine the actual input type based on password field state
+  const actualType = isPasswordField ? (showPassword ? 'text' : 'password') : type;
 
   // Parse the URL and identify variable placeholders
   const parseUrl = (urlString: string) => {
@@ -137,14 +143,14 @@ export const UrlVariableInput: React.FC<UrlVariableInputProps> = ({
           <input
             ref={inputRef}
             id={id}
-            type={type ?? "text"}
+            type={actualType ?? "text"}
             value={value}
             onChange={(e) => onChange?.(e.target.value)}
             onScroll={handleScroll}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder={placeholder}
-            disabled={isPreviewMode}
+            disabled={isPreviewMode && !isPasswordField}
             className={cn(
               baseStyles,
               "w-full border rounded-md text-transparent caret-black focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-x-auto scrollbar-hide",
@@ -182,7 +188,11 @@ export const UrlVariableInput: React.FC<UrlVariableInputProps> = ({
               <>
                 {urlParts.map((part, index) => {
                   if (part.type === 'text') {
-                    return <span key={index} className="text-gray-900 dark:text-gray-100">{part.content}</span>;
+                    // Mask password even in preview mode if type is password
+                    const displayContent = actualType === 'password' 
+                      ? '•'.repeat(part.content.length)
+                      : part.content;
+                    return <span key={index} className="text-gray-900 dark:text-gray-100">{displayContent}</span>;
                   }
                   
                   const trimmedContent = part.content.trim();
@@ -222,7 +232,11 @@ export const UrlVariableInput: React.FC<UrlVariableInputProps> = ({
               // Normal mode - show variables with colors
               urlParts.map((part, index) => {
             if (part.type === 'text') {
-              return <span key={index}>{part.content}</span>;
+              // Mask password if type is password
+              const displayContent = actualType === 'password' 
+                ? '•'.repeat(part.content.length)
+                : part.content;
+              return <span key={index}>{displayContent}</span>;
             }
 
             const varExists = part.content in vars;
@@ -260,7 +274,7 @@ export const UrlVariableInput: React.FC<UrlVariableInputProps> = ({
           </div>
         </div>
 
-        {/* Preview toggle button */}
+        {/* Preview/Password toggle button */}
         {showPreviewButton && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -268,19 +282,39 @@ export const UrlVariableInput: React.FC<UrlVariableInputProps> = ({
                 size="sm"
                 variant="ghost"
                 className="h-8 w-8 p-0"
-                onClick={() => setIsPreviewMode(!isPreviewMode)}
+                onClick={() => {
+                  if (isPasswordField) {
+                    setShowPassword(!showPassword);
+                  } else {
+                    setIsPreviewMode(!isPreviewMode);
+                  }
+                }}
               >
-                {isPreviewMode ? (
-                  <EyeOff className="h-4 w-4" />
+                {isPasswordField ? (
+                  showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  isPreviewMode ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )
                 )}
               </Button>
             </TooltipTrigger>
             <TooltipContent>
               <div className="text-xs">
-                {isPreviewMode ? 'Hide preview' : 'Preview with variables'}
-                <kbd className="ml-2 text-xs">⌘E</kbd>
+                {isPasswordField ? (
+                  showPassword ? 'Hide password' : 'Show password'
+                ) : (
+                  <>
+                    {isPreviewMode ? 'Hide preview' : 'Preview with variables'}
+                    <kbd className="ml-2 text-xs">⌘E</kbd>
+                  </>
+                )}
               </div>
             </TooltipContent>
           </Tooltip>

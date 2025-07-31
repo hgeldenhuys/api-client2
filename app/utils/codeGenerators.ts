@@ -241,7 +241,63 @@ export function generatePowerShell({ request, variables }: CodeGeneratorOptions)
   return code;
 }
 
+export function generateHttp({ request, variables }: CodeGeneratorOptions): string {
+  const url = resolveUrl(request.url, variables);
+  const headers = resolveHeaders(request.header, variables);
+  
+  // Parse URL to extract host, path, and query parameters
+  let host = '';
+  let path = '/';
+  let query = '';
+  
+  try {
+    const urlObj = new URL(url);
+    host = urlObj.host;
+    path = urlObj.pathname || '/';
+    if (urlObj.search) {
+      query = urlObj.search;
+    }
+  } catch {
+    // If URL parsing fails, treat the entire URL as path
+    host = 'localhost';
+    path = url;
+  }
+  
+  // Build the HTTP request
+  let httpRequest = `${request.method} ${path}${query} HTTP/1.1\n`;
+  
+  // Add Host header (required for HTTP/1.1)
+  httpRequest += `Host: ${host}\n`;
+  
+  // Add other headers
+  headers.forEach(header => {
+    httpRequest += `${header.key}: ${header.value}\n`;
+  });
+  
+  // Add body if present
+  if (request.body?.raw) {
+    const body = variables 
+      ? request.body.raw.replace(/\{\{(\w+)\}\}/g, (match, varName) => variables[varName] || match)
+      : request.body.raw;
+    
+    // Add Content-Length header if not already present
+    const hasContentLength = headers.some(h => h.key.toLowerCase() === 'content-length');
+    if (!hasContentLength) {
+      const contentLength = new TextEncoder().encode(body).length;
+      httpRequest += `Content-Length: ${contentLength}\n`;
+    }
+    
+    httpRequest += `\n${body}`;
+  } else {
+    // Empty line to end headers section
+    httpRequest += '\n';
+  }
+  
+  return httpRequest;
+}
+
 export const codeGenerators = {
+  http: generateHttp,
   curl: generateCurl,
   javascript: generateJavaScript,
   python: generatePython,

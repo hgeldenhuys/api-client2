@@ -38,6 +38,7 @@ interface AuthenticationEditorProps {
   auth?: Auth;
   onChange: (auth: Auth | undefined) => void;
   collectionAuth?: Auth;
+  variables?: Record<string, string>;
 }
 
 const AUTH_TYPES: { value: AuthType; label: string; icon: React.ReactNode; description: string }[] = [
@@ -75,7 +76,7 @@ function setAuthParam(params: AuthParam[] | undefined, key: string, value: strin
   return newParams;
 }
 
-export function AuthenticationEditor({ auth, onChange, collectionAuth }: AuthenticationEditorProps) {
+export function AuthenticationEditor({ auth, onChange, collectionAuth, variables = {} }: AuthenticationEditorProps) {
   const effectiveAuth = auth || collectionAuth;
   const isInherited = !auth && !!collectionAuth;
   const [showSecrets, setShowSecrets] = useState(false);
@@ -134,15 +135,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
             </Badge>
           )}
         </div>
-        {authType !== 'noauth' && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSecrets(!showSecrets)}
-          >
-            {showSecrets ? 'Hide' : 'Show'} Secrets
-          </Button>
-        )}
+        {/* Removed global Show/Hide Secrets button - each field has its own toggle */}
       </div>
 
       <Select 
@@ -183,7 +176,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                 value={getAuthParam(effectiveAuth?.bearer, 'token')}
                 onChange={(value) => updateParam('bearer', 'token', value)}
                 placeholder="Enter bearer token or {{variable}}"
-                type={showSecrets ? 'text' : 'password'}
+                type="password"
+                isPasswordField={true}
+                vars={variables}
               />
             </div>
           )}
@@ -198,6 +193,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   value={getAuthParam(effectiveAuth?.basic, 'username')}
                   onChange={(value) => updateParam('basic', 'username', value)}
                   placeholder="Enter username or {{variable}}"
+                  vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -208,6 +204,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   onChange={(value) => updateParam('basic', 'password', value)}
                   placeholder="Enter password or {{variable}}"
                   type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                 />
               </div>
             </div>
@@ -223,6 +220,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   value={getAuthParam(effectiveAuth?.apikey, 'key')}
                   onChange={(value) => updateParam('apikey', 'key', value)}
                   placeholder="e.g., X-API-Key"
+                vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -233,6 +231,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   onChange={(value) => updateParam('apikey', 'value', value)}
                   placeholder="Enter API key or {{variable}}"
                   type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -284,6 +283,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   onChange={(value) => updateParam('oauth2', 'accessToken', value)}
                   placeholder="Enter access token or {{variable}}"
                   type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                 />
               </div>
 
@@ -295,6 +295,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                     value={getAuthParam(effectiveAuth?.oauth2, 'clientId')}
                     onChange={(value) => updateParam('oauth2', 'clientId', value)}
                     placeholder="Client ID"
+                vars={variables}
                   />
                 </div>
                 <div className="space-y-2">
@@ -305,6 +306,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                     onChange={(value) => updateParam('oauth2', 'clientSecret', value)}
                     placeholder="Client Secret"
                     type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                   />
                 </div>
               </div>
@@ -356,6 +358,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                     value={getAuthParam(effectiveAuth?.awsv4, 'accessKey')}
                     onChange={(value) => updateParam('awsv4', 'accessKey', value)}
                     placeholder="AWS Access Key"
+                vars={variables}
                   />
                 </div>
                 <div className="space-y-2">
@@ -366,6 +369,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                     onChange={(value) => updateParam('awsv4', 'secretKey', value)}
                     placeholder="AWS Secret Key"
                     type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                   />
                 </div>
               </div>
@@ -377,6 +381,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                     value={getAuthParam(effectiveAuth?.awsv4, 'region')}
                     onChange={(value) => updateParam('awsv4', 'region', value)}
                     placeholder="e.g., us-east-1"
+                vars={variables}
                   />
                 </div>
                 <div className="space-y-2">
@@ -386,6 +391,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                     value={getAuthParam(effectiveAuth?.awsv4, 'service')}
                     onChange={(value) => updateParam('awsv4', 'service', value)}
                     placeholder="e.g., s3, dynamodb"
+                vars={variables}
                   />
                 </div>
               </div>
@@ -397,6 +403,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   onChange={(value) => updateParam('awsv4', 'sessionToken', value)}
                   placeholder="AWS Session Token"
                   type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                 />
               </div>
             </div>
@@ -412,6 +419,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   value={getAuthParam(effectiveAuth?.digest, 'username')}
                   onChange={(value) => updateParam('digest', 'username', value)}
                   placeholder="Enter username"
+                vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -422,6 +430,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   onChange={(value) => updateParam('digest', 'password', value)}
                   placeholder="Enter password"
                   type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -431,6 +440,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   value={getAuthParam(effectiveAuth?.digest, 'realm')}
                   onChange={(value) => updateParam('digest', 'realm', value)}
                   placeholder="Authentication realm"
+                vars={variables}
                 />
               </div>
             </div>
@@ -447,6 +457,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                     value={getAuthParam(effectiveAuth?.oauth1, 'consumerKey')}
                     onChange={(value) => updateParam('oauth1', 'consumerKey', value)}
                     placeholder="Consumer Key"
+                vars={variables}
                   />
                 </div>
                 <div className="space-y-2">
@@ -457,6 +468,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                     onChange={(value) => updateParam('oauth1', 'consumerSecret', value)}
                     placeholder="Consumer Secret"
                     type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                   />
                 </div>
               </div>
@@ -468,6 +480,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                     value={getAuthParam(effectiveAuth?.oauth1, 'token')}
                     onChange={(value) => updateParam('oauth1', 'token', value)}
                     placeholder="Access Token"
+                vars={variables}
                   />
                 </div>
                 <div className="space-y-2">
@@ -478,6 +491,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                     onChange={(value) => updateParam('oauth1', 'tokenSecret', value)}
                     placeholder="Token Secret"
                     type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                   />
                 </div>
               </div>
@@ -511,6 +525,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   value={getAuthParam(effectiveAuth?.hawk, 'authId')}
                   onChange={(value) => updateParam('hawk', 'authId', value)}
                   placeholder="Hawk Auth ID"
+                vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -521,6 +536,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   onChange={(value) => updateParam('hawk', 'authKey', value)}
                   placeholder="Hawk Auth Key"
                   type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -551,6 +567,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   value={getAuthParam(effectiveAuth?.ntlm, 'username')}
                   onChange={(value) => updateParam('ntlm', 'username', value)}
                   placeholder="Enter username"
+                vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -561,6 +578,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   onChange={(value) => updateParam('ntlm', 'password', value)}
                   placeholder="Enter password"
                   type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -570,6 +588,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   value={getAuthParam(effectiveAuth?.ntlm, 'domain')}
                   onChange={(value) => updateParam('ntlm', 'domain', value)}
                   placeholder="DOMAIN"
+                vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -579,6 +598,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   value={getAuthParam(effectiveAuth?.ntlm, 'workstation')}
                   onChange={(value) => updateParam('ntlm', 'workstation', value)}
                   placeholder="WORKSTATION"
+                vars={variables}
                 />
               </div>
             </div>
@@ -599,6 +619,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   value={getAuthParam(effectiveAuth?.custom, 'headerName') || 'Authorization'}
                   onChange={(value) => updateParam('custom', 'headerName', value)}
                   placeholder="e.g., Authorization, X-Auth-Token"
+                vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -609,6 +630,7 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth }: Authent
                   onChange={(value) => updateParam('custom', 'headerValue', value)}
                   placeholder="Enter value or {{variable}}"
                   type={showSecrets ? 'text' : 'password'}
+                vars={variables}
                 />
               </div>
             </div>

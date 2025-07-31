@@ -203,8 +203,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                   value={getAuthParam(effectiveAuth?.basic, 'password')}
                   onChange={(value) => updateParam('basic', 'password', value)}
                   placeholder="Enter password or {{variable}}"
-                  type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                  type="password"
+                  isPasswordField={true}
+                  vars={variables}
                 />
               </div>
             </div>
@@ -230,8 +231,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                   value={getAuthParam(effectiveAuth?.apikey, 'value')}
                   onChange={(value) => updateParam('apikey', 'value', value)}
                   placeholder="Enter API key or {{variable}}"
-                  type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                  type="password"
+                  isPasswordField={true}
+                  vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -282,8 +284,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                   value={getAuthParam(effectiveAuth?.oauth2, 'accessToken')}
                   onChange={(value) => updateParam('oauth2', 'accessToken', value)}
                   placeholder="Enter access token or {{variable}}"
-                  type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                  type="password"
+                  isPasswordField={true}
+                  vars={variables}
                 />
               </div>
 
@@ -305,8 +308,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                     value={getAuthParam(effectiveAuth?.oauth2, 'clientSecret')}
                     onChange={(value) => updateParam('oauth2', 'clientSecret', value)}
                     placeholder="Client Secret"
-                    type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                    type="password"
+                    isPasswordField={true}
+                    vars={variables}
                   />
                 </div>
               </div>
@@ -368,8 +372,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                     value={getAuthParam(effectiveAuth?.awsv4, 'secretKey')}
                     onChange={(value) => updateParam('awsv4', 'secretKey', value)}
                     placeholder="AWS Secret Key"
-                    type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                    type="password"
+                    isPasswordField={true}
+                    vars={variables}
                   />
                 </div>
               </div>
@@ -402,8 +407,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                   value={getAuthParam(effectiveAuth?.awsv4, 'sessionToken')}
                   onChange={(value) => updateParam('awsv4', 'sessionToken', value)}
                   placeholder="AWS Session Token"
-                  type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                  type="password"
+                  isPasswordField={true}
+                  vars={variables}
                 />
               </div>
             </div>
@@ -429,8 +435,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                   value={getAuthParam(effectiveAuth?.digest, 'password')}
                   onChange={(value) => updateParam('digest', 'password', value)}
                   placeholder="Enter password"
-                  type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                  type="password"
+                  isPasswordField={true}
+                  vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -467,8 +474,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                     value={getAuthParam(effectiveAuth?.oauth1, 'consumerSecret')}
                     onChange={(value) => updateParam('oauth1', 'consumerSecret', value)}
                     placeholder="Consumer Secret"
-                    type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                    type="password"
+                    isPasswordField={true}
+                    vars={variables}
                   />
                 </div>
               </div>
@@ -490,8 +498,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                     value={getAuthParam(effectiveAuth?.oauth1, 'tokenSecret')}
                     onChange={(value) => updateParam('oauth1', 'tokenSecret', value)}
                     placeholder="Token Secret"
-                    type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                    type="password"
+                    isPasswordField={true}
+                    vars={variables}
                   />
                 </div>
               </div>
@@ -535,8 +544,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                   value={getAuthParam(effectiveAuth?.hawk, 'authKey')}
                   onChange={(value) => updateParam('hawk', 'authKey', value)}
                   placeholder="Hawk Auth Key"
-                  type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                  type="password"
+                  isPasswordField={true}
+                  vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -577,8 +587,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                   value={getAuthParam(effectiveAuth?.ntlm, 'password')}
                   onChange={(value) => updateParam('ntlm', 'password', value)}
                   placeholder="Enter password"
-                  type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                  type="password"
+                  isPasswordField={true}
+                  vars={variables}
                 />
               </div>
               <div className="space-y-2">
@@ -629,8 +640,9 @@ export function AuthenticationEditor({ auth, onChange, collectionAuth, variables
                   value={getAuthParam(effectiveAuth?.custom, 'headerValue')}
                   onChange={(value) => updateParam('custom', 'headerValue', value)}
                   placeholder="Enter value or {{variable}}"
-                  type={showSecrets ? 'text' : 'password'}
-                vars={variables}
+                  type="password"
+                  isPasswordField={true}
+                  vars={variables}
                 />
               </div>
             </div>

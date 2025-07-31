@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Auth Password and Preview Features', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('http://localhost:5175');
     await page.waitForLoadState('networkidle');
     
     // Create a new request
@@ -10,7 +10,7 @@ test.describe('Auth Password and Preview Features', () => {
     await page.waitForTimeout(500);
   });
 
-  test('password inputs should be masked with bullets', async ({ page }) => {
+  test('password inputs should be masked with bullets and toggleable with eye icon', async ({ page }) => {
     // Navigate to Auth tab
     await page.click('button[role="tab"][value="auth"]');
     
@@ -33,12 +33,18 @@ test.describe('Auth Password and Preview Features', () => {
     const displayText = await displayLayer.textContent();
     expect(displayText).toBe('•'.repeat(19));
     
-    // Click Show Secrets button
-    await page.click('button:has-text("Show Secrets")');
+    // Click the eye icon button next to the input
+    const eyeButton = page.locator('#bearer-token').locator('..').locator('..').locator('button:has(svg)');
+    await eyeButton.click();
     
     // Now the display should show the actual text
     const displayTextAfterShow = await displayLayer.textContent();
     expect(displayTextAfterShow).toBe('my-secret-token-123');
+    
+    // Click again to hide
+    await eyeButton.click();
+    const displayTextAfterHide = await displayLayer.textContent();
+    expect(displayTextAfterHide).toBe('•'.repeat(19));
   });
 
   test('preview button should work with variables', async ({ page }) => {
@@ -52,8 +58,8 @@ test.describe('Auth Password and Preview Features', () => {
     
     // Add a variable
     await page.click('button:has-text("Add Variable")');
-    await page.fill('input[placeholder="Variable name"]').first(), 'authToken');
-    await page.fill('input[placeholder="Value"]').first(), 'secret-token-value');
+    await page.locator('input[placeholder="Variable name"]').first().fill('authToken');
+    await page.locator('input[placeholder="Value"]').first().fill('secret-token-value');
     
     // Save and close
     await page.click('button:has-text("Save")');

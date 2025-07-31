@@ -1,0 +1,34 @@
+# Sample HTTP file for testing
+# This file demonstrates the HTTP file format
+
+### Get Users
+GET https://jsonplaceholder.typicode.com/users
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Create User
+POST https://jsonplaceholder.typicode.com/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "address": {
+    "street": "123 Main St",
+    "city": "Anytown"
+  }
+}
+
+### Update User
+PUT https://jsonplaceholder.typicode.com/users/1
+Content-Type: application/json
+
+{
+  "name": "Jane Smith",
+  "email": "jane@example.com"
+}
+
+### Delete User
+DELETE https://jsonplaceholder.typicode.com/users/1
+Authorization: Bearer {{token}}

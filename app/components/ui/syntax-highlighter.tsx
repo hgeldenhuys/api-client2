@@ -1,13 +1,12 @@
 import React from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import tomorrow from 'react-syntax-highlighter/dist/esm/styles/prism/tomorrow';
-import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism';
 import { Button } from '~/components/ui/button';
 import { Copy } from 'lucide-react';
 import { cn } from '~/utils/cn';
 
-// Note: react-syntax-highlighter includes common languages by default
-// We'll rely on the built-in language support
+// Lazy load Monaco Editor
+const MonacoEditor = React.lazy(() => 
+  import('../MonacoEditor').then(module => ({ default: module.MonacoEditor }))
+);
 
 interface CodeHighlighterProps {
   children: string;
@@ -52,7 +51,7 @@ export function CodeHighlighter({
     }
   };
   
-  // Map common language aliases
+  // Map common language aliases to Monaco languages
   const normalizeLanguage = (lang: string) => {
     const languageMap: Record<string, string> = {
       'http': 'http',
@@ -61,50 +60,57 @@ export function CodeHighlighter({
       'ts': 'typescript',
       'typescript': 'typescript',
       'json': 'json',
-      'html': 'markup',
-      'xml': 'markup',
+      'html': 'html',
+      'xml': 'xml',
       'css': 'css',
-      'bash': 'bash',
-      'shell': 'bash',
-      'text': 'text',
-      'plain': 'text'
+      'bash': 'shell',
+      'shell': 'shell',
+      'text': 'plaintext',
+      'plain': 'plaintext'
     };
     
-    return languageMap[lang.toLowerCase()] || 'text';
+    return languageMap[lang.toLowerCase()] || 'plaintext';
   };
   
   const normalizedLanguage = normalizeLanguage(language);
   
-  // Debug logging for language detection
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`CodeHighlighter: original="${language}", normalized="${normalizedLanguage}", content preview="${children.substring(0, 50)}..."`);
-  }
-  
-  // Custom style that respects the theme and integrates with our design system
-  const getCustomStyle = () => {
-    const baseStyle: React.CSSProperties = {
-      margin: 0,
-      borderRadius: '6px',
-      fontSize: '13px',
-      fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-      ...customStyle
-    };
+  // Calculate height based on content
+  const calculateHeight = () => {
+    const lines = children.split('\n').length;
+    const lineHeight = 19; // Approximate line height in Monaco
+    const padding = 20; // Padding for the editor
+    const maxHeight = customStyle?.maxHeight ? 
+      parseInt(customStyle.maxHeight.toString().replace('px', '')) : 
+      400;
     
-    return baseStyle;
+    const calculatedHeight = Math.min(lines * lineHeight + padding, maxHeight);
+    return `${calculatedHeight}px`;
   };
   
   return (
     <div className={cn("relative group", className)}>
-      <SyntaxHighlighter
-        language={normalizedLanguage}
-        style={resolvedTheme === 'dark' ? tomorrow : prism}
-        customStyle={getCustomStyle()}
-        showLineNumbers={showLineNumbers}
-        wrapLines={true}
-        wrapLongLines={true}
+      <div 
+        className="rounded-md overflow-hidden border border-border"
+        style={{
+          height: calculateHeight(),
+          ...customStyle
+        }}
       >
-        {children}
-      </SyntaxHighlighter>
+        <React.Suspense fallback={
+          <div className="p-4 bg-muted text-muted-foreground font-mono text-sm">
+            <pre>{children}</pre>
+          </div>
+        }>
+          <MonacoEditor
+            value={children}
+            language={normalizedLanguage}
+            theme={resolvedTheme === 'dark' ? 'vs-dark' : 'vs'}
+            readOnly={true}
+            minimap={false}
+            height={calculateHeight()}
+          />
+        </React.Suspense>
+      </div>
       
       {showCopyButton && (
         <Button

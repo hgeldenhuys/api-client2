@@ -383,7 +383,7 @@ declare const console: Console;
     if (language === 'api-script') {
       // Register completion provider for variables and PM API
       monaco.languages.registerCompletionItemProvider('api-script', {
-        triggerCharacters: ['{', '.'],
+        triggerCharacters: ['{', '.', "'", '"'],
         provideCompletionItems: (model, position, context) => {
           const textUntilPosition = model.getValueInRange({
             startLineNumber: position.lineNumber,
@@ -394,10 +394,71 @@ declare const console: Console;
           
           const suggestions: monaco.languages.CompletionItem[] = [];
           
-          // Check if we're after {{ or just {
+          // Check if we're inside PM API variable methods
+          const pmMethodPatterns = [
+            /pm\.(environment|globals|collectionVariables|variables)\.(get|set|has|unset)\s*\(\s*["']$/,
+            /pm\.(environment|globals|collectionVariables|variables)\.(get|set|has|unset)\s*\(\s*["'][^"']*$/
+          ];
+          
+          const matchesPmMethod = pmMethodPatterns.some(pattern => pattern.test(textUntilPosition));
+          
+          if (matchesPmMethod) {
+            // Extract what's already typed inside the quotes
+            const quoteMatch = textUntilPosition.match(/["']([^"']*)$/);
+            const typedText = quoteMatch ? quoteMatch[1] : '';
+            
+            // Calculate range for replacement
+            const range = {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: position.column - typedText.length,
+              endColumn: position.column
+            };
+            
+            const variables = resolveAllVariables();
+            const varSuggestions = Object.entries(variables)
+              .filter(([key]) => key.toLowerCase().includes(typedText.toLowerCase()))
+              .map(([key, value]) => ({
+                label: key,
+                kind: monaco.languages.CompletionItemKind.Variable,
+                detail: 'Variable',
+                documentation: `Current value: ${value}`,
+                insertText: key,
+                range: range
+              }));
+            
+            suggestions.push(...varSuggestions);
+          }
+          
+          // Check if we're in a string literal and user typed {{
+          const inString = (() => {
+            let inSingle = false;
+            let inDouble = false;
+            let inTemplate = false;
+            let escaped = false;
+            
+            for (let i = 0; i < textUntilPosition.length - 1; i++) {
+              const char = textUntilPosition[i];
+              if (escaped) {
+                escaped = false;
+                continue;
+              }
+              if (char === '\\') {
+                escaped = true;
+                continue;
+              }
+              if (char === "'" && !inDouble && !inTemplate) inSingle = !inSingle;
+              if (char === '"' && !inSingle && !inTemplate) inDouble = !inDouble;
+              if (char === '`' && !inSingle && !inDouble) inTemplate = !inTemplate;
+            }
+            
+            return inSingle || inDouble || inTemplate;
+          })();
+          
+          // Only show {{variable}} completions inside strings
           const beforeCursor = textUntilPosition.slice(-2);
-          if (beforeCursor === '{{' || (textUntilPosition.endsWith('{') && context.triggerCharacter === '{')) {
-            // Variable completions
+          if (inString && (beforeCursor === '{{' || (textUntilPosition.endsWith('{') && context.triggerCharacter === '{'))) {
+            // Variable completions for string interpolation
             const word = model.getWordUntilPosition(position);
             const range = {
               startLineNumber: position.lineNumber,

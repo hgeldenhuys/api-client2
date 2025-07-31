@@ -548,6 +548,140 @@ declare const console: Console;
             suggestions.push(...methodSuggestions);
           }
           
+          // PM Request properties
+          if (beforePosition.endsWith('pm.request.')) {
+            const range = {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: position.column,
+              endColumn: position.column
+            };
+            
+            const requestProperties = [
+              { label: 'url', kind: monaco.languages.CompletionItemKind.Property, detail: 'string', documentation: 'The request URL' },
+              { label: 'method', kind: monaco.languages.CompletionItemKind.Property, detail: 'string', documentation: 'HTTP method (GET, POST, PUT, etc.)' },
+              { label: 'headers', kind: monaco.languages.CompletionItemKind.Property, detail: 'object', documentation: 'Request headers as key-value pairs' },
+              { label: 'body', kind: monaco.languages.CompletionItemKind.Property, detail: 'any', documentation: 'Request body content' },
+              { label: 'auth', kind: monaco.languages.CompletionItemKind.Property, detail: 'object', documentation: 'Authentication details' }
+            ];
+            
+            const requestSuggestions = requestProperties.map(prop => ({
+              ...prop,
+              insertText: prop.label,
+              range: range
+            }));
+            
+            suggestions.push(...requestSuggestions);
+          }
+          
+          // PM Response properties and methods
+          if (beforePosition.endsWith('pm.response.')) {
+            const range = {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: position.column,
+              endColumn: position.column
+            };
+            
+            const responseProperties = [
+              { label: 'code', kind: monaco.languages.CompletionItemKind.Property, detail: 'number', documentation: 'HTTP response status code (e.g., 200, 404)' },
+              { label: 'status', kind: monaco.languages.CompletionItemKind.Property, detail: 'string', documentation: 'HTTP status text (e.g., "OK", "Not Found")' },
+              { label: 'headers', kind: monaco.languages.CompletionItemKind.Property, detail: 'object', documentation: 'Response headers as key-value pairs' },
+              { label: 'body', kind: monaco.languages.CompletionItemKind.Property, detail: 'any', documentation: 'Raw response body' },
+              { label: 'responseTime', kind: monaco.languages.CompletionItemKind.Property, detail: 'number', documentation: 'Response time in milliseconds' },
+              { label: 'json', kind: monaco.languages.CompletionItemKind.Method, detail: '() => any', documentation: 'Parse response body as JSON' },
+              { label: 'text', kind: monaco.languages.CompletionItemKind.Method, detail: '() => string', documentation: 'Get response body as text' },
+              { label: 'to', kind: monaco.languages.CompletionItemKind.Property, detail: 'ChaiAssertions', documentation: 'Chai assertion chain for testing' }
+            ];
+            
+            const responseSuggestions = responseProperties.map(prop => ({
+              ...prop,
+              insertText: prop.label,
+              range: range
+            }));
+            
+            suggestions.push(...responseSuggestions);
+          }
+          
+          // PM Response.to assertions
+          if (beforePosition.endsWith('pm.response.to.')) {
+            const range = {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: position.column,
+              endColumn: position.column
+            };
+            
+            const toAssertions = [
+              { label: 'have', kind: monaco.languages.CompletionItemKind.Property, detail: 'ChaiHave', documentation: 'Chain for have assertions' },
+              { label: 'be', kind: monaco.languages.CompletionItemKind.Property, detail: 'ChaiBe', documentation: 'Chain for be assertions' },
+              { label: 'not', kind: monaco.languages.CompletionItemKind.Property, detail: 'ChaiAssertions', documentation: 'Negate the assertion' }
+            ];
+            
+            const toSuggestions = toAssertions.map(assertion => ({
+              ...assertion,
+              insertText: assertion.label,
+              range: range
+            }));
+            
+            suggestions.push(...toSuggestions);
+          }
+          
+          // PM Response.to.have assertions
+          if (beforePosition.endsWith('pm.response.to.have.')) {
+            const range = {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: position.column,
+              endColumn: position.column
+            };
+            
+            const haveAssertions = [
+              { label: 'status', detail: '(code: number)', documentation: 'Assert response has specific status code' },
+              { label: 'header', detail: '(name: string, value?: string)', documentation: 'Assert response has specific header' },
+              { label: 'jsonBody', detail: '(path?: string, value?: any)', documentation: 'Assert JSON body contains value' },
+              { label: 'body', detail: '(value: string | RegExp)', documentation: 'Assert response body contains text' },
+              { label: 'property', detail: '(name: string, value?: any)', documentation: 'Assert object has property' }
+            ];
+            
+            const haveSuggestions = haveAssertions.map(method => ({
+              label: method.label,
+              kind: monaco.languages.CompletionItemKind.Method,
+              detail: method.detail,
+              documentation: method.documentation,
+              insertText: method.label,
+              range: range
+            }));
+            
+            suggestions.push(...haveSuggestions);
+          }
+          
+          // PM Response.to.be assertions
+          if (beforePosition.endsWith('pm.response.to.be.')) {
+            const range = {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: position.column,
+              endColumn: position.column
+            };
+            
+            const beAssertions = [
+              { label: 'ok', kind: monaco.languages.CompletionItemKind.Property, detail: '', documentation: 'Assert response is successful (2xx status)' },
+              { label: 'accepted', kind: monaco.languages.CompletionItemKind.Property, detail: '', documentation: 'Assert response status is 202' },
+              { label: 'badRequest', kind: monaco.languages.CompletionItemKind.Property, detail: '', documentation: 'Assert response status is 400' },
+              { label: 'notFound', kind: monaco.languages.CompletionItemKind.Property, detail: '', documentation: 'Assert response status is 404' },
+              { label: 'json', kind: monaco.languages.CompletionItemKind.Property, detail: '', documentation: 'Assert response has JSON content-type' }
+            ];
+            
+            const beSuggestions = beAssertions.map(assertion => ({
+              ...assertion,
+              insertText: assertion.label,
+              range: range
+            }));
+            
+            suggestions.push(...beSuggestions);
+          }
+          
           // Console method suggestions
           if (beforePosition.endsWith('console.')) {
             const range = {

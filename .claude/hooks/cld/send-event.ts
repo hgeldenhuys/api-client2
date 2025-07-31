@@ -4,6 +4,8 @@
  * Sends Claude Code hook events to the CLOUDIOS API.
  */
 
+import fs from "node:fs";
+import path from "node:path";
 import { CLOUDIOS } from "@lib/cloudios/helpers/cloudios-helper";
 import { isHookStopEvent, type SendEventEvent } from "@lib/cloudios/types";
 
@@ -49,10 +51,19 @@ async function sendEventToCloudios(
 async function main() {
   // Parse command line arguments
   const event = await input();
-  const agent_name = readAgentName(event.session_id);
+  
+  // Read agent name from the correct project directory using event.cwd
+  const linksDir = path.join(event.cwd, ".claude", "cloudios", "agents", "links");
+  const agentLinkPath = path.join(linksDir, event.session_id);
+  let agent_name = null;
+  
+  if (fs.existsSync(agentLinkPath)) {
+    agent_name = fs.readFileSync(agentLinkPath, "utf-8").trim();
+  }
+  
   if (!agent_name) {
     CLOUDIOS.debug(
-      `Error: Agent registration not completed for session ${event.session_id}.`,
+      `Error: Agent registration not completed for session ${event.session_id} in ${event.cwd}`,
     );
     process.exit(0);
   }
@@ -64,8 +75,8 @@ async function main() {
     CLOUDIOS.debug(`Created new prompt context for session ${event.session_id}`);
   }
   
-  // Read current prompt context and attach prompt_id
-  const context = CLOUDIOS.readPromptContext(event.cwd);
+  // Read current prompt context for this specific session
+  const context = CLOUDIOS.readPromptContext(event.cwd, event.session_id);
   const prompt_id = context?.prompt_id;
   
   const data: SendEventEvent = {

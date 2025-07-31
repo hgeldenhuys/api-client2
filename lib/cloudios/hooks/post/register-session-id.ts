@@ -97,16 +97,31 @@ export async function main(
     }
 
     try {
-      // Step 1: Create local session association
+      // Step 1: Create initial context for this session to enable audio generation
+      const { createPromptContext } = CLOUDIOS;
+      console.error(`DEBUG: About to create context for session ${event.session_id}`);
+      try {
+        debug(`Attempting to create context for session ${event.session_id} in directory: ${event.cwd}`);
+        console.error(`DEBUG: Calling createPromptContext with session_id=${event.session_id}, cwd=${event.cwd}`);
+        const context = createPromptContext(event.session_id, `Registered agent: ${agentName}`, event.cwd);
+        console.error(`DEBUG: Context created successfully:`, context);
+        debug(`Created initial context for session ${event.session_id}:`, context);
+      } catch (contextErr) {
+        console.error(`DEBUG: Context creation failed:`, contextErr);
+        debug(`Failed to create initial context: ${(contextErr as Error).message}`);
+        debug(`Stack trace:`, (contextErr as Error).stack);
+      }
+
+      // Step 2: Create local session association
       writeAgentSession(agentName, event.session_id);
       const session = readAgentSession(agentName);
       debug("Local session created:", session);
 
-      // Step 2: Register agent with CLOUDIOS server
+      // Step 3: Register agent with CLOUDIOS server
       const apiResponse = await registerAgentWithServer(session, apiClient);
       debug("Server registration completed:", apiResponse);
 
-      // Step 3: Return success with enhanced data
+      // Step 4: Return success with enhanced data
       success({
         ...session,
         server_registration: {

@@ -12,7 +12,6 @@
 # Proxy server binaries (too large for GitHub)
 proxy-server/dist/
 **/proxy-server/dist/
-**/*proxy*
 **/api-client-proxy*
 /test-results/
 /playwright-report/

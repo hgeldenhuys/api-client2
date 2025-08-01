@@ -56,26 +56,34 @@ export function SettingsView() {
     try {
       // For now, copy instructions on how to get the script
       const instructions: Record<string, string> = {
-        typescript: `# Download and run the TypeScript/Bun proxy server:
-curl -o proxy-server.ts ${window.location.origin}/proxy-server/proxy-server.ts
+        typescript: `# Run from your API Client project directory:
 bun proxy-server.ts
 
-# Or run directly:
-bun run ${window.location.origin}/proxy-server/proxy-server.ts`,
+# With verbose logging (recommended for debugging):
+bun proxy-server.ts -v
 
-        python: `# Download and run the Python proxy server:
-curl -o proxy.py ${window.location.origin}/proxy-server/scripts/proxy.py
+# Custom port (if 9090 is in use):
+bun proxy-server.ts -p 8080
+
+# The proxy server is included in your project root`,
+
+        python: `# Python proxy server (standalone, no dependencies):
+curl -o proxy.py https://raw.githubusercontent.com/api-client/cors-proxy/main/proxy.py
 python proxy.py
 
-# Or run directly:
-curl -s ${window.location.origin}/proxy-server/scripts/proxy.py | python`,
+# Or create a simple Python proxy:
+python -m http.server 9090 --cgi
 
-        go: `# Download and run the Go proxy server:
-curl -o proxy.go ${window.location.origin}/proxy-server/scripts/proxy.go
+# Note: Use the TypeScript version for full features`,
+
+        go: `# Go proxy server (standalone, no dependencies):
+curl -o proxy.go https://raw.githubusercontent.com/api-client/cors-proxy/main/proxy.go
 go run proxy.go
 
-# Or run directly:
-go run ${window.location.origin}/proxy-server/scripts/proxy.go`,
+# Or run from project if available:
+go run ./proxy-server/scripts/proxy.go
+
+# Note: Use the TypeScript version for full features`,
       };
 
       const instruction = instructions[language];

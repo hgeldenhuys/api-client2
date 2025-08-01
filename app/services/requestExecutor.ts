@@ -15,6 +15,7 @@ interface RequestOptions {
   preRequestScript?: string;
   testScript?: string;
   signal?: AbortSignal;
+  _corsRetryAttempt?: boolean; // Internal flag to prevent infinite retries
 }
 
 export class RequestExecutor {
@@ -30,9 +31,15 @@ export class RequestExecutor {
     const envStore = useEnvironmentStore.getState();
     const authStore = useAuthStore.getState();
 
-    // Ensure store is initialized
+    // Ensure stores are initialized
     if (!envStore.isInitialized) {
       await envStore.init();
+    }
+    
+    // Ensure proxy store is initialized
+    const proxyStoreState = useProxyStore.getState();
+    if (!proxyStoreState.isInitialized) {
+      await proxyStoreState.init();
     }
 
     // Create execution context
@@ -298,7 +305,7 @@ export class RequestExecutor {
         hasBody: !!requestContext.body
       });
 
-      // Check if proxy is enabled
+      // Check if proxy is enabled (get fresh state)
       const proxyStore = useProxyStore.getState();
       let fetchUrl = targetUrl;
 
@@ -437,8 +444,15 @@ export class RequestExecutor {
 
         // Auto-enable proxy if auto-detect is enabled
         const proxyStore = useProxyStore.getState();
-        if (proxyStore.autoDetectCors && !proxyStore.isEnabled) {
-          console.log('CORS error detected, automatically enabling proxy');
+        console.log('CORS error detected. Proxy state:', {
+          autoDetectCors: proxyStore.autoDetectCors,
+          isEnabled: proxyStore.isEnabled,
+          proxyUrl: proxyStore.proxyUrl,
+          isInitialized: proxyStore.isInitialized
+        });
+        
+        if (proxyStore.autoDetectCors && !proxyStore.isEnabled && !options._corsRetryAttempt) {
+          console.log('CORS error detected, automatically enabling proxy and retrying request');
           // Automatically enable the proxy for CORS errors
           proxyStore.setEnabled(true);
           
@@ -449,8 +463,16 @@ export class RequestExecutor {
             timestamp: Date.now(),
           });
           
-          // Suggest retrying the request through the proxy
-          errorMessage = "CORS error detected. Proxy has been automatically enabled. Please retry your request.";
+          // Automatically retry the request through the proxy
+          console.log('Retrying request through proxy...');
+          return this.execute({
+            ...options,
+            _corsRetryAttempt: true
+          });
+        } else if (!proxyStore.autoDetectCors) {
+          errorMessage = "Request blocked by CORS policy. Enable 'Auto-detect CORS Errors' in Settings → Proxy to automatically use the proxy when CORS errors occur.";
+        } else if (proxyStore.isEnabled) {
+          errorMessage = "Request blocked by CORS policy even with proxy enabled. Check if the proxy server is running on " + proxyStore.proxyUrl;
         }
       }
 

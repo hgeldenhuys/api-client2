@@ -286,12 +286,29 @@ export class RequestExecutor {
 
       // Update targetUrl for error handling
       targetUrl = requestContext.url;
+      
+      // Validate URL
+      if (!targetUrl || targetUrl.trim() === '') {
+        throw new Error('Request URL is empty or missing');
+      }
+
+      console.log('Executing request:', {
+        url: targetUrl,
+        method: requestContext.method,
+        hasBody: !!requestContext.body
+      });
 
       // Check if proxy is enabled
       const proxyStore = useProxyStore.getState();
       let fetchUrl = targetUrl;
 
       if (proxyStore.isEnabled && proxyStore.proxyUrl) {
+        console.log('Routing request through proxy:', {
+          originalUrl: targetUrl,
+          proxyUrl: proxyStore.proxyUrl,
+          method: fetchOptions.method
+        });
+        
         // Route through proxy
         fetchUrl = proxyStore.proxyUrl;
 
@@ -307,6 +324,8 @@ export class RequestExecutor {
           (fetchOptions.headers as any)["Proxy-Authorization"] =
             `Basic ${auth}`;
         }
+        
+        console.log('Proxy request headers:', fetchOptions.headers);
       }
 
       // Execute the request
@@ -416,15 +435,22 @@ export class RequestExecutor {
         errorMessage =
           "Request blocked by CORS policy. Enable the proxy in Settings to bypass CORS restrictions.";
 
-        // Auto-suggest proxy if enabled in settings
+        // Auto-enable proxy if auto-detect is enabled
         const proxyStore = useProxyStore.getState();
         if (proxyStore.autoDetectCors && !proxyStore.isEnabled) {
+          console.log('CORS error detected, automatically enabling proxy');
+          // Automatically enable the proxy for CORS errors
+          proxyStore.setEnabled(true);
+          
           // Store CORS error state for UI to handle
           const requestStore = useRequestStore.getState();
           requestStore.setLastCorsError({
             url: targetUrl,
             timestamp: Date.now(),
           });
+          
+          // Suggest retrying the request through the proxy
+          errorMessage = "CORS error detected. Proxy has been automatically enabled. Please retry your request.";
         }
       }
 

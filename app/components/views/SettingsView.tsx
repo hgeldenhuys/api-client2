@@ -56,34 +56,14 @@ export function SettingsView() {
     try {
       // For now, copy instructions on how to get the script
       const instructions: Record<string, string> = {
-        typescript: `# Run from your API Client project directory:
-bun proxy-server.ts
+        typescript: `curl -o proxy-server-node.cjs http://localhost:5173/proxy-server/proxy-server-node.cjs
+node proxy-server-node.cjs -v`,
 
-# With verbose logging (recommended for debugging):
-bun proxy-server.ts -v
+        python: `curl -o proxy.py http://localhost:5173/proxy-server/scripts/proxy.py
+python proxy.py`,
 
-# Custom port (if 9090 is in use):
-bun proxy-server.ts -p 8080
-
-# The proxy server is included in your project root`,
-
-        python: `# Python proxy server (standalone, no dependencies):
-curl -o proxy.py https://raw.githubusercontent.com/api-client/cors-proxy/main/proxy.py
-python proxy.py
-
-# Or create a simple Python proxy:
-python -m http.server 9090 --cgi
-
-# Note: Use the TypeScript version for full features`,
-
-        go: `# Go proxy server (standalone, no dependencies):
-curl -o proxy.go https://raw.githubusercontent.com/api-client/cors-proxy/main/proxy.go
-go run proxy.go
-
-# Or run from project if available:
-go run ./proxy-server/scripts/proxy.go
-
-# Note: Use the TypeScript version for full features`,
+        go: `curl -o proxy.go http://localhost:5173/proxy-server/scripts/proxy.go
+go run proxy.go`,
       };
 
       const instruction = instructions[language];
@@ -274,7 +254,7 @@ go run ./proxy-server/scripts/proxy.go
                           ) : (
                             <Copy className="h-4 w-4 mr-2" />
                           )}
-                          TypeScript/Bun
+                          Node.js/TypeScript
                         </span>
                         {copyStatus === "typescript" ? (
                           <span className="text-xs text-green-600">
@@ -354,12 +334,12 @@ go run ./proxy-server/scripts/proxy.go
                       <p className="font-medium">Quick Start:</p>
                       <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
                         <li>
-                          Click a script button above to copy the commands
+                          Click "Node.js/TypeScript" button above to copy the commands
                         </li>
                         <li>Paste and run the commands in your terminal</li>
                         <li>The proxy will start on port 9090 by default</li>
                         <li>Enable the proxy in settings above (or let auto-detect enable it)</li>
-                        <li>All requests will now bypass CORS restrictions automatically</li>
+                        <li>No more "Missing url" errors - requests work perfectly!</li>
                       </ol>
                       <div className="mt-3 space-y-2">
                         <p className="text-xs font-medium">
@@ -385,8 +365,8 @@ go run ./proxy-server/scripts/proxy.go
                         </p>
                         <ul className="text-xs text-muted-foreground space-y-1">
                           <li>
-                            • <strong>Bun/Node.js</strong> - TypeScript proxy
-                            server
+                            • <strong>Node.js/Bun</strong> - JavaScript proxy
+                            server (Node.js recommended)
                           </li>
                           <li>
                             • <strong>Python 3.6+</strong> - No dependencies

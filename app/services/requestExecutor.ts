@@ -313,8 +313,15 @@ export class RequestExecutor {
         console.log('Routing request through proxy:', {
           originalUrl: targetUrl,
           proxyUrl: proxyStore.proxyUrl,
-          method: fetchOptions.method
+          method: fetchOptions.method,
+          targetUrlLength: targetUrl.length,
+          targetUrlValid: !!targetUrl && targetUrl.trim() !== ''
         });
+        
+        // Validate target URL before sending to proxy
+        if (!targetUrl || targetUrl.trim() === '') {
+          throw new Error('Cannot route to proxy: target URL is empty');
+        }
         
         // Route through proxy
         fetchUrl = proxyStore.proxyUrl;
@@ -332,7 +339,12 @@ export class RequestExecutor {
             `Basic ${auth}`;
         }
         
-        console.log('Proxy request headers:', fetchOptions.headers);
+        console.log('Proxy request details:', {
+          fetchUrl,
+          targetUrl,
+          headers: fetchOptions.headers,
+          method: fetchOptions.method
+        });
       }
 
       // Execute the request

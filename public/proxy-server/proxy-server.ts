@@ -206,7 +206,19 @@ const server = Bun.serve({
     const targetUrl = request.headers.get('X-Target-URL') || 
                      new URL(request.url).searchParams.get('url');
     
+    // Debug logging for missing URL issue
+    console.log('Proxy request debug:', {
+      method: request.method,
+      url: request.url,
+      hasXTargetURL: !!request.headers.get('X-Target-URL'),
+      xTargetURLValue: request.headers.get('X-Target-URL'),
+      hasUrlParam: !!new URL(request.url).searchParams.get('url'),
+      urlParamValue: new URL(request.url).searchParams.get('url'),
+      allHeaders: Object.fromEntries(request.headers.entries())
+    });
+    
     if (!targetUrl) {
+      console.error('Missing target URL in proxy request');
       return new Response('Missing target URL. Use X-Target-URL header or ?url= parameter', {
         status: 400,
         headers: addCorsHeaders(new Headers(), origin || undefined)

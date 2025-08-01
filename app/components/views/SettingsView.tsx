@@ -177,7 +177,7 @@ go run ${window.location.origin}/proxy-server/scripts/proxy.go`,
                 </CardTitle>
                 <CardDescription>
                   Use a local proxy server to bypass CORS restrictions when
-                  testing APIs
+                  testing APIs. Supports all origins, methods, and headers for maximum compatibility.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -226,7 +226,7 @@ go run ${window.location.origin}/proxy-server/scripts/proxy.go`,
                   <div className="space-y-0.5">
                     <Label>Auto-detect CORS Errors</Label>
                     <div className="text-sm text-muted-foreground">
-                      Automatically suggest using proxy when CORS errors occur
+                      Automatically enable proxy when CORS errors are detected. The proxy will activate instantly to resolve CORS issues.
                     </div>
                   </div>
                   <Button
@@ -350,11 +350,29 @@ go run ${window.location.origin}/proxy-server/scripts/proxy.go`,
                         </li>
                         <li>Paste and run the commands in your terminal</li>
                         <li>The proxy will start on port 9090 by default</li>
-                        <li>Enable the proxy in settings above</li>
-                        <li>All requests will now bypass CORS restrictions</li>
+                        <li>Enable the proxy in settings above (or let auto-detect enable it)</li>
+                        <li>All requests will now bypass CORS restrictions automatically</li>
                       </ol>
                       <div className="mt-3 space-y-2">
                         <p className="text-xs font-medium">
+                          Enhanced CORS Support:
+                        </p>
+                        <ul className="text-xs text-muted-foreground space-y-1">
+                          <li>
+                            • <strong>Zero CORS Restrictions</strong> - All origins, methods, and headers allowed
+                          </li>
+                          <li>
+                            • <strong>Auto-Detection</strong> - Proxy automatically enables when CORS errors occur
+                          </li>
+                          <li>
+                            • <strong>Localhost Development</strong> - Perfect for local API testing
+                          </li>
+                          <li>
+                            • <strong>Transparent Proxying</strong> - Preserves original request/response data
+                          </li>
+                        </ul>
+                        
+                        <p className="text-xs font-medium mt-3">
                           Supported runtimes:
                         </p>
                         <ul className="text-xs text-muted-foreground space-y-1">
